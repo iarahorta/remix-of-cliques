@@ -1,14 +1,14 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import logoAsset from "@/assets/hs-logo.png.asset.json";
-import { Loader2, Mail, Lock, User as UserIcon } from "lucide-react";
+import { Loader2, Mail, Lock, Sparkles, User as UserIcon } from "lucide-react";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "Entrar — HS Assessoria" },
-      { name: "description", content: "Acesse sua conta HS Assessoria para gerenciar campanhas de disparo." },
+      { title: "Entrar — cliques" },
+      { name: "description", content: "Acesse sua conta para gerenciar seus links." },
+      { name: "robots", content: "noindex,nofollow" },
     ],
   }),
   component: AuthPage,
@@ -25,7 +25,7 @@ function AuthPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/painel" });
+      if (data.session) navigate({ to: "/encurtador" });
     });
   }, [navigate]);
 
@@ -44,18 +44,17 @@ function AuthPage() {
           },
         });
         if (error) throw error;
-        // Auto-confirm is enabled — tenta logar imediatamente
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) {
           setMsg({ kind: "ok", text: "Cadastro criado! Faça login para entrar." });
           setMode("signin");
         } else {
-          navigate({ to: "/painel" });
+          navigate({ to: "/encurtador" });
         }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        navigate({ to: "/painel" });
+        navigate({ to: "/encurtador" });
       }
     } catch (err: any) {
       const m = (err?.message ?? "").toLowerCase();
@@ -70,69 +69,64 @@ function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-6">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
       <div className="w-full max-w-md">
-        <div className="flex flex-col items-center mb-8 text-center">
-          <img
-            src={logoAsset.url}
-            alt="HS Assessoria"
-            className="w-28 h-28 object-contain drop-shadow-[0_6px_24px_rgba(200,150,80,0.45)]"
-          />
-          <div className="mt-4 flex flex-col items-center leading-none">
-            <span className="font-display text-5xl tracking-[0.2em] text-gold-gradient font-semibold">HS</span>
-            <span className="mt-2 font-display text-base tracking-[0.42em] text-gold-gradient/90 font-medium">ASSESSORIA</span>
+        <div className="flex flex-col items-center mb-6 text-center">
+          <div className="h-12 w-12 rounded-xl bg-[#0b3d91] text-white flex items-center justify-center shadow-sm">
+            <Sparkles className="h-6 w-6" />
           </div>
-          <p className="mt-4 text-sm text-muted-foreground">Plataforma de disparos em massa</p>
+          <h1 className="mt-4 text-2xl font-bold tracking-tight text-slate-900">cliques</h1>
+          <p className="mt-1 text-sm text-slate-500">Encurtador de links</p>
         </div>
 
-        <div className="card-premium p-8">
-          <div className="flex bg-secondary/40 rounded-lg p-1 mb-6">
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+          <div className="flex bg-slate-100 rounded-lg p-1 mb-5">
             <button
               type="button"
               onClick={() => { setMode("signin"); setMsg(null); }}
-              className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${mode === "signin" ? "bg-gold-metal" : "text-muted-foreground"}`}
+              className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${mode === "signin" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"}`}
             >Entrar</button>
             <button
               type="button"
               onClick={() => { setMode("signup"); setMsg(null); }}
-              className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${mode === "signup" ? "bg-gold-metal" : "text-muted-foreground"}`}
+              className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${mode === "signup" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500"}`}
             >Criar conta</button>
           </div>
 
-          <form onSubmit={submit} className="space-y-4">
+          <form onSubmit={submit} className="space-y-3">
             {mode === "signup" && (
               <Field icon={<UserIcon className="h-4 w-4" />} label="Nome completo">
                 <input
                   required value={name} onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-transparent text-sm focus:outline-none"
-                  placeholder="Ex: Iara Chorta"
+                  className="w-full bg-transparent text-sm focus:outline-none text-slate-800"
+                  placeholder="Seu nome"
                 />
               </Field>
             )}
             <Field icon={<Mail className="h-4 w-4" />} label="E-mail">
               <input
                 required type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-transparent text-sm focus:outline-none"
+                className="w-full bg-transparent text-sm focus:outline-none text-slate-800"
                 placeholder="seu@email.com"
               />
             </Field>
             <Field icon={<Lock className="h-4 w-4" />} label="Senha">
               <input
                 required type="password" minLength={6} value={password} onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-transparent text-sm focus:outline-none"
+                className="w-full bg-transparent text-sm focus:outline-none text-slate-800"
                 placeholder="Mínimo 6 caracteres"
               />
             </Field>
 
             {msg && (
-              <div className={`rounded-lg p-3 text-sm ${msg.kind === "error" ? "bg-destructive/15 text-destructive border border-destructive/30" : "bg-[oklch(0.78_0.13_75_/_0.1)] text-[oklch(0.85_0.14_75)] border border-[oklch(0.75_0.13_75_/_0.3)]"}`}>
+              <div className={`rounded-lg p-3 text-sm border ${msg.kind === "error" ? "bg-red-50 text-red-700 border-red-200" : "bg-emerald-50 text-emerald-700 border-emerald-200"}`}>
                 {msg.text}
               </div>
             )}
 
             <button
               type="submit" disabled={loading}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-gold-metal px-6 py-3 text-sm font-semibold hover:scale-[1.01] transition-transform disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-[#0b3d91] hover:bg-[#0a3582] text-white px-6 py-2.5 text-sm font-semibold transition disabled:opacity-60"
             >
               {loading && <Loader2 className="h-4 w-4 animate-spin" />}
               {mode === "signin" ? "Entrar" : "Criar conta"}
@@ -152,16 +146,10 @@ function AuthPage() {
                 if (error) setMsg({ kind: "error", text: error.message });
                 else setMsg({ kind: "ok", text: "Link de redefinição enviado para o seu e-mail." });
               }}
-              className="mt-4 w-full text-xs text-muted-foreground hover:text-foreground underline underline-offset-4"
+              className="mt-4 w-full text-xs text-slate-500 hover:text-slate-800 underline underline-offset-4"
             >
               Esqueci minha senha
             </button>
-          )}
-
-          {mode === "signup" && (
-            <p className="mt-4 text-xs text-muted-foreground text-center">
-              Sua conta é ativada na hora — sem precisar confirmar e-mail.
-            </p>
           )}
         </div>
       </div>
@@ -172,9 +160,9 @@ function AuthPage() {
 function Field({ label, icon, children }: { label: string; icon: React.ReactNode; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="text-xs uppercase tracking-wider text-muted-foreground">{label}</span>
-      <div className="mt-1.5 flex items-center gap-3 rounded-lg bg-input border border-border px-4 py-3 focus-within:ring-2 focus-within:ring-ring">
-        <span className="text-[oklch(0.7_0.12_70)]">{icon}</span>
+      <span className="text-xs uppercase tracking-wider text-slate-500">{label}</span>
+      <div className="mt-1.5 flex items-center gap-3 rounded-lg bg-white border border-slate-300 px-3 py-2.5 focus-within:border-[#0b3d91] focus-within:ring-2 focus-within:ring-sky-100">
+        <span className="text-slate-400">{icon}</span>
         {children}
       </div>
     </label>

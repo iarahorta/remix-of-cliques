@@ -15,7 +15,7 @@ import {
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/encurtador")({
-  head: () => ({ meta: [{ title: "Encurtador — HS Assessoria" }] }),
+  head: () => ({ meta: [{ title: "Encurtador — cliques" }] }),
   component: Encurtador,
 });
 

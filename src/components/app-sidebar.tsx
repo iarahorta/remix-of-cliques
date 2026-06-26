@@ -1,39 +1,29 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useState } from "react";
-import {
-  LayoutDashboard, Send, Wallet, History, LogOut, Menu,
-  Tags, FileText, Link2, Users, ShieldCheck, FileSpreadsheet, ClipboardList,
-  Plug, MessageSquareText, LayoutTemplate,
-} from "lucide-react";
-import logoAsset from "@/assets/hs-logo.png.asset.json";
+import { Link2, LogOut, Menu, Sparkles } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
-const clientItems = [
-  { title: "Dashboard", url: "/painel", icon: LayoutDashboard },
-  { title: "Nova Campanha", url: "/nova-campanha", icon: Send },
-  { title: "Recarga", url: "/recarga", icon: Wallet },
-  { title: "Histórico", url: "/historico", icon: History },
-];
+const navItems = [
+  { title: "Encurtador", url: "/encurtador", icon: Link2 },
+] as const;
 
-type AdminItem = { title: string; url: string; icon: any; permission?: string };
-const adminItems: AdminItem[] = [
-  { title: "Pedidos", url: "/admin/pedidos", icon: ClipboardList, permission: "view_all_campaigns" },
-  { title: "Encurtador", url: "/encurtador", icon: Link2, permission: "view_all_campaigns" },
-  { title: "Landing (Planos)", url: "/admin/landing", icon: LayoutTemplate, permission: "manage_pricing" },
-  { title: "Valores", url: "/admin/valores", icon: Tags, permission: "manage_pricing" },
-  { title: "Templates", url: "/admin/templates", icon: FileText, permission: "edit_templates" },
-  { title: "WhatsApp Templates", url: "/admin/wa-templates", icon: MessageSquareText, permission: "manage_infobip" },
-  { title: "Infobip", url: "/admin/infobip", icon: Plug, permission: "manage_infobip" },
-  { title: "Usuários", url: "/admin/usuarios", icon: Users, permission: "manage_users" },
-  { title: "Todas Campanhas", url: "/admin/campanhas", icon: ShieldCheck, permission: "view_all_campaigns" },
-];
+function Brand() {
+  return (
+    <div className="flex items-center gap-2 font-semibold tracking-tight text-slate-800">
+      <div className="h-8 w-8 rounded-md bg-[#0b3d91] text-white flex items-center justify-center">
+        <Sparkles className="h-4 w-4" />
+      </div>
+      <span className="text-lg">cliques</span>
+    </div>
+  );
+}
 
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   const navigate = useNavigate();
-  const { user, isAdmin, isSuperAdmin, hasPermission } = useAuth();
+  const { user, isAdmin, isSuperAdmin } = useAuth();
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -42,52 +32,49 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   };
 
   const initials = (user?.email ?? "?").slice(0, 2).toUpperCase();
-  const visibleAdminItems = adminItems.filter((i) => isAdmin || hasPermission(i.permission as any));
-  const showAdminSection = visibleAdminItems.length > 0;
+  const role = isSuperAdmin ? "Admin-chefe" : isAdmin ? "Admin" : "Cliente";
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="px-6 pt-8 pb-6 flex flex-col items-center text-center">
-        <img
-          src={logoAsset.url}
-          alt="HS Assessoria"
-          className="w-24 h-24 md:w-32 md:h-32 object-contain drop-shadow-[0_6px_24px_rgba(200,150,80,0.45)]"
-        />
-        <div className="mt-4 flex flex-col items-center leading-none">
-          <span className="font-display text-4xl md:text-5xl tracking-[0.2em] text-gold-gradient font-semibold">HS</span>
-          <span className="mt-2 font-display text-base md:text-lg tracking-[0.42em] text-gold-gradient/90 font-medium">ASSESSORIA</span>
-        </div>
-        <div className="mt-4 h-px w-3/4 bg-gradient-to-r from-transparent via-[oklch(0.6_0.12_55)] to-transparent" />
+    <div className="flex flex-col h-full bg-white">
+      <div className="px-6 pt-6 pb-4 border-b border-slate-200">
+        <Brand />
       </div>
 
-      <nav className="flex-1 px-4 py-2 space-y-1 overflow-y-auto">
-        {clientItems.map((item) => (
-          <NavItem key={item.url} {...item} active={pathname === item.url} onClick={onNavigate} />
-        ))}
-        {hasPermission("use_hygiene_tool") && (
-          <NavItem title="Higienização" url="/higienizacao" icon={FileSpreadsheet} active={pathname === "/higienizacao"} onClick={onNavigate} />
-        )}
-
-        {showAdminSection && (
-          <>
-            <p className="mt-6 mb-2 px-4 text-[10px] uppercase tracking-[0.2em] text-[oklch(0.6_0.1_60)]">
-              {isSuperAdmin ? "Admin-chefe" : isAdmin ? "Admin" : "Acesso"}
-            </p>
-            {visibleAdminItems.map((item) => (
-              <NavItem key={item.url} {...item} active={pathname === item.url} onClick={onNavigate} />
-            ))}
-          </>
-        )}
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        {navItems.map((item) => {
+          const active = pathname === item.url;
+          return (
+            <Link
+              key={item.url}
+              to={item.url}
+              onClick={onNavigate}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                active
+                  ? "bg-[#0b3d91] text-white"
+                  : "text-slate-700 hover:bg-slate-100"
+              }`}
+            >
+              <item.icon className="h-4 w-4" />
+              <span>{item.title}</span>
+            </Link>
+          );
+        })}
       </nav>
 
-      <div className="p-4 border-t border-sidebar-border">
-        <div className="flex items-center gap-3 px-3 py-3 rounded-lg bg-sidebar-accent/40">
-          <div className="h-9 w-9 shrink-0 rounded-full bg-gold-metal flex items-center justify-center text-xs font-bold">{initials}</div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs text-muted-foreground">{isSuperAdmin ? "Admin-chefe" : isAdmin ? "Admin" : showAdminSection ? "Equipe" : "Cliente"}</p>
-            <p className="text-sm text-foreground truncate">{user?.email ?? "—"}</p>
+      <div className="p-3 border-t border-slate-200">
+        <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-slate-50">
+          <div className="h-9 w-9 shrink-0 rounded-full bg-[#0b3d91] text-white flex items-center justify-center text-xs font-bold">
+            {initials}
           </div>
-          <button onClick={handleSignOut} aria-label="Sair" className="p-2 rounded-md hover:bg-sidebar-accent text-[oklch(0.75_0.12_70)] hover:text-[oklch(0.85_0.14_75)] transition-colors">
+          <div className="flex-1 min-w-0">
+            <p className="text-xs text-slate-500">{role}</p>
+            <p className="text-sm text-slate-800 truncate">{user?.email ?? "—"}</p>
+          </div>
+          <button
+            onClick={handleSignOut}
+            aria-label="Sair"
+            className="p-2 rounded-md hover:bg-slate-200 text-slate-500 transition-colors"
+          >
             <LogOut className="h-4 w-4" />
           </button>
         </div>
@@ -98,7 +85,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
 export function AppSidebar() {
   return (
-    <aside className="hidden md:flex md:flex-col w-72 shrink-0 bg-sidebar border-r border-sidebar-border min-h-screen sticky top-0">
+    <aside className="hidden md:flex md:flex-col w-64 shrink-0 border-r border-slate-200 min-h-screen sticky top-0">
       <SidebarContent />
     </aside>
   );
@@ -107,37 +94,19 @@ export function AppSidebar() {
 export function MobileTopBar() {
   const [open, setOpen] = useState(false);
   return (
-    <header className="md:hidden sticky top-0 z-40 flex items-center justify-between gap-3 px-4 h-14 bg-sidebar/95 backdrop-blur border-b border-sidebar-border">
+    <header className="md:hidden sticky top-0 z-40 flex items-center justify-between gap-3 px-4 h-14 bg-white border-b border-slate-200">
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
-          <button aria-label="Abrir menu" className="p-2 -ml-2 rounded-md hover:bg-sidebar-accent text-[oklch(0.8_0.12_70)]">
+          <button aria-label="Abrir menu" className="p-2 -ml-2 rounded-md hover:bg-slate-100 text-slate-700">
             <Menu className="h-5 w-5" />
           </button>
         </SheetTrigger>
-        <SheetContent side="left" className="p-0 w-72 bg-sidebar border-sidebar-border">
+        <SheetContent side="left" className="p-0 w-64 bg-white">
           <SidebarContent onNavigate={() => setOpen(false)} />
         </SheetContent>
       </Sheet>
-      <div className="flex items-center gap-2 min-w-0">
-        <img src={logoAsset.url} alt="HS" className="h-8 w-8 object-contain shrink-0" />
-        <span className="font-display text-lg tracking-[0.25em] text-gold-gradient font-semibold">HS</span>
-      </div>
+      <Brand />
       <div className="w-9" />
     </header>
-  );
-}
-
-function NavItem({ url, title, icon: Icon, active, onClick }: { url: string; title: string; icon: any; active: boolean; onClick?: () => void }) {
-  return (
-    <Link
-      to={url}
-      onClick={onClick}
-      className={`group flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 ${
-        active ? "bg-gold-metal font-semibold" : "text-sidebar-foreground hover:bg-sidebar-accent hover:translate-x-0.5"
-      }`}
-    >
-      <Icon className={`h-4 w-4 ${active ? "" : "text-[oklch(0.7_0.1_65)]"}`} />
-      <span className="tracking-wide">{title}</span>
-    </Link>
   );
 }
