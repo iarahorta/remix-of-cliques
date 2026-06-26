@@ -27,7 +27,7 @@ interface ShortLink {
   click_count: number;
   status: string;
   label: string | null;
-  infobip_template_id: string | null;
+  
   created_at: string;
   last_clicked_at: string | null;
 }
@@ -51,7 +51,7 @@ function Encurtador() {
     setLoading(true);
     const { data } = await supabase
       .from("short_links")
-      .select("id,slug,is_rotating,target_url,click_count,status,label,infobip_template_id,created_at,last_clicked_at")
+      .select("id,slug,is_rotating,target_url,click_count,status,label,created_at,last_clicked_at")
       .order("created_at", { ascending: false });
     setLinks((data as any) ?? []);
     setLoading(false);
@@ -85,7 +85,7 @@ function Encurtador() {
   const baseHost = domain ?? (typeof window !== "undefined" ? window.location.host : "");
 
   return (
-    <PageShell title="Encurtador de Link" subtitle="Encurte, edite o destino e rotacione seus links — ideal para subir templates antes da aprovação.">
+    <PageShell title="Encurtador de Link" subtitle="Encurte, edite o destino e rotacione seus links.">
       <div className="flex flex-wrap gap-2 mb-5">
         <Btn icon={Globe} label={`Domínio (${baseHost || "—"})`} onClick={() => setModal("domain")} />
         <Btn icon={RefreshCw} label="Trocar Todos" onClick={() => {
@@ -128,7 +128,7 @@ function Encurtador() {
           <div className="py-10 flex justify-center"><Loader2 className="h-6 w-6 animate-spin text-[oklch(0.75_0.13_75)]" /></div>
         ) : filtered.length === 0 ? (
           <div className="py-10 text-center text-sm text-muted-foreground">
-            Nenhum link nesta aba. Use <span className="text-[oklch(0.85_0.14_75)]">Gerar em Massa</span> para criar slugs vazios e subir templates.
+            Nenhum link nesta aba. Use <span className="text-[#0b3d91] font-semibold">Gerar em Massa</span> para criar slugs vazios.
           </div>
         ) : (
           <div className="space-y-2">
@@ -266,7 +266,7 @@ function GenerateModal({ onClose, onDone }: { onClose: () => void; onDone: () =>
   };
   return (
     <ModalShell title="Gerar em Massa" onClose={onClose}>
-      <p className="text-sm text-muted-foreground mb-4">Cria N slugs já apontando para <code>/portal</code> (página de aprovação). Você troca o destino depois que o template for aprovado na Infobip.</p>
+      <p className="text-sm text-muted-foreground mb-4">Cria N slugs já apontando para <code>/portal</code>. Você pode trocar o destino de cada slug a qualquer momento.</p>
       <div className="grid grid-cols-2 gap-3">
         <NumField label="Quantidade" value={count} onChange={setCount} min={1} max={500} />
         <NumField label="Tamanho do slug" value={length} onChange={setLength} min={4} max={12} />
@@ -274,7 +274,7 @@ function GenerateModal({ onClose, onDone }: { onClose: () => void; onDone: () =>
       <label className="block mt-3">
         <span className="text-xs uppercase tracking-wider text-muted-foreground">Apelido (opcional)</span>
         <input value={label} onChange={e => setLabel(e.target.value)}
-          placeholder="Ex.: Campanha Boas-Vindas"
+          placeholder="Ex.: Lote agosto"
           className="mt-1.5 w-full rounded-lg bg-input border border-border px-3 py-2 text-sm focus:outline-none" />
       </label>
       <button onClick={submit} disabled={saving}
@@ -423,7 +423,7 @@ function EditModal({ link, onClose, onDone }: { link: ShortLink; onClose: () => 
             <input value={target} onChange={e => setTarget(e.target.value)} type="url"
               placeholder="https://…"
               className="mt-1.5 w-full rounded-lg bg-input border border-border px-3 py-2 text-sm focus:outline-none" />
-            <p className="text-[11px] text-muted-foreground mt-1">Trocar o destino mantém o mesmo slug aprovado na Infobip.</p>
+            <p className="text-[11px] text-muted-foreground mt-1">Trocar o destino mantém o mesmo slug curto.</p>
           </label>
         ) : (
           <div>
@@ -454,7 +454,7 @@ function EditModal({ link, onClose, onDone }: { link: ShortLink; onClose: () => 
           <select value={status} onChange={e => setStatus(e.target.value)}
             className="mt-1.5 w-full rounded-lg bg-input border border-border px-3 py-2 text-sm focus:outline-none">
             <option value="available">Disponível</option>
-            <option value="analysis">Em análise (template aguardando aprovação)</option>
+            <option value="analysis">Em análise</option>
             <option value="occupied">Ocupado</option>
           </select>
         </label>

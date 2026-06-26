@@ -5,18 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 export type AppRole = "super_admin" | "admin" | "admin_jr" | "operator" | "client";
 
 export type AppPermission =
-  | "view_all_campaigns"
-  | "download_campaign_files"
-  | "download_valid_leads"
-  | "edit_templates"
-  | "manage_pricing"
-  | "manage_niches"
-  | "manage_users"
   | "view_shortener_admin"
-  | "use_hygiene_tool"
-  | "customize_profile_photo"
-  | "manage_credits"
-  | "manage_infobip";
+  | "manage_users";
 
 export interface AuthState {
   session: Session | null;
@@ -28,9 +18,6 @@ export interface AuthState {
   isAdmin: boolean;
   isStaff: boolean;
   hasPermission: (p: AppPermission) => boolean;
-  /** Backward-compat helpers */
-  canUseHygieneTool: boolean;
-  canCustomizeProfilePhoto: boolean;
 }
 
 const STAFF_ROLES: AppRole[] = ["super_admin", "admin", "admin_jr", "operator"];
@@ -86,7 +73,5 @@ export function useAuth(): AuthState {
     isAdmin,
     isStaff,
     hasPermission,
-    canUseHygieneTool: hasPermission("use_hygiene_tool"),
-    canCustomizeProfilePhoto: hasPermission("customize_profile_photo"),
   };
 }
