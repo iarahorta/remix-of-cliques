@@ -13,28 +13,10 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PortalRouteImport } from './routes/portal'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AreaRouteImport } from './routes/area'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RSlugRouteImport } from './routes/r.$slug'
-import { Route as AuthenticatedRecargaRouteImport } from './routes/_authenticated/recarga'
-import { Route as AuthenticatedPainelRouteImport } from './routes/_authenticated/painel'
-import { Route as AuthenticatedNovaCampanhaRouteImport } from './routes/_authenticated/nova-campanha'
-import { Route as AuthenticatedHistoricoRouteImport } from './routes/_authenticated/historico'
-import { Route as AuthenticatedHigienizacaoRouteImport } from './routes/_authenticated/higienizacao'
 import { Route as AuthenticatedEncurtadorRouteImport } from './routes/_authenticated/encurtador'
-import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
-import { Route as AuthenticatedAdminWaTemplatesRouteImport } from './routes/_authenticated/admin/wa-templates'
-import { Route as AuthenticatedAdminValoresRouteImport } from './routes/_authenticated/admin/valores'
-import { Route as AuthenticatedAdminUsuariosRouteImport } from './routes/_authenticated/admin/usuarios'
-import { Route as AuthenticatedAdminTemplatesRouteImport } from './routes/_authenticated/admin/templates'
-import { Route as AuthenticatedAdminPedidosRouteImport } from './routes/_authenticated/admin/pedidos'
-import { Route as AuthenticatedAdminLandingRouteImport } from './routes/_authenticated/admin/landing'
-import { Route as AuthenticatedAdminInfobipRouteImport } from './routes/_authenticated/admin/infobip'
-import { Route as AuthenticatedAdminCampanhasRouteImport } from './routes/_authenticated/admin/campanhas'
-import { Route as ApiPublicWebhooksPaymentRouteImport } from './routes/api/public/webhooks/payment'
-import { Route as ApiPublicWebhooksInfobipRouteImport } from './routes/api/public/webhooks/infobip'
-import { Route as ApiPublicHooksAutoDispatchRouteImport } from './routes/api/public/hooks/auto-dispatch'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -56,11 +38,6 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AreaRoute = AreaRouteImport.update({
-  id: '/area',
-  path: '/area',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
@@ -75,290 +52,80 @@ const RSlugRoute = RSlugRouteImport.update({
   path: '/r/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRecargaRoute = AuthenticatedRecargaRouteImport.update({
-  id: '/recarga',
-  path: '/recarga',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedPainelRoute = AuthenticatedPainelRouteImport.update({
-  id: '/painel',
-  path: '/painel',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedNovaCampanhaRoute =
-  AuthenticatedNovaCampanhaRouteImport.update({
-    id: '/nova-campanha',
-    path: '/nova-campanha',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedHistoricoRoute = AuthenticatedHistoricoRouteImport.update({
-  id: '/historico',
-  path: '/historico',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedHigienizacaoRoute =
-  AuthenticatedHigienizacaoRouteImport.update({
-    id: '/higienizacao',
-    path: '/higienizacao',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedEncurtadorRoute = AuthenticatedEncurtadorRouteImport.update({
   id: '/encurtador',
   path: '/encurtador',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedAdminRouteRoute = AuthenticatedAdminRouteRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedAdminWaTemplatesRoute =
-  AuthenticatedAdminWaTemplatesRouteImport.update({
-    id: '/wa-templates',
-    path: '/wa-templates',
-    getParentRoute: () => AuthenticatedAdminRouteRoute,
-  } as any)
-const AuthenticatedAdminValoresRoute =
-  AuthenticatedAdminValoresRouteImport.update({
-    id: '/valores',
-    path: '/valores',
-    getParentRoute: () => AuthenticatedAdminRouteRoute,
-  } as any)
-const AuthenticatedAdminUsuariosRoute =
-  AuthenticatedAdminUsuariosRouteImport.update({
-    id: '/usuarios',
-    path: '/usuarios',
-    getParentRoute: () => AuthenticatedAdminRouteRoute,
-  } as any)
-const AuthenticatedAdminTemplatesRoute =
-  AuthenticatedAdminTemplatesRouteImport.update({
-    id: '/templates',
-    path: '/templates',
-    getParentRoute: () => AuthenticatedAdminRouteRoute,
-  } as any)
-const AuthenticatedAdminPedidosRoute =
-  AuthenticatedAdminPedidosRouteImport.update({
-    id: '/pedidos',
-    path: '/pedidos',
-    getParentRoute: () => AuthenticatedAdminRouteRoute,
-  } as any)
-const AuthenticatedAdminLandingRoute =
-  AuthenticatedAdminLandingRouteImport.update({
-    id: '/landing',
-    path: '/landing',
-    getParentRoute: () => AuthenticatedAdminRouteRoute,
-  } as any)
-const AuthenticatedAdminInfobipRoute =
-  AuthenticatedAdminInfobipRouteImport.update({
-    id: '/infobip',
-    path: '/infobip',
-    getParentRoute: () => AuthenticatedAdminRouteRoute,
-  } as any)
-const AuthenticatedAdminCampanhasRoute =
-  AuthenticatedAdminCampanhasRouteImport.update({
-    id: '/campanhas',
-    path: '/campanhas',
-    getParentRoute: () => AuthenticatedAdminRouteRoute,
-  } as any)
-const ApiPublicWebhooksPaymentRoute =
-  ApiPublicWebhooksPaymentRouteImport.update({
-    id: '/api/public/webhooks/payment',
-    path: '/api/public/webhooks/payment',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicWebhooksInfobipRoute =
-  ApiPublicWebhooksInfobipRouteImport.update({
-    id: '/api/public/webhooks/infobip',
-    path: '/api/public/webhooks/infobip',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicHooksAutoDispatchRoute =
-  ApiPublicHooksAutoDispatchRouteImport.update({
-    id: '/api/public/hooks/auto-dispatch',
-    path: '/api/public/hooks/auto-dispatch',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/area': typeof AreaRoute
   '/auth': typeof AuthRoute
   '/login': typeof LoginRoute
   '/portal': typeof PortalRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/encurtador': typeof AuthenticatedEncurtadorRoute
-  '/higienizacao': typeof AuthenticatedHigienizacaoRoute
-  '/historico': typeof AuthenticatedHistoricoRoute
-  '/nova-campanha': typeof AuthenticatedNovaCampanhaRoute
-  '/painel': typeof AuthenticatedPainelRoute
-  '/recarga': typeof AuthenticatedRecargaRoute
   '/r/$slug': typeof RSlugRoute
-  '/admin/campanhas': typeof AuthenticatedAdminCampanhasRoute
-  '/admin/infobip': typeof AuthenticatedAdminInfobipRoute
-  '/admin/landing': typeof AuthenticatedAdminLandingRoute
-  '/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
-  '/admin/templates': typeof AuthenticatedAdminTemplatesRoute
-  '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
-  '/admin/valores': typeof AuthenticatedAdminValoresRoute
-  '/admin/wa-templates': typeof AuthenticatedAdminWaTemplatesRoute
-  '/api/public/hooks/auto-dispatch': typeof ApiPublicHooksAutoDispatchRoute
-  '/api/public/webhooks/infobip': typeof ApiPublicWebhooksInfobipRoute
-  '/api/public/webhooks/payment': typeof ApiPublicWebhooksPaymentRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/area': typeof AreaRoute
   '/auth': typeof AuthRoute
   '/login': typeof LoginRoute
   '/portal': typeof PortalRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/encurtador': typeof AuthenticatedEncurtadorRoute
-  '/higienizacao': typeof AuthenticatedHigienizacaoRoute
-  '/historico': typeof AuthenticatedHistoricoRoute
-  '/nova-campanha': typeof AuthenticatedNovaCampanhaRoute
-  '/painel': typeof AuthenticatedPainelRoute
-  '/recarga': typeof AuthenticatedRecargaRoute
   '/r/$slug': typeof RSlugRoute
-  '/admin/campanhas': typeof AuthenticatedAdminCampanhasRoute
-  '/admin/infobip': typeof AuthenticatedAdminInfobipRoute
-  '/admin/landing': typeof AuthenticatedAdminLandingRoute
-  '/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
-  '/admin/templates': typeof AuthenticatedAdminTemplatesRoute
-  '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
-  '/admin/valores': typeof AuthenticatedAdminValoresRoute
-  '/admin/wa-templates': typeof AuthenticatedAdminWaTemplatesRoute
-  '/api/public/hooks/auto-dispatch': typeof ApiPublicHooksAutoDispatchRoute
-  '/api/public/webhooks/infobip': typeof ApiPublicWebhooksInfobipRoute
-  '/api/public/webhooks/payment': typeof ApiPublicWebhooksPaymentRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
-  '/area': typeof AreaRoute
   '/auth': typeof AuthRoute
   '/login': typeof LoginRoute
   '/portal': typeof PortalRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/_authenticated/encurtador': typeof AuthenticatedEncurtadorRoute
-  '/_authenticated/higienizacao': typeof AuthenticatedHigienizacaoRoute
-  '/_authenticated/historico': typeof AuthenticatedHistoricoRoute
-  '/_authenticated/nova-campanha': typeof AuthenticatedNovaCampanhaRoute
-  '/_authenticated/painel': typeof AuthenticatedPainelRoute
-  '/_authenticated/recarga': typeof AuthenticatedRecargaRoute
   '/r/$slug': typeof RSlugRoute
-  '/_authenticated/admin/campanhas': typeof AuthenticatedAdminCampanhasRoute
-  '/_authenticated/admin/infobip': typeof AuthenticatedAdminInfobipRoute
-  '/_authenticated/admin/landing': typeof AuthenticatedAdminLandingRoute
-  '/_authenticated/admin/pedidos': typeof AuthenticatedAdminPedidosRoute
-  '/_authenticated/admin/templates': typeof AuthenticatedAdminTemplatesRoute
-  '/_authenticated/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
-  '/_authenticated/admin/valores': typeof AuthenticatedAdminValoresRoute
-  '/_authenticated/admin/wa-templates': typeof AuthenticatedAdminWaTemplatesRoute
-  '/api/public/hooks/auto-dispatch': typeof ApiPublicHooksAutoDispatchRoute
-  '/api/public/webhooks/infobip': typeof ApiPublicWebhooksInfobipRoute
-  '/api/public/webhooks/payment': typeof ApiPublicWebhooksPaymentRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/area'
     | '/auth'
     | '/login'
     | '/portal'
     | '/reset-password'
-    | '/admin'
     | '/encurtador'
-    | '/higienizacao'
-    | '/historico'
-    | '/nova-campanha'
-    | '/painel'
-    | '/recarga'
     | '/r/$slug'
-    | '/admin/campanhas'
-    | '/admin/infobip'
-    | '/admin/landing'
-    | '/admin/pedidos'
-    | '/admin/templates'
-    | '/admin/usuarios'
-    | '/admin/valores'
-    | '/admin/wa-templates'
-    | '/api/public/hooks/auto-dispatch'
-    | '/api/public/webhooks/infobip'
-    | '/api/public/webhooks/payment'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/area'
     | '/auth'
     | '/login'
     | '/portal'
     | '/reset-password'
-    | '/admin'
     | '/encurtador'
-    | '/higienizacao'
-    | '/historico'
-    | '/nova-campanha'
-    | '/painel'
-    | '/recarga'
     | '/r/$slug'
-    | '/admin/campanhas'
-    | '/admin/infobip'
-    | '/admin/landing'
-    | '/admin/pedidos'
-    | '/admin/templates'
-    | '/admin/usuarios'
-    | '/admin/valores'
-    | '/admin/wa-templates'
-    | '/api/public/hooks/auto-dispatch'
-    | '/api/public/webhooks/infobip'
-    | '/api/public/webhooks/payment'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
-    | '/area'
     | '/auth'
     | '/login'
     | '/portal'
     | '/reset-password'
-    | '/_authenticated/admin'
     | '/_authenticated/encurtador'
-    | '/_authenticated/higienizacao'
-    | '/_authenticated/historico'
-    | '/_authenticated/nova-campanha'
-    | '/_authenticated/painel'
-    | '/_authenticated/recarga'
     | '/r/$slug'
-    | '/_authenticated/admin/campanhas'
-    | '/_authenticated/admin/infobip'
-    | '/_authenticated/admin/landing'
-    | '/_authenticated/admin/pedidos'
-    | '/_authenticated/admin/templates'
-    | '/_authenticated/admin/usuarios'
-    | '/_authenticated/admin/valores'
-    | '/_authenticated/admin/wa-templates'
-    | '/api/public/hooks/auto-dispatch'
-    | '/api/public/webhooks/infobip'
-    | '/api/public/webhooks/payment'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
-  AreaRoute: typeof AreaRoute
   AuthRoute: typeof AuthRoute
   LoginRoute: typeof LoginRoute
   PortalRoute: typeof PortalRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   RSlugRoute: typeof RSlugRoute
-  ApiPublicHooksAutoDispatchRoute: typeof ApiPublicHooksAutoDispatchRoute
-  ApiPublicWebhooksInfobipRoute: typeof ApiPublicWebhooksInfobipRoute
-  ApiPublicWebhooksPaymentRoute: typeof ApiPublicWebhooksPaymentRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -391,13 +158,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/area': {
-      id: '/area'
-      path: '/area'
-      fullPath: '/area'
-      preLoaderRoute: typeof AreaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_authenticated': {
       id: '/_authenticated'
       path: ''
@@ -419,41 +179,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/recarga': {
-      id: '/_authenticated/recarga'
-      path: '/recarga'
-      fullPath: '/recarga'
-      preLoaderRoute: typeof AuthenticatedRecargaRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/painel': {
-      id: '/_authenticated/painel'
-      path: '/painel'
-      fullPath: '/painel'
-      preLoaderRoute: typeof AuthenticatedPainelRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/nova-campanha': {
-      id: '/_authenticated/nova-campanha'
-      path: '/nova-campanha'
-      fullPath: '/nova-campanha'
-      preLoaderRoute: typeof AuthenticatedNovaCampanhaRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/historico': {
-      id: '/_authenticated/historico'
-      path: '/historico'
-      fullPath: '/historico'
-      preLoaderRoute: typeof AuthenticatedHistoricoRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/higienizacao': {
-      id: '/_authenticated/higienizacao'
-      path: '/higienizacao'
-      fullPath: '/higienizacao'
-      preLoaderRoute: typeof AuthenticatedHigienizacaoRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/encurtador': {
       id: '/_authenticated/encurtador'
       path: '/encurtador'
@@ -461,139 +186,15 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEncurtadorRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/admin': {
-      id: '/_authenticated/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AuthenticatedAdminRouteRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/admin/wa-templates': {
-      id: '/_authenticated/admin/wa-templates'
-      path: '/wa-templates'
-      fullPath: '/admin/wa-templates'
-      preLoaderRoute: typeof AuthenticatedAdminWaTemplatesRouteImport
-      parentRoute: typeof AuthenticatedAdminRouteRoute
-    }
-    '/_authenticated/admin/valores': {
-      id: '/_authenticated/admin/valores'
-      path: '/valores'
-      fullPath: '/admin/valores'
-      preLoaderRoute: typeof AuthenticatedAdminValoresRouteImport
-      parentRoute: typeof AuthenticatedAdminRouteRoute
-    }
-    '/_authenticated/admin/usuarios': {
-      id: '/_authenticated/admin/usuarios'
-      path: '/usuarios'
-      fullPath: '/admin/usuarios'
-      preLoaderRoute: typeof AuthenticatedAdminUsuariosRouteImport
-      parentRoute: typeof AuthenticatedAdminRouteRoute
-    }
-    '/_authenticated/admin/templates': {
-      id: '/_authenticated/admin/templates'
-      path: '/templates'
-      fullPath: '/admin/templates'
-      preLoaderRoute: typeof AuthenticatedAdminTemplatesRouteImport
-      parentRoute: typeof AuthenticatedAdminRouteRoute
-    }
-    '/_authenticated/admin/pedidos': {
-      id: '/_authenticated/admin/pedidos'
-      path: '/pedidos'
-      fullPath: '/admin/pedidos'
-      preLoaderRoute: typeof AuthenticatedAdminPedidosRouteImport
-      parentRoute: typeof AuthenticatedAdminRouteRoute
-    }
-    '/_authenticated/admin/landing': {
-      id: '/_authenticated/admin/landing'
-      path: '/landing'
-      fullPath: '/admin/landing'
-      preLoaderRoute: typeof AuthenticatedAdminLandingRouteImport
-      parentRoute: typeof AuthenticatedAdminRouteRoute
-    }
-    '/_authenticated/admin/infobip': {
-      id: '/_authenticated/admin/infobip'
-      path: '/infobip'
-      fullPath: '/admin/infobip'
-      preLoaderRoute: typeof AuthenticatedAdminInfobipRouteImport
-      parentRoute: typeof AuthenticatedAdminRouteRoute
-    }
-    '/_authenticated/admin/campanhas': {
-      id: '/_authenticated/admin/campanhas'
-      path: '/campanhas'
-      fullPath: '/admin/campanhas'
-      preLoaderRoute: typeof AuthenticatedAdminCampanhasRouteImport
-      parentRoute: typeof AuthenticatedAdminRouteRoute
-    }
-    '/api/public/webhooks/payment': {
-      id: '/api/public/webhooks/payment'
-      path: '/api/public/webhooks/payment'
-      fullPath: '/api/public/webhooks/payment'
-      preLoaderRoute: typeof ApiPublicWebhooksPaymentRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/webhooks/infobip': {
-      id: '/api/public/webhooks/infobip'
-      path: '/api/public/webhooks/infobip'
-      fullPath: '/api/public/webhooks/infobip'
-      preLoaderRoute: typeof ApiPublicWebhooksInfobipRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/hooks/auto-dispatch': {
-      id: '/api/public/hooks/auto-dispatch'
-      path: '/api/public/hooks/auto-dispatch'
-      fullPath: '/api/public/hooks/auto-dispatch'
-      preLoaderRoute: typeof ApiPublicHooksAutoDispatchRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
-
-interface AuthenticatedAdminRouteRouteChildren {
-  AuthenticatedAdminCampanhasRoute: typeof AuthenticatedAdminCampanhasRoute
-  AuthenticatedAdminInfobipRoute: typeof AuthenticatedAdminInfobipRoute
-  AuthenticatedAdminLandingRoute: typeof AuthenticatedAdminLandingRoute
-  AuthenticatedAdminPedidosRoute: typeof AuthenticatedAdminPedidosRoute
-  AuthenticatedAdminTemplatesRoute: typeof AuthenticatedAdminTemplatesRoute
-  AuthenticatedAdminUsuariosRoute: typeof AuthenticatedAdminUsuariosRoute
-  AuthenticatedAdminValoresRoute: typeof AuthenticatedAdminValoresRoute
-  AuthenticatedAdminWaTemplatesRoute: typeof AuthenticatedAdminWaTemplatesRoute
-}
-
-const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren =
-  {
-    AuthenticatedAdminCampanhasRoute: AuthenticatedAdminCampanhasRoute,
-    AuthenticatedAdminInfobipRoute: AuthenticatedAdminInfobipRoute,
-    AuthenticatedAdminLandingRoute: AuthenticatedAdminLandingRoute,
-    AuthenticatedAdminPedidosRoute: AuthenticatedAdminPedidosRoute,
-    AuthenticatedAdminTemplatesRoute: AuthenticatedAdminTemplatesRoute,
-    AuthenticatedAdminUsuariosRoute: AuthenticatedAdminUsuariosRoute,
-    AuthenticatedAdminValoresRoute: AuthenticatedAdminValoresRoute,
-    AuthenticatedAdminWaTemplatesRoute: AuthenticatedAdminWaTemplatesRoute,
-  }
-
-const AuthenticatedAdminRouteRouteWithChildren =
-  AuthenticatedAdminRouteRoute._addFileChildren(
-    AuthenticatedAdminRouteRouteChildren,
-  )
 
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedAdminRouteRoute: typeof AuthenticatedAdminRouteRouteWithChildren
   AuthenticatedEncurtadorRoute: typeof AuthenticatedEncurtadorRoute
-  AuthenticatedHigienizacaoRoute: typeof AuthenticatedHigienizacaoRoute
-  AuthenticatedHistoricoRoute: typeof AuthenticatedHistoricoRoute
-  AuthenticatedNovaCampanhaRoute: typeof AuthenticatedNovaCampanhaRoute
-  AuthenticatedPainelRoute: typeof AuthenticatedPainelRoute
-  AuthenticatedRecargaRoute: typeof AuthenticatedRecargaRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedAdminRouteRoute: AuthenticatedAdminRouteRouteWithChildren,
   AuthenticatedEncurtadorRoute: AuthenticatedEncurtadorRoute,
-  AuthenticatedHigienizacaoRoute: AuthenticatedHigienizacaoRoute,
-  AuthenticatedHistoricoRoute: AuthenticatedHistoricoRoute,
-  AuthenticatedNovaCampanhaRoute: AuthenticatedNovaCampanhaRoute,
-  AuthenticatedPainelRoute: AuthenticatedPainelRoute,
-  AuthenticatedRecargaRoute: AuthenticatedRecargaRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -602,26 +203,12 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
-  AreaRoute: AreaRoute,
   AuthRoute: AuthRoute,
   LoginRoute: LoginRoute,
   PortalRoute: PortalRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   RSlugRoute: RSlugRoute,
-  ApiPublicHooksAutoDispatchRoute: ApiPublicHooksAutoDispatchRoute,
-  ApiPublicWebhooksInfobipRoute: ApiPublicWebhooksInfobipRoute,
-  ApiPublicWebhooksPaymentRoute: ApiPublicWebhooksPaymentRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

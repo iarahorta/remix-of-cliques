@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Lock, CheckCircle2 } from "lucide-react";
 
 export const Route = createFileRoute("/reset-password")({
-  head: () => ({ meta: [{ title: "Redefinir senha — HS Assessoria" }] }),
+  head: () => ({ meta: [{ title: "Redefinir senha — cliques" }, { name: "robots", content: "noindex,nofollow" }] }),
   component: ResetPasswordPage,
 });
 
@@ -18,7 +18,6 @@ function ResetPasswordPage() {
   const [done, setDone] = useState(false);
 
   useEffect(() => {
-    // Supabase recovery link drops tokens in the URL hash; the client picks them up automatically.
     const sub = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN" || event === "INITIAL_SESSION") {
         setReady(true);
@@ -42,55 +41,55 @@ function ResetPasswordPage() {
     setLoading(false);
     if (error) return setError(error.message);
     setDone(true);
-    setTimeout(() => navigate({ to: "/painel" }), 1500);
+    setTimeout(() => navigate({ to: "/encurtador" }), 1500);
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-4 py-10 bg-background">
-      <div className="w-full max-w-md card-premium p-6 md:p-8">
+    <main className="min-h-screen flex items-center justify-center px-4 py-10 bg-slate-50">
+      <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl shadow-sm p-6 md:p-8">
         <div className="flex items-center gap-2 mb-4">
-          <Lock className="h-5 w-5 text-[oklch(0.78_0.14_75)]" />
-          <h1 className="text-xl font-semibold">Definir nova senha</h1>
+          <Lock className="h-5 w-5 text-[#0b3d91]" />
+          <h1 className="text-xl font-semibold text-slate-900">Definir nova senha</h1>
         </div>
 
         {done ? (
-          <div className="flex items-center gap-2 text-sm text-emerald-500">
+          <div className="flex items-center gap-2 text-sm text-emerald-600">
             <CheckCircle2 className="h-4 w-4" /> Senha atualizada! Redirecionando…
           </div>
         ) : !ready ? (
-          <p className="text-sm text-muted-foreground flex items-center gap-2">
+          <p className="text-sm text-slate-500 flex items-center gap-2">
             <Loader2 className="h-4 w-4 animate-spin" />
             Validando link de redefinição…
           </p>
         ) : (
           <form onSubmit={submit} className="space-y-3">
             <div>
-              <label className="text-xs font-medium text-muted-foreground">Nova senha</label>
+              <label className="text-xs font-medium text-slate-600">Nova senha</label>
               <input
                 type="password"
                 value={pwd}
                 onChange={(e) => setPwd(e.target.value)}
-                className="w-full mt-1 rounded-lg bg-input border border-border px-3 py-2.5 text-sm"
+                className="w-full mt-1 rounded-lg bg-white border border-slate-300 px-3 py-2.5 text-sm focus:border-[#0b3d91] focus:ring-2 focus:ring-sky-100 outline-none"
                 autoComplete="new-password"
                 required
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground">Confirmar senha</label>
+              <label className="text-xs font-medium text-slate-600">Confirmar senha</label>
               <input
                 type="password"
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
-                className="w-full mt-1 rounded-lg bg-input border border-border px-3 py-2.5 text-sm"
+                className="w-full mt-1 rounded-lg bg-white border border-slate-300 px-3 py-2.5 text-sm focus:border-[#0b3d91] focus:ring-2 focus:ring-sky-100 outline-none"
                 autoComplete="new-password"
                 required
               />
             </div>
-            {error && <p className="text-xs text-destructive">{error}</p>}
+            {error && <p className="text-xs text-red-600">{error}</p>}
             <button
               type="submit"
               disabled={loading}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-gold-metal px-4 py-2.5 text-sm font-semibold disabled:opacity-60"
+              className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-[#0b3d91] hover:bg-[#0a3582] text-white px-4 py-2.5 text-sm font-semibold disabled:opacity-60"
             >
               {loading && <Loader2 className="h-4 w-4 animate-spin" />}
               Salvar nova senha
