@@ -1,0 +1,2 @@
+UPDATE public.app_settings SET value = jsonb_set(coalesce(value,'{}'::jsonb), '{domain}', '"cliques.site"') WHERE key = 'short_link';
+INSERT INTO public.app_settings(key, value) SELECT 'short_link', '{"domain":"cliques.site"}'::jsonb WHERE NOT EXISTS (SELECT 1 FROM public.app_settings WHERE key='short_link');

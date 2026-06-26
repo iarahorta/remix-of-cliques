@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.bump_short_link_click(text) TO anon, authenticated, service_role;
