@@ -87,7 +87,12 @@ export const Route = createFileRoute("/api/public/links/$slug")({
             headers: { "content-type": "application/json" },
           });
 
-        const patch: Record<string, unknown> = {};
+        const patch: {
+          target_url?: string;
+          label?: string;
+          status?: string;
+          is_rotating?: boolean;
+        } = {};
         if (typeof body.target_url === "string") patch.target_url = body.target_url;
         if (typeof body.label === "string") patch.label = body.label;
         if (typeof body.status === "string") patch.status = body.status;

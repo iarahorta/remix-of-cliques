@@ -17,6 +17,8 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RSlugRouteImport } from './routes/r.$slug'
 import { Route as AuthenticatedEncurtadorRouteImport } from './routes/_authenticated/encurtador'
+import { Route as ApiPublicLinksRouteImport } from './routes/api/public/links'
+import { Route as ApiPublicLinksSlugRouteImport } from './routes/api/public/links.$slug'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -57,6 +59,16 @@ const AuthenticatedEncurtadorRoute = AuthenticatedEncurtadorRouteImport.update({
   path: '/encurtador',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicLinksRoute = ApiPublicLinksRouteImport.update({
+  id: '/api/public/links',
+  path: '/api/public/links',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicLinksSlugRoute = ApiPublicLinksSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => ApiPublicLinksRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -66,6 +78,8 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/encurtador': typeof AuthenticatedEncurtadorRoute
   '/r/$slug': typeof RSlugRoute
+  '/api/public/links': typeof ApiPublicLinksRouteWithChildren
+  '/api/public/links/$slug': typeof ApiPublicLinksSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -75,6 +89,8 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/encurtador': typeof AuthenticatedEncurtadorRoute
   '/r/$slug': typeof RSlugRoute
+  '/api/public/links': typeof ApiPublicLinksRouteWithChildren
+  '/api/public/links/$slug': typeof ApiPublicLinksSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -86,6 +102,8 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/encurtador': typeof AuthenticatedEncurtadorRoute
   '/r/$slug': typeof RSlugRoute
+  '/api/public/links': typeof ApiPublicLinksRouteWithChildren
+  '/api/public/links/$slug': typeof ApiPublicLinksSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -97,6 +115,8 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/encurtador'
     | '/r/$slug'
+    | '/api/public/links'
+    | '/api/public/links/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -106,6 +126,8 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/encurtador'
     | '/r/$slug'
+    | '/api/public/links'
+    | '/api/public/links/$slug'
   id:
     | '__root__'
     | '/'
@@ -116,6 +138,8 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_authenticated/encurtador'
     | '/r/$slug'
+    | '/api/public/links'
+    | '/api/public/links/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -126,6 +150,7 @@ export interface RootRouteChildren {
   PortalRoute: typeof PortalRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   RSlugRoute: typeof RSlugRoute
+  ApiPublicLinksRoute: typeof ApiPublicLinksRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -186,6 +211,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEncurtadorRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/links': {
+      id: '/api/public/links'
+      path: '/api/public/links'
+      fullPath: '/api/public/links'
+      preLoaderRoute: typeof ApiPublicLinksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/links/$slug': {
+      id: '/api/public/links/$slug'
+      path: '/$slug'
+      fullPath: '/api/public/links/$slug'
+      preLoaderRoute: typeof ApiPublicLinksSlugRouteImport
+      parentRoute: typeof ApiPublicLinksRoute
+    }
   }
 }
 
@@ -200,6 +239,18 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface ApiPublicLinksRouteChildren {
+  ApiPublicLinksSlugRoute: typeof ApiPublicLinksSlugRoute
+}
+
+const ApiPublicLinksRouteChildren: ApiPublicLinksRouteChildren = {
+  ApiPublicLinksSlugRoute: ApiPublicLinksSlugRoute,
+}
+
+const ApiPublicLinksRouteWithChildren = ApiPublicLinksRoute._addFileChildren(
+  ApiPublicLinksRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
@@ -208,17 +259,8 @@ const rootRouteChildren: RootRouteChildren = {
   PortalRoute: PortalRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   RSlugRoute: RSlugRoute,
+  ApiPublicLinksRoute: ApiPublicLinksRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
