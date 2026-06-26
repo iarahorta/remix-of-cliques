@@ -550,7 +550,7 @@ export type Database = {
           status: string
           target_url: string | null
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           click_count?: number
@@ -565,7 +565,7 @@ export type Database = {
           status?: string
           target_url?: string | null
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           click_count?: number
@@ -580,7 +580,7 @@ export type Database = {
           status?: string
           target_url?: string | null
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }

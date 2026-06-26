@@ -1,0 +1,1 @@
+ALTER TABLE public.short_links ALTER COLUMN user_id DROP NOT NULL;
