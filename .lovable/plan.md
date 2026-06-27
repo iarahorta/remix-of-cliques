@@ -1,7 +1,10 @@
-Apontar o slug `kk44pd` para `https://www.metodospark.com/DA2`.
+Plano para resolver agora:
 
-Passos:
-1. Verificar se `kk44pd` já existe na tabela `short_links`.
-2. Se existir: `UPDATE short_links SET target_url='https://www.metodospark.com/DA2', is_rotating=false, status='active' WHERE slug='kk44pd'` e limpar `short_link_urls` desse id.
-3. Se não existir: `INSERT INTO short_links (slug, target_url, status, is_rotating) VALUES ('kk44pd', 'https://www.metodospark.com/DA2', 'active', false)`.
-4. Testar com curl que `https://cliques.site/r/kk44pd` retorna 302 → destino correto.
+1. Gerar uma nova `CLIQUES_API_KEY`.
+2. Salvar essa nova chave no secret `CLIQUES_API_KEY`, substituindo a anterior.
+3. Criar uma forma prática de você usar a chave no projeto HS sem depender do botão de copiar dessa tela:
+   - opção segura recomendada: eu abro o formulário de atualização de secret no projeto HS e você cola/define a mesma chave lá;
+   - se você preferir, posso também criar temporariamente um endpoint interno protegido/one-time para mostrar a chave recém-gerada uma única vez, e depois remover esse endpoint.
+4. Validar que a API do cliques continua respondendo com a nova chave.
+
+Observação importante: não dá para revelar/copiar um secret já salvo nessa tela porque ele é write-only. A solução é rotacionar para um novo valor e inserir esse novo valor no HS.
