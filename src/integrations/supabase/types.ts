@@ -584,6 +584,24 @@ export type Database = {
         }
         Relationships: []
       }
+      used_slugs: {
+        Row: {
+          first_used_at: string
+          short_link_id: string | null
+          slug: string
+        }
+        Insert: {
+          first_used_at?: string
+          short_link_id?: string | null
+          slug: string
+        }
+        Update: {
+          first_used_at?: string
+          short_link_id?: string | null
+          slug?: string
+        }
+        Relationships: []
+      }
       user_permissions: {
         Row: {
           created_at: string
