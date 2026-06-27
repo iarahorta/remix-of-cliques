@@ -212,8 +212,8 @@ function LinkRow({ link, host, selected, onToggle, onEdit, onChange }: {
           </p>
           <div className="mt-1.5 flex items-center gap-3 text-[11px] text-muted-foreground">
             <span>{link.click_count} cliques</span>
-            <span>· criado {new Date(link.created_at).toLocaleDateString("pt-BR")}</span>
-            {link.last_clicked_at && <span>· último: {new Date(link.last_clicked_at).toLocaleString("pt-BR")}</span>}
+            <span>· criado {new Date(link.created_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+            {link.last_clicked_at && <span>· último: {new Date(link.last_clicked_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}</span>}
           </div>
         </div>
         <div className="flex items-center gap-1 shrink-0">
