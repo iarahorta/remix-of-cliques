@@ -99,11 +99,27 @@ export const Route = createFileRoute("/api/public/links")({
             status: string;
           }> = [];
           const seen = new Set<string>();
-          while (rows.length < count) {
-            const slug = (prefix + genSlug(len)).toLowerCase();
-            if (seen.has(slug)) continue;
-            seen.add(slug);
-            rows.push({ slug, target_url, label, status: "active" });
+          let attempts = 0;
+          const maxAttempts = count * 20;
+          while (rows.length < count && attempts < maxAttempts) {
+            attempts++;
+            const candidate = (prefix + genSlug(len)).toLowerCase();
+            if (seen.has(candidate)) continue;
+            // Pre-check history table so we never collide with a previously used slug
+            const { data: used } = await supabaseAdmin
+              .from("used_slugs")
+              .select("slug")
+              .eq("slug", candidate)
+              .maybeSingle();
+            if (used) continue;
+            seen.add(candidate);
+            rows.push({ slug: candidate, target_url, label, status: "active" });
+          }
+          if (rows.length < count) {
+            return new Response(
+              JSON.stringify({ error: "could_not_generate_unique_slugs", generated: rows.length }),
+              { status: 500, headers: { "content-type": "application/json" } }
+            );
           }
           const { data, error } = await supabaseAdmin
             .from("short_links")
