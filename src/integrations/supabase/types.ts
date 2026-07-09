@@ -504,6 +504,56 @@ export type Database = {
         }
         Relationships: []
       }
+      short_link_clicks: {
+        Row: {
+          city: string | null
+          country: string | null
+          created_at: string
+          id: string
+          ip: string | null
+          referer: string | null
+          region: string | null
+          short_link_id: string
+          slug: string
+          target_url: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          id?: string
+          ip?: string | null
+          referer?: string | null
+          region?: string | null
+          short_link_id: string
+          slug: string
+          target_url?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          id?: string
+          ip?: string | null
+          referer?: string | null
+          region?: string | null
+          short_link_id?: string
+          slug?: string
+          target_url?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "short_link_clicks_short_link_id_fkey"
+            columns: ["short_link_id"]
+            isOneToOne: false
+            referencedRelation: "short_links"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       short_link_urls: {
         Row: {
           created_at: string
