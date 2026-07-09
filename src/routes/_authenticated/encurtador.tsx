@@ -739,9 +739,9 @@ function MetricsModal({ link, onClose }: { link: ShortLink; onClose: () => void 
                   </tr>
                 </thead>
                 <tbody>
-                  {clicks!.length === 0 ? (
-                    <tr><td colSpan={6} className="px-3 py-6 text-center text-muted-foreground">Nenhum clique ainda.</td></tr>
-                  ) : clicks!.map(c => (
+                  {filtered.length === 0 ? (
+                    <tr><td colSpan={6} className="px-3 py-6 text-center text-muted-foreground">{clicks!.length === 0 ? "Nenhum clique ainda." : "Nenhum clique corresponde ao filtro."}</td></tr>
+                  ) : filtered.map(c => (
                     <tr key={c.id} className="border-t border-border">
                       <td className="px-3 py-2 font-mono whitespace-nowrap">
                         {new Date(c.created_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" })}
