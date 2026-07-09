@@ -563,6 +563,7 @@ interface ClickRow {
 function MetricsModal({ link, onClose }: { link: ShortLink; onClose: () => void }) {
   const [clicks, setClicks] = useState<ClickRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [filter, setFilter] = useState("");
 
   useEffect(() => {
     (async () => {
