@@ -547,3 +547,157 @@ function NumField({ label, value, onChange, min, max }: { label: string; value: 
     </label>
   );
 }
+
+interface ClickRow {
+  id: string;
+  created_at: string;
+  ip: string | null;
+  country: string | null;
+  region: string | null;
+  city: string | null;
+  user_agent: string | null;
+  referer: string | null;
+  target_url: string | null;
+}
+
+function MetricsModal({ link, onClose }: { link: ShortLink; onClose: () => void }) {
+  const [clicks, setClicks] = useState<ClickRow[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data, error } = await supabase
+        .from("short_link_clicks")
+        .select("id,created_at,ip,country,region,city,user_agent,referer,target_url")
+        .eq("short_link_id", link.id)
+        .order("created_at", { ascending: false })
+        .limit(500);
+      if (error) setError(error.message);
+      else setClicks((data as ClickRow[]) ?? []);
+    })();
+  }, [link.id]);
+
+  const stats = useMemo(() => {
+    if (!clicks) return null;
+    const byCountry = new Map<string, number>();
+    const byDay = new Map<string, number>();
+    const uniqueIps = new Set<string>();
+    for (const c of clicks) {
+      const k = c.country || "—";
+      byCountry.set(k, (byCountry.get(k) ?? 0) + 1);
+      const d = new Date(c.created_at).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+      byDay.set(d, (byDay.get(d) ?? 0) + 1);
+      if (c.ip) uniqueIps.add(c.ip);
+    }
+    return {
+      total: clicks.length,
+      uniqueIps: uniqueIps.size,
+      countries: [...byCountry.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6),
+      days: [...byDay.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6),
+    };
+  }, [clicks]);
+
+  const parseUA = (ua: string | null) => {
+    if (!ua) return "—";
+    if (/WhatsApp/i.test(ua)) return "WhatsApp";
+    if (/Instagram/i.test(ua)) return "Instagram";
+    if (/FBAN|FBAV|Facebook/i.test(ua)) return "Facebook";
+    if (/iPhone|iPad/i.test(ua)) return "iOS";
+    if (/Android/i.test(ua)) return "Android";
+    if (/Windows/i.test(ua)) return "Windows";
+    if (/Mac OS/i.test(ua)) return "macOS";
+    if (/Linux/i.test(ua)) return "Linux";
+    return "Outro";
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
+      <div className="card-premium p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="font-display text-xl">Métricas · /r/{link.slug}</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">Últimos 500 cliques com IP, localização e dispositivo</p>
+          </div>
+          <button onClick={onClose} className="p-1 rounded hover:bg-secondary"><X className="h-4 w-4" /></button>
+        </div>
+
+        {error && <p className="text-sm text-destructive">{error}</p>}
+        {!clicks && !error && (
+          <div className="py-10 flex justify-center"><Loader2 className="h-6 w-6 animate-spin text-[oklch(0.75_0.13_75)]" /></div>
+        )}
+
+        {stats && (
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+              <StatCard label="Cliques" value={stats.total.toString()} />
+              <StatCard label="IPs únicos" value={stats.uniqueIps.toString()} />
+              <StatCard label="Países" value={stats.countries.length.toString()} />
+              <StatCard label="Dias ativos" value={stats.days.length.toString()} />
+            </div>
+
+            {stats.countries.length > 0 && (
+              <div className="grid md:grid-cols-2 gap-4 mb-5">
+                <div className="rounded-lg border border-border p-3">
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Top países</div>
+                  <ul className="space-y-1 text-sm">
+                    {stats.countries.map(([c, n]) => (
+                      <li key={c} className="flex justify-between"><span className="font-mono">{c}</span><span className="text-muted-foreground">{n}</span></li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="rounded-lg border border-border p-3">
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Top dias</div>
+                  <ul className="space-y-1 text-sm">
+                    {stats.days.map(([d, n]) => (
+                      <li key={d} className="flex justify-between"><span className="font-mono">{d}</span><span className="text-muted-foreground">{n}</span></li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
+
+            <div className="overflow-x-auto rounded-lg border border-border">
+              <table className="w-full text-xs">
+                <thead className="bg-secondary/50 text-muted-foreground">
+                  <tr>
+                    <th className="text-left px-3 py-2 font-medium">Data (BR)</th>
+                    <th className="text-left px-3 py-2 font-medium">IP</th>
+                    <th className="text-left px-3 py-2 font-medium">Local</th>
+                    <th className="text-left px-3 py-2 font-medium">Dispositivo</th>
+                    <th className="text-left px-3 py-2 font-medium">Origem</th>
+                    <th className="text-left px-3 py-2 font-medium">Destino</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {clicks!.length === 0 ? (
+                    <tr><td colSpan={6} className="px-3 py-6 text-center text-muted-foreground">Nenhum clique ainda.</td></tr>
+                  ) : clicks!.map(c => (
+                    <tr key={c.id} className="border-t border-border">
+                      <td className="px-3 py-2 font-mono whitespace-nowrap">
+                        {new Date(c.created_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                      </td>
+                      <td className="px-3 py-2 font-mono">{c.ip ?? "—"}</td>
+                      <td className="px-3 py-2">{[c.city, c.region, c.country].filter(Boolean).join(", ") || "—"}</td>
+                      <td className="px-3 py-2">{parseUA(c.user_agent)}</td>
+                      <td className="px-3 py-2 max-w-[160px] truncate" title={c.referer ?? ""}>{c.referer ?? "—"}</td>
+                      <td className="px-3 py-2 max-w-[200px] truncate" title={c.target_url ?? ""}>{c.target_url ?? "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function StatCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-border p-3 bg-secondary/30">
+      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="text-2xl font-display mt-1">{value}</div>
+    </div>
+  );
+}
