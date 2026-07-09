@@ -578,26 +578,6 @@ function MetricsModal({ link, onClose }: { link: ShortLink; onClose: () => void 
     })();
   }, [link.id]);
 
-  const stats = useMemo(() => {
-    if (!clicks) return null;
-    const byCountry = new Map<string, number>();
-    const byDay = new Map<string, number>();
-    const uniqueIps = new Set<string>();
-    for (const c of clicks) {
-      const k = c.country || "—";
-      byCountry.set(k, (byCountry.get(k) ?? 0) + 1);
-      const d = new Date(c.created_at).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
-      byDay.set(d, (byDay.get(d) ?? 0) + 1);
-      if (c.ip) uniqueIps.add(c.ip);
-    }
-    return {
-      total: clicks.length,
-      uniqueIps: uniqueIps.size,
-      countries: [...byCountry.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6),
-      days: [...byDay.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6),
-    };
-  }, [clicks]);
-
   const parseUA = (ua: string | null) => {
     if (!ua) return "—";
     if (/WhatsApp/i.test(ua)) return "WhatsApp";
@@ -609,6 +589,73 @@ function MetricsModal({ link, onClose }: { link: ShortLink; onClose: () => void 
     if (/Mac OS/i.test(ua)) return "macOS";
     if (/Linux/i.test(ua)) return "Linux";
     return "Outro";
+  };
+
+  const filtered = useMemo(() => {
+    if (!clicks) return [];
+    const q = filter.trim().toLowerCase();
+    if (!q) return clicks;
+    return clicks.filter(c => {
+      const hay = [
+        c.ip, c.country, c.region, c.city, c.referer, c.target_url,
+        parseUA(c.user_agent),
+        new Date(c.created_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }),
+      ].filter(Boolean).join(" ").toLowerCase();
+      return hay.includes(q);
+    });
+  }, [clicks, filter]);
+
+  const stats = useMemo(() => {
+    if (!clicks) return null;
+    const byCountry = new Map<string, number>();
+    const byDay = new Map<string, number>();
+    const uniqueIps = new Set<string>();
+    for (const c of filtered) {
+      const k = c.country || "—";
+      byCountry.set(k, (byCountry.get(k) ?? 0) + 1);
+      const d = new Date(c.created_at).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+      byDay.set(d, (byDay.get(d) ?? 0) + 1);
+      if (c.ip) uniqueIps.add(c.ip);
+    }
+    return {
+      total: filtered.length,
+      uniqueIps: uniqueIps.size,
+      countries: [...byCountry.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6),
+      days: [...byDay.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6),
+    };
+  }, [clicks, filtered]);
+
+  const exportCsv = () => {
+    const headers = ["data_iso", "data_br", "ip", "pais", "regiao", "cidade", "dispositivo", "user_agent", "origem", "destino"];
+    const esc = (v: unknown) => {
+      const s = v == null ? "" : String(v);
+      return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const lines = [headers.join(",")];
+    for (const c of filtered) {
+      lines.push([
+        c.created_at,
+        new Date(c.created_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }),
+        c.ip ?? "",
+        c.country ?? "",
+        c.region ?? "",
+        c.city ?? "",
+        parseUA(c.user_agent),
+        c.user_agent ?? "",
+        c.referer ?? "",
+        c.target_url ?? "",
+      ].map(esc).join(","));
+    }
+    const blob = new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+    a.href = url;
+    a.download = `cliques-${link.slug}-${stamp}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   return (
