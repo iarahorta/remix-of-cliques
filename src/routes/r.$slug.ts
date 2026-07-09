@@ -20,6 +20,37 @@ export const Route = createFileRoute("/r/$slug")({
         const url = new URL(request.url);
         const fallback = `${url.origin}/portal`;
         const target = row.target && row.target.trim() ? row.target : fallback;
+
+        // Log click metadata (best-effort, non-blocking on failure)
+        try {
+          const h = request.headers;
+          const ip =
+            h.get("cf-connecting-ip") ||
+            h.get("x-real-ip") ||
+            (h.get("x-forwarded-for") || "").split(",")[0].trim() ||
+            null;
+          const { data: linkRow } = await supabaseAdmin
+            .from("short_links")
+            .select("id")
+            .eq("slug", slug)
+            .maybeSingle();
+          if (linkRow?.id) {
+            await supabaseAdmin.from("short_link_clicks").insert({
+              short_link_id: linkRow.id,
+              slug,
+              target_url: target,
+              ip,
+              country: h.get("cf-ipcountry") || null,
+              region: h.get("cf-region") || null,
+              city: h.get("cf-ipcity") || null,
+              user_agent: h.get("user-agent") || null,
+              referer: h.get("referer") || null,
+            });
+          }
+        } catch (e) {
+          console.error("click log failed", e);
+        }
+
         return new Response(null, {
           status: 302,
           headers: {
@@ -27,7 +58,6 @@ export const Route = createFileRoute("/r/$slug")({
             "cache-control": "no-store",
           },
         });
-
       },
     },
   },
