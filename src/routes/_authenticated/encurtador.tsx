@@ -42,8 +42,9 @@ function Encurtador() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [domain, setDomain] = useState<string | null>(null);
 
-  const [modal, setModal] = useState<null | "gen" | "import" | "edit" | "bulk" | "domain" | "new">(null);
+  const [modal, setModal] = useState<null | "gen" | "import" | "edit" | "bulk" | "domain" | "new" | "metrics">(null);
   const [editing, setEditing] = useState<ShortLink | null>(null);
+  const [metricsLink, setMetricsLink] = useState<ShortLink | null>(null);
 
   const getDomain = useServerFn(getShortLinkDomain);
 
