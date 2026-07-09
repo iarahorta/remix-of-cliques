@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
   Link2, Plus, Trash2, Copy, Check, ExternalLink, Loader2, Search,
-  Globe, Wand2, Upload, RefreshCw, Pencil, X, BarChart3,
+  Globe, Wand2, Upload, RefreshCw, Pencil, X, BarChart3, Download,
 } from "lucide-react";
 import { PageShell } from "@/components/page-shell";
 import { supabase } from "@/integrations/supabase/client";
