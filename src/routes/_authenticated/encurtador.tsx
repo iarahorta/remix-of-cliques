@@ -137,6 +137,7 @@ function Encurtador() {
               <LinkRow key={l.id} link={l} host={baseHost} selected={selected.has(l.id)}
                 onToggle={() => toggleOne(l.id)}
                 onEdit={() => { setEditing(l); setModal("edit"); }}
+                onMetrics={() => { setMetricsLink(l); setModal("metrics"); }}
                 onChange={load} />
             ))}
           </div>
