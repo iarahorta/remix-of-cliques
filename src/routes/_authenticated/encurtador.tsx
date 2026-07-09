@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
   Link2, Plus, Trash2, Copy, Check, ExternalLink, Loader2, Search,
-  Globe, Wand2, Upload, RefreshCw, Pencil, X, BarChart3,
+  Globe, Wand2, Upload, RefreshCw, Pencil, X, BarChart3, Download,
 } from "lucide-react";
 import { PageShell } from "@/components/page-shell";
 import { supabase } from "@/integrations/supabase/client";
@@ -563,6 +563,7 @@ interface ClickRow {
 function MetricsModal({ link, onClose }: { link: ShortLink; onClose: () => void }) {
   const [clicks, setClicks] = useState<ClickRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [filter, setFilter] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -577,26 +578,6 @@ function MetricsModal({ link, onClose }: { link: ShortLink; onClose: () => void 
     })();
   }, [link.id]);
 
-  const stats = useMemo(() => {
-    if (!clicks) return null;
-    const byCountry = new Map<string, number>();
-    const byDay = new Map<string, number>();
-    const uniqueIps = new Set<string>();
-    for (const c of clicks) {
-      const k = c.country || "—";
-      byCountry.set(k, (byCountry.get(k) ?? 0) + 1);
-      const d = new Date(c.created_at).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
-      byDay.set(d, (byDay.get(d) ?? 0) + 1);
-      if (c.ip) uniqueIps.add(c.ip);
-    }
-    return {
-      total: clicks.length,
-      uniqueIps: uniqueIps.size,
-      countries: [...byCountry.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6),
-      days: [...byDay.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6),
-    };
-  }, [clicks]);
-
   const parseUA = (ua: string | null) => {
     if (!ua) return "—";
     if (/WhatsApp/i.test(ua)) return "WhatsApp";
@@ -608,6 +589,73 @@ function MetricsModal({ link, onClose }: { link: ShortLink; onClose: () => void 
     if (/Mac OS/i.test(ua)) return "macOS";
     if (/Linux/i.test(ua)) return "Linux";
     return "Outro";
+  };
+
+  const filtered = useMemo(() => {
+    if (!clicks) return [];
+    const q = filter.trim().toLowerCase();
+    if (!q) return clicks;
+    return clicks.filter(c => {
+      const hay = [
+        c.ip, c.country, c.region, c.city, c.referer, c.target_url,
+        parseUA(c.user_agent),
+        new Date(c.created_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }),
+      ].filter(Boolean).join(" ").toLowerCase();
+      return hay.includes(q);
+    });
+  }, [clicks, filter]);
+
+  const stats = useMemo(() => {
+    if (!clicks) return null;
+    const byCountry = new Map<string, number>();
+    const byDay = new Map<string, number>();
+    const uniqueIps = new Set<string>();
+    for (const c of filtered) {
+      const k = c.country || "—";
+      byCountry.set(k, (byCountry.get(k) ?? 0) + 1);
+      const d = new Date(c.created_at).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+      byDay.set(d, (byDay.get(d) ?? 0) + 1);
+      if (c.ip) uniqueIps.add(c.ip);
+    }
+    return {
+      total: filtered.length,
+      uniqueIps: uniqueIps.size,
+      countries: [...byCountry.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6),
+      days: [...byDay.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6),
+    };
+  }, [clicks, filtered]);
+
+  const exportCsv = () => {
+    const headers = ["data_iso", "data_br", "ip", "pais", "regiao", "cidade", "dispositivo", "user_agent", "origem", "destino"];
+    const esc = (v: unknown) => {
+      const s = v == null ? "" : String(v);
+      return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const lines = [headers.join(",")];
+    for (const c of filtered) {
+      lines.push([
+        c.created_at,
+        new Date(c.created_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }),
+        c.ip ?? "",
+        c.country ?? "",
+        c.region ?? "",
+        c.city ?? "",
+        parseUA(c.user_agent),
+        c.user_agent ?? "",
+        c.referer ?? "",
+        c.target_url ?? "",
+      ].map(esc).join(","));
+    }
+    const blob = new Blob(["\uFEFF" + lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+    a.href = url;
+    a.download = `cliques-${link.slug}-${stamp}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -633,6 +681,28 @@ function MetricsModal({ link, onClose }: { link: ShortLink; onClose: () => void 
               <StatCard label="IPs únicos" value={stats.uniqueIps.toString()} />
               <StatCard label="Países" value={stats.countries.length.toString()} />
               <StatCard label="Dias ativos" value={stats.days.length.toString()} />
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-2 mb-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <input
+                  type="text"
+                  value={filter}
+                  onChange={e => setFilter(e.target.value)}
+                  placeholder="Filtrar por IP, país, cidade, origem, destino, dispositivo…"
+                  className="w-full rounded-lg bg-input border border-border pl-9 pr-3 py-2 text-sm focus:outline-none"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={exportCsv}
+                disabled={filtered.length === 0}
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-secondary/50 hover:bg-secondary px-3 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Download className="h-4 w-4" />
+                Exportar CSV ({filtered.length})
+              </button>
             </div>
 
             {stats.countries.length > 0 && (
@@ -669,9 +739,9 @@ function MetricsModal({ link, onClose }: { link: ShortLink; onClose: () => void 
                   </tr>
                 </thead>
                 <tbody>
-                  {clicks!.length === 0 ? (
-                    <tr><td colSpan={6} className="px-3 py-6 text-center text-muted-foreground">Nenhum clique ainda.</td></tr>
-                  ) : clicks!.map(c => (
+                  {filtered.length === 0 ? (
+                    <tr><td colSpan={6} className="px-3 py-6 text-center text-muted-foreground">{clicks!.length === 0 ? "Nenhum clique ainda." : "Nenhum clique corresponde ao filtro."}</td></tr>
+                  ) : filtered.map(c => (
                     <tr key={c.id} className="border-t border-border">
                       <td className="px-3 py-2 font-mono whitespace-nowrap">
                         {new Date(c.created_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" })}
