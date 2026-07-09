@@ -156,6 +156,9 @@ function Encurtador() {
       {modal === "domain" && (
         <DomainModal current={domain} onClose={() => setModal(null)} onSaved={(d) => setDomain(d)} />
       )}
+      {modal === "metrics" && metricsLink && (
+        <MetricsModal link={metricsLink} onClose={() => { setModal(null); setMetricsLink(null); }} />
+      )}
     </PageShell>
   );
 }
