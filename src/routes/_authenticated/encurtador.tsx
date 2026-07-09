@@ -219,6 +219,9 @@ function LinkRow({ link, host, selected, onToggle, onEdit, onMetrics, onChange }
           </div>
         </div>
         <div className="flex items-center gap-1 shrink-0">
+          <button onClick={onMetrics} title="Métricas" className="p-2 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground">
+            <BarChart3 className="h-4 w-4" />
+          </button>
           <button onClick={onEdit} title="Editar" className="p-2 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground">
             <Pencil className="h-4 w-4" />
           </button>
