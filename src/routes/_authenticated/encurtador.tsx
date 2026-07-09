@@ -179,9 +179,9 @@ function statusBadge(s: string) {
   return <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[oklch(0.4_0.1_30_/_0.3)] text-[oklch(0.8_0.13_50)]">Ocupado</span>;
 }
 
-function LinkRow({ link, host, selected, onToggle, onEdit, onChange }: {
+function LinkRow({ link, host, selected, onToggle, onEdit, onMetrics, onChange }: {
   link: ShortLink; host: string; selected: boolean;
-  onToggle: () => void; onEdit: () => void; onChange: () => void;
+  onToggle: () => void; onEdit: () => void; onMetrics: () => void; onChange: () => void;
 }) {
   const [copied, setCopied] = useState(false);
   const shortUrl = `https://${host}/r/${link.slug}`;
