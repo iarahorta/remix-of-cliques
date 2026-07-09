@@ -19,6 +19,7 @@ import { Route as RSlugRouteImport } from './routes/r.$slug'
 import { Route as AuthenticatedEncurtadorRouteImport } from './routes/_authenticated/encurtador'
 import { Route as ApiPublicLinksRouteImport } from './routes/api/public/links'
 import { Route as ApiPublicLinksSlugRouteImport } from './routes/api/public/links.$slug'
+import { Route as ApiPublicLinksSlugClicksRouteImport } from './routes/api/public/links.$slug.clicks'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -69,6 +70,12 @@ const ApiPublicLinksSlugRoute = ApiPublicLinksSlugRouteImport.update({
   path: '/$slug',
   getParentRoute: () => ApiPublicLinksRoute,
 } as any)
+const ApiPublicLinksSlugClicksRoute =
+  ApiPublicLinksSlugClicksRouteImport.update({
+    id: '/clicks',
+    path: '/clicks',
+    getParentRoute: () => ApiPublicLinksSlugRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -79,7 +86,8 @@ export interface FileRoutesByFullPath {
   '/encurtador': typeof AuthenticatedEncurtadorRoute
   '/r/$slug': typeof RSlugRoute
   '/api/public/links': typeof ApiPublicLinksRouteWithChildren
-  '/api/public/links/$slug': typeof ApiPublicLinksSlugRoute
+  '/api/public/links/$slug': typeof ApiPublicLinksSlugRouteWithChildren
+  '/api/public/links/$slug/clicks': typeof ApiPublicLinksSlugClicksRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -90,7 +98,8 @@ export interface FileRoutesByTo {
   '/encurtador': typeof AuthenticatedEncurtadorRoute
   '/r/$slug': typeof RSlugRoute
   '/api/public/links': typeof ApiPublicLinksRouteWithChildren
-  '/api/public/links/$slug': typeof ApiPublicLinksSlugRoute
+  '/api/public/links/$slug': typeof ApiPublicLinksSlugRouteWithChildren
+  '/api/public/links/$slug/clicks': typeof ApiPublicLinksSlugClicksRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -103,7 +112,8 @@ export interface FileRoutesById {
   '/_authenticated/encurtador': typeof AuthenticatedEncurtadorRoute
   '/r/$slug': typeof RSlugRoute
   '/api/public/links': typeof ApiPublicLinksRouteWithChildren
-  '/api/public/links/$slug': typeof ApiPublicLinksSlugRoute
+  '/api/public/links/$slug': typeof ApiPublicLinksSlugRouteWithChildren
+  '/api/public/links/$slug/clicks': typeof ApiPublicLinksSlugClicksRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -117,6 +127,7 @@ export interface FileRouteTypes {
     | '/r/$slug'
     | '/api/public/links'
     | '/api/public/links/$slug'
+    | '/api/public/links/$slug/clicks'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -128,6 +139,7 @@ export interface FileRouteTypes {
     | '/r/$slug'
     | '/api/public/links'
     | '/api/public/links/$slug'
+    | '/api/public/links/$slug/clicks'
   id:
     | '__root__'
     | '/'
@@ -140,6 +152,7 @@ export interface FileRouteTypes {
     | '/r/$slug'
     | '/api/public/links'
     | '/api/public/links/$slug'
+    | '/api/public/links/$slug/clicks'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -225,6 +238,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicLinksSlugRouteImport
       parentRoute: typeof ApiPublicLinksRoute
     }
+    '/api/public/links/$slug/clicks': {
+      id: '/api/public/links/$slug/clicks'
+      path: '/clicks'
+      fullPath: '/api/public/links/$slug/clicks'
+      preLoaderRoute: typeof ApiPublicLinksSlugClicksRouteImport
+      parentRoute: typeof ApiPublicLinksSlugRoute
+    }
   }
 }
 
@@ -239,12 +259,23 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface ApiPublicLinksSlugRouteChildren {
+  ApiPublicLinksSlugClicksRoute: typeof ApiPublicLinksSlugClicksRoute
+}
+
+const ApiPublicLinksSlugRouteChildren: ApiPublicLinksSlugRouteChildren = {
+  ApiPublicLinksSlugClicksRoute: ApiPublicLinksSlugClicksRoute,
+}
+
+const ApiPublicLinksSlugRouteWithChildren =
+  ApiPublicLinksSlugRoute._addFileChildren(ApiPublicLinksSlugRouteChildren)
+
 interface ApiPublicLinksRouteChildren {
-  ApiPublicLinksSlugRoute: typeof ApiPublicLinksSlugRoute
+  ApiPublicLinksSlugRoute: typeof ApiPublicLinksSlugRouteWithChildren
 }
 
 const ApiPublicLinksRouteChildren: ApiPublicLinksRouteChildren = {
-  ApiPublicLinksSlugRoute: ApiPublicLinksSlugRoute,
+  ApiPublicLinksSlugRoute: ApiPublicLinksSlugRouteWithChildren,
 }
 
 const ApiPublicLinksRouteWithChildren = ApiPublicLinksRoute._addFileChildren(
@@ -264,13 +295,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
