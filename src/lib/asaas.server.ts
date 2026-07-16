@@ -11,7 +11,9 @@ async function asaas(path: string, init?: RequestInit): Promise<any> {
     ...init,
     headers: {
       access_token: key,
+      accept: "application/json",
       "Content-Type": "application/json",
+      "User-Agent": "cliques.site/1.0.0",
       ...(init?.headers ?? {}),
     },
   });
