@@ -393,7 +393,6 @@ function ClientesDashboard() {
                       disabled={!active}
                       showWeight={rotMode === "weighted"}
                     />
-                  </div>
                     <button
                       type="submit" disabled={!active || creating}
                       className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#0b3d91] hover:bg-[#0a3582] text-white px-5 py-2.5 text-sm font-semibold disabled:opacity-60"
