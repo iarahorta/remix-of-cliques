@@ -182,6 +182,34 @@ export const getMyLinkMetrics = createServerFn({ method: "POST" })
     return { total: rows.length, daily, topCountries, topCities };
   });
 
+export const updateSubscriberLinkTarget = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { linkId: string; target_url: string }) => ({
+    linkId: d.linkId,
+    target_url: (d.target_url ?? "").trim(),
+  }))
+  .handler(async ({ data, context }) => {
+    if (!/^https?:\/\//i.test(data.target_url)) {
+      throw new Error("URL inválida — deve começar com http:// ou https://");
+    }
+    await requireActiveSubscription({ supabase: context.supabase, userId: context.userId });
+    const { data: link, error: findErr } = await context.supabase
+      .from("short_links")
+      .select("id,user_id,is_subscriber_link")
+      .eq("id", data.linkId)
+      .maybeSingle();
+    if (findErr) throw new Error(findErr.message);
+    if (!link || link.user_id !== context.userId || !link.is_subscriber_link) {
+      throw new Error("Link não encontrado.");
+    }
+    const { error } = await context.supabase
+      .from("short_links")
+      .update({ target_url: data.target_url })
+      .eq("id", data.linkId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 // ==================== ADMIN (staff) ====================
 
 export const listSubscribersAdmin = createServerFn({ method: "GET" })

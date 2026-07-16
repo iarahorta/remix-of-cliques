@@ -20,7 +20,9 @@ import { Route as RSlugRouteImport } from './routes/r.$slug'
 import { Route as ClientesDashboardRouteImport } from './routes/clientes.dashboard'
 import { Route as AuthenticatedEncurtadorRouteImport } from './routes/_authenticated/encurtador'
 import { Route as AuthenticatedAssinantesRouteImport } from './routes/_authenticated/assinantes'
+import { Route as ApiPublicSubscribersRouteImport } from './routes/api/public/subscribers'
 import { Route as ApiPublicLinksRouteImport } from './routes/api/public/links'
+import { Route as ApiPublicSubscribersIdRouteImport } from './routes/api/public/subscribers.$id'
 import { Route as ApiPublicLinksSlugRouteImport } from './routes/api/public/links.$slug'
 import { Route as ApiPublicLinksSlugClicksRouteImport } from './routes/api/public/links.$slug.clicks'
 
@@ -78,10 +80,20 @@ const AuthenticatedAssinantesRoute = AuthenticatedAssinantesRouteImport.update({
   path: '/assinantes',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicSubscribersRoute = ApiPublicSubscribersRouteImport.update({
+  id: '/api/public/subscribers',
+  path: '/api/public/subscribers',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicLinksRoute = ApiPublicLinksRouteImport.update({
   id: '/api/public/links',
   path: '/api/public/links',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicSubscribersIdRoute = ApiPublicSubscribersIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiPublicSubscribersRoute,
 } as any)
 const ApiPublicLinksSlugRoute = ApiPublicLinksSlugRouteImport.update({
   id: '/$slug',
@@ -107,7 +119,9 @@ export interface FileRoutesByFullPath {
   '/r/$slug': typeof RSlugRoute
   '/clientes/': typeof ClientesIndexRoute
   '/api/public/links': typeof ApiPublicLinksRouteWithChildren
+  '/api/public/subscribers': typeof ApiPublicSubscribersRouteWithChildren
   '/api/public/links/$slug': typeof ApiPublicLinksSlugRouteWithChildren
+  '/api/public/subscribers/$id': typeof ApiPublicSubscribersIdRoute
   '/api/public/links/$slug/clicks': typeof ApiPublicLinksSlugClicksRoute
 }
 export interface FileRoutesByTo {
@@ -122,7 +136,9 @@ export interface FileRoutesByTo {
   '/r/$slug': typeof RSlugRoute
   '/clientes': typeof ClientesIndexRoute
   '/api/public/links': typeof ApiPublicLinksRouteWithChildren
+  '/api/public/subscribers': typeof ApiPublicSubscribersRouteWithChildren
   '/api/public/links/$slug': typeof ApiPublicLinksSlugRouteWithChildren
+  '/api/public/subscribers/$id': typeof ApiPublicSubscribersIdRoute
   '/api/public/links/$slug/clicks': typeof ApiPublicLinksSlugClicksRoute
 }
 export interface FileRoutesById {
@@ -139,7 +155,9 @@ export interface FileRoutesById {
   '/r/$slug': typeof RSlugRoute
   '/clientes/': typeof ClientesIndexRoute
   '/api/public/links': typeof ApiPublicLinksRouteWithChildren
+  '/api/public/subscribers': typeof ApiPublicSubscribersRouteWithChildren
   '/api/public/links/$slug': typeof ApiPublicLinksSlugRouteWithChildren
+  '/api/public/subscribers/$id': typeof ApiPublicSubscribersIdRoute
   '/api/public/links/$slug/clicks': typeof ApiPublicLinksSlugClicksRoute
 }
 export interface FileRouteTypes {
@@ -156,7 +174,9 @@ export interface FileRouteTypes {
     | '/r/$slug'
     | '/clientes/'
     | '/api/public/links'
+    | '/api/public/subscribers'
     | '/api/public/links/$slug'
+    | '/api/public/subscribers/$id'
     | '/api/public/links/$slug/clicks'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -171,7 +191,9 @@ export interface FileRouteTypes {
     | '/r/$slug'
     | '/clientes'
     | '/api/public/links'
+    | '/api/public/subscribers'
     | '/api/public/links/$slug'
+    | '/api/public/subscribers/$id'
     | '/api/public/links/$slug/clicks'
   id:
     | '__root__'
@@ -187,7 +209,9 @@ export interface FileRouteTypes {
     | '/r/$slug'
     | '/clientes/'
     | '/api/public/links'
+    | '/api/public/subscribers'
     | '/api/public/links/$slug'
+    | '/api/public/subscribers/$id'
     | '/api/public/links/$slug/clicks'
   fileRoutesById: FileRoutesById
 }
@@ -202,6 +226,7 @@ export interface RootRouteChildren {
   RSlugRoute: typeof RSlugRoute
   ClientesIndexRoute: typeof ClientesIndexRoute
   ApiPublicLinksRoute: typeof ApiPublicLinksRouteWithChildren
+  ApiPublicSubscribersRoute: typeof ApiPublicSubscribersRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -283,12 +308,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAssinantesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/subscribers': {
+      id: '/api/public/subscribers'
+      path: '/api/public/subscribers'
+      fullPath: '/api/public/subscribers'
+      preLoaderRoute: typeof ApiPublicSubscribersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/links': {
       id: '/api/public/links'
       path: '/api/public/links'
       fullPath: '/api/public/links'
       preLoaderRoute: typeof ApiPublicLinksRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/api/public/subscribers/$id': {
+      id: '/api/public/subscribers/$id'
+      path: '/$id'
+      fullPath: '/api/public/subscribers/$id'
+      preLoaderRoute: typeof ApiPublicSubscribersIdRouteImport
+      parentRoute: typeof ApiPublicSubscribersRoute
     }
     '/api/public/links/$slug': {
       id: '/api/public/links/$slug'
@@ -343,6 +382,17 @@ const ApiPublicLinksRouteWithChildren = ApiPublicLinksRoute._addFileChildren(
   ApiPublicLinksRouteChildren,
 )
 
+interface ApiPublicSubscribersRouteChildren {
+  ApiPublicSubscribersIdRoute: typeof ApiPublicSubscribersIdRoute
+}
+
+const ApiPublicSubscribersRouteChildren: ApiPublicSubscribersRouteChildren = {
+  ApiPublicSubscribersIdRoute: ApiPublicSubscribersIdRoute,
+}
+
+const ApiPublicSubscribersRouteWithChildren =
+  ApiPublicSubscribersRoute._addFileChildren(ApiPublicSubscribersRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
@@ -354,17 +404,8 @@ const rootRouteChildren: RootRouteChildren = {
   RSlugRoute: RSlugRoute,
   ClientesIndexRoute: ClientesIndexRoute,
   ApiPublicLinksRoute: ApiPublicLinksRouteWithChildren,
+  ApiPublicSubscribersRoute: ApiPublicSubscribersRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
