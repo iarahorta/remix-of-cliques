@@ -32,6 +32,14 @@ export const Route = createFileRoute("/api/public/webhooks/asaas")({
             .maybeSingle();
           subscriberId = (data as any)?.id ?? null;
         }
+        if (!subscriberId && payment.paymentLink) {
+          const { data } = await (supabaseAdmin as any)
+            .from("link_subscribers")
+            .select("id")
+            .eq("asaas_payment_link_id", payment.paymentLink)
+            .maybeSingle();
+          subscriberId = (data as any)?.id ?? null;
+        }
         if (!subscriberId && payment.customer) {
           const { data } = await supabaseAdmin
             .from("link_subscribers")
@@ -48,6 +56,8 @@ export const Route = createFileRoute("/api/public/webhooks/asaas")({
           asaas_last_invoice_url: payment.invoiceUrl ?? null,
           updated_at: new Date().toISOString(),
         };
+        if (payment.customer) patch.asaas_customer_id = payment.customer;
+        if (payment.subscription) patch.asaas_subscription_id = payment.subscription;
 
         if (event === "PAYMENT_CONFIRMED" || event === "PAYMENT_RECEIVED") {
           patch.status = "active";
