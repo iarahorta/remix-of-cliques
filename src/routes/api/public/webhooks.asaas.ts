@@ -79,7 +79,7 @@ export const Route = createFileRoute("/api/public/webhooks/asaas")({
 
         const { error } = await supabaseAdmin
           .from("link_subscribers")
-          .update(patch)
+          .update(patch as any)
           .eq("id", subscriberId);
         if (error) {
           console.error("[asaas webhook] update failed", error.message);
