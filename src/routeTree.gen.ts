@@ -17,6 +17,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ClientesIndexRouteImport } from './routes/clientes.index'
 import { Route as RSlugRouteImport } from './routes/r.$slug'
+import { Route as ClientesDashboardRouteImport } from './routes/clientes.dashboard'
 import { Route as AuthenticatedEncurtadorRouteImport } from './routes/_authenticated/encurtador'
 import { Route as AuthenticatedAssinantesRouteImport } from './routes/_authenticated/assinantes'
 import { Route as ApiPublicLinksRouteImport } from './routes/api/public/links'
@@ -62,6 +63,11 @@ const RSlugRoute = RSlugRouteImport.update({
   path: '/r/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ClientesDashboardRoute = ClientesDashboardRouteImport.update({
+  id: '/clientes/dashboard',
+  path: '/clientes/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedEncurtadorRoute = AuthenticatedEncurtadorRouteImport.update({
   id: '/encurtador',
   path: '/encurtador',
@@ -97,6 +103,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/assinantes': typeof AuthenticatedAssinantesRoute
   '/encurtador': typeof AuthenticatedEncurtadorRoute
+  '/clientes/dashboard': typeof ClientesDashboardRoute
   '/r/$slug': typeof RSlugRoute
   '/clientes/': typeof ClientesIndexRoute
   '/api/public/links': typeof ApiPublicLinksRouteWithChildren
@@ -111,6 +118,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/assinantes': typeof AuthenticatedAssinantesRoute
   '/encurtador': typeof AuthenticatedEncurtadorRoute
+  '/clientes/dashboard': typeof ClientesDashboardRoute
   '/r/$slug': typeof RSlugRoute
   '/clientes': typeof ClientesIndexRoute
   '/api/public/links': typeof ApiPublicLinksRouteWithChildren
@@ -127,6 +135,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/assinantes': typeof AuthenticatedAssinantesRoute
   '/_authenticated/encurtador': typeof AuthenticatedEncurtadorRoute
+  '/clientes/dashboard': typeof ClientesDashboardRoute
   '/r/$slug': typeof RSlugRoute
   '/clientes/': typeof ClientesIndexRoute
   '/api/public/links': typeof ApiPublicLinksRouteWithChildren
@@ -143,6 +152,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/assinantes'
     | '/encurtador'
+    | '/clientes/dashboard'
     | '/r/$slug'
     | '/clientes/'
     | '/api/public/links'
@@ -157,6 +167,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/assinantes'
     | '/encurtador'
+    | '/clientes/dashboard'
     | '/r/$slug'
     | '/clientes'
     | '/api/public/links'
@@ -172,6 +183,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_authenticated/assinantes'
     | '/_authenticated/encurtador'
+    | '/clientes/dashboard'
     | '/r/$slug'
     | '/clientes/'
     | '/api/public/links'
@@ -186,6 +198,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   PortalRoute: typeof PortalRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ClientesDashboardRoute: typeof ClientesDashboardRoute
   RSlugRoute: typeof RSlugRoute
   ClientesIndexRoute: typeof ClientesIndexRoute
   ApiPublicLinksRoute: typeof ApiPublicLinksRouteWithChildren
@@ -247,6 +260,13 @@ declare module '@tanstack/react-router' {
       path: '/r/$slug'
       fullPath: '/r/$slug'
       preLoaderRoute: typeof RSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/clientes/dashboard': {
+      id: '/clientes/dashboard'
+      path: '/clientes/dashboard'
+      fullPath: '/clientes/dashboard'
+      preLoaderRoute: typeof ClientesDashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/encurtador': {
@@ -330,6 +350,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   PortalRoute: PortalRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  ClientesDashboardRoute: ClientesDashboardRoute,
   RSlugRoute: RSlugRoute,
   ClientesIndexRoute: ClientesIndexRoute,
   ApiPublicLinksRoute: ApiPublicLinksRouteWithChildren,
