@@ -106,7 +106,7 @@ export const createSubscriberLink = createServerFn({ method: "POST" })
         slug: candidate,
         is_rotating: false,
         target_url: data.target_url,
-        status: "occupied",
+        status: "active",
         label: data.label,
         is_subscriber_link: true,
       });
