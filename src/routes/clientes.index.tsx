@@ -43,7 +43,7 @@ function ClientesLanding() {
     setMsg(null);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data: signUpData, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -52,16 +52,17 @@ function ClientesLanding() {
           },
         });
         if (error) throw error;
+        if (signUpData.user) {
+          try {
+            await createProfile({ data: { name, email, phone } });
+          } catch (e: any) {
+            console.error("Erro ao criar perfil do assinante:", e);
+          }
+        }
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) {
           setMsg({ kind: "ok", text: "Cadastro criado! Faça login para entrar." });
           setMode("signin");
-          return;
-        }
-        try {
-          await createProfile({ data: { name, email, phone } });
-        } catch (e: any) {
-          setMsg({ kind: "error", text: e?.message ?? "Erro ao criar perfil" });
           return;
         }
         navigate({ to: "/clientes/dashboard" });
