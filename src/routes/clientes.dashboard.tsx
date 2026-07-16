@@ -38,6 +38,7 @@ interface Sub {
   plan_price_cents: number;
 }
 
+interface RotationUrl { url: string; weight: number; sort_order: number }
 interface MyLink {
   id: string;
   slug: string;
@@ -47,7 +48,18 @@ interface MyLink {
   status: string;
   created_at: string;
   last_clicked_at: string | null;
+  is_rotating: boolean;
+  rotation_mode: "round_robin" | "random" | "weighted" | "sticky";
+  short_link_urls: RotationUrl[];
 }
+
+type RotationMode = "round_robin" | "random" | "weighted" | "sticky";
+const ROTATION_LABELS: Record<RotationMode, string> = {
+  round_robin: "Alternado (round-robin)",
+  random: "Aleatório",
+  weighted: "Ponderado (por peso)",
+  sticky: "Sequencial fixo",
+};
 
 const PIX_KEY = "iarachorta@gmail.com";
 
