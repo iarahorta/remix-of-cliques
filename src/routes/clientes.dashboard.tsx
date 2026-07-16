@@ -121,8 +121,8 @@ function ClientesDashboard() {
   const [waMsg, setWaMsg] = useState("");
   const [label, setLabel] = useState("");
   const [rotMode, setRotMode] = useState<RotationMode>("round_robin");
-  const [rotUrls, setRotUrls] = useState<{ url: string; weight: number }[]>([
-    { url: "", weight: 1 }, { url: "", weight: 1 },
+  const [rotUrls, setRotUrls] = useState<RotRow[]>([
+    emptyRotRow("whatsapp"), emptyRotRow("whatsapp"),
   ]);
   const [creating, setCreating] = useState(false);
 
