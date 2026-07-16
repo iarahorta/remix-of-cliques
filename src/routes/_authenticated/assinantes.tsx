@@ -91,7 +91,7 @@ function Assinantes() {
   };
 
   return (
-    <PageShell title="Assinantes" icon={<Users className="h-5 w-5" />}>
+    <PageShell title="Assinantes" subtitle="Gestão de clientes assinantes do encurtador">
       {err && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 mb-4">{err}</div>
       )}
