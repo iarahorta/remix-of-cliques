@@ -249,15 +249,23 @@ function ClientesDashboard() {
               const isActive = active;
               const isSuspended = status === "suspended";
               const openInvoice = async () => {
+                const paymentTab = window.open("about:blank", "_blank");
+                paymentTab?.document.write("<title>Gerando cobrança...</title><p>Gerando cobrança...</p>");
                 setBillingLoading(true);
                 try {
                   const r: any = await ensureBilling({});
                   if (r?.invoiceUrl) {
-                    window.open(r.invoiceUrl, "_blank", "noopener,noreferrer");
+                    if (paymentTab) {
+                      paymentTab.location.href = r.invoiceUrl;
+                    } else {
+                      window.location.href = r.invoiceUrl;
+                    }
                   } else {
+                    paymentTab?.close();
                     toast.error("Não foi possível gerar a fatura agora — tente de novo em instantes.");
                   }
                 } catch (e: any) {
+                  paymentTab?.close();
                   toast.error(e?.message ?? "Erro ao gerar cobrança");
                 } finally {
                   setBillingLoading(false);
