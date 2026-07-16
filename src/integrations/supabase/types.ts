@@ -402,6 +402,48 @@ export type Database = {
         }
         Relationships: []
       }
+      link_subscribers: {
+        Row: {
+          created_at: string
+          current_period_end: string | null
+          email: string | null
+          id: string
+          last_payment_at: string | null
+          name: string | null
+          payment_method: string | null
+          phone: string | null
+          plan_price_cents: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_period_end?: string | null
+          email?: string | null
+          id: string
+          last_payment_at?: string | null
+          name?: string | null
+          payment_method?: string | null
+          phone?: string | null
+          plan_price_cents?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_period_end?: string | null
+          email?: string | null
+          id?: string
+          last_payment_at?: string | null
+          name?: string | null
+          payment_method?: string | null
+          phone?: string | null
+          plan_price_cents?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       message_templates: {
         Row: {
           content: string
@@ -511,6 +553,7 @@ export type Database = {
           created_at: string
           id: string
           ip: string | null
+          is_bot: boolean
           referer: string | null
           region: string | null
           short_link_id: string
@@ -524,6 +567,7 @@ export type Database = {
           created_at?: string
           id?: string
           ip?: string | null
+          is_bot?: boolean
           referer?: string | null
           region?: string | null
           short_link_id: string
@@ -537,6 +581,7 @@ export type Database = {
           created_at?: string
           id?: string
           ip?: string | null
+          is_bot?: boolean
           referer?: string | null
           region?: string | null
           short_link_id?: string
@@ -593,6 +638,7 @@ export type Database = {
           id: string
           infobip_template_id: string | null
           is_rotating: boolean
+          is_subscriber_link: boolean
           label: string | null
           last_clicked_at: string | null
           rotation_index: number
@@ -608,6 +654,7 @@ export type Database = {
           id?: string
           infobip_template_id?: string | null
           is_rotating?: boolean
+          is_subscriber_link?: boolean
           label?: string | null
           last_clicked_at?: string | null
           rotation_index?: number
@@ -623,6 +670,7 @@ export type Database = {
           id?: string
           infobip_template_id?: string | null
           is_rotating?: boolean
+          is_subscriber_link?: boolean
           label?: string | null
           last_clicked_at?: string | null
           rotation_index?: number
