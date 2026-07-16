@@ -85,6 +85,29 @@ function parseWaUrl(url: string | null): { phone: string; message: string } | nu
   } catch { return null; }
 }
 
+type RotRow = { kind: "url" | "whatsapp"; url: string; phone: string; message: string; weight: number };
+
+function emptyRotRow(kind: RotRow["kind"] = "url"): RotRow {
+  return { kind, url: "", phone: "", message: "", weight: 1 };
+}
+
+function rowToFinalUrl(row: RotRow): { ok: true; url: string } | { ok: false; reason: string } {
+  if (row.kind === "whatsapp") {
+    const p = normalizePhone(row.phone);
+    if (!p) return { ok: false, reason: "Número de WhatsApp inválido — use DDD + número" };
+    return { ok: true, url: buildWaUrl(p, row.message) };
+  }
+  const t = row.url.trim();
+  if (!t) return { ok: false, reason: "URL vazia" };
+  return { ok: true, url: t };
+}
+
+function urlToRow(u: string, weight: number): RotRow {
+  const wa = parseWaUrl(u);
+  if (wa) return { kind: "whatsapp", url: "", phone: wa.phone, message: wa.message, weight };
+  return { kind: "url", url: u, phone: "", message: "", weight };
+}
+
 function ClientesDashboard() {
   const navigate = useNavigate();
   const [sub, setSub] = useState<Sub | null>(null);
@@ -98,8 +121,8 @@ function ClientesDashboard() {
   const [waMsg, setWaMsg] = useState("");
   const [label, setLabel] = useState("");
   const [rotMode, setRotMode] = useState<RotationMode>("round_robin");
-  const [rotUrls, setRotUrls] = useState<{ url: string; weight: number }[]>([
-    { url: "", weight: 1 }, { url: "", weight: 1 },
+  const [rotUrls, setRotUrls] = useState<RotRow[]>([
+    emptyRotRow("whatsapp"), emptyRotRow("whatsapp"),
   ]);
   const [creating, setCreating] = useState(false);
 
@@ -138,16 +161,25 @@ function ClientesDashboard() {
     setCreating(true);
     try {
       if (mode === "rotating") {
-        const urls = rotUrls
-          .map((u) => ({ url: u.url.trim(), weight: Math.max(0, Math.floor(u.weight)) }))
-          .filter((u) => u.url.length > 0);
+        const urls: { url: string; weight: number }[] = [];
+        for (const row of rotUrls) {
+          const res = rowToFinalUrl(row);
+          if (!res.ok) {
+            if (row.kind === "whatsapp" || row.url.trim().length > 0) {
+              toast.error(res.reason);
+              setCreating(false); return;
+            }
+            continue;
+          }
+          urls.push({ url: res.url, weight: Math.max(0, Math.floor(row.weight)) });
+        }
         if (urls.length < 2) {
-          toast.error("Adicione pelo menos 2 URLs para rotação.");
+          toast.error("Adicione pelo menos 2 destinos para rotação.");
           setCreating(false); return;
         }
         const r: any = await createRotating({ data: { label: label || null, rotation_mode: rotMode, urls } });
         toast.success(`Link rotativo criado: ${r.url}`);
-        setRotUrls([{ url: "", weight: 1 }, { url: "", weight: 1 }]);
+        setRotUrls([emptyRotRow("whatsapp"), emptyRotRow("whatsapp")]);
         setRotMode("round_robin");
       } else {
         let finalUrl = targetUrl;
@@ -355,43 +387,12 @@ function ClientesDashboard() {
                         />
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      {rotUrls.map((row, idx) => (
-                        <div key={idx} className="grid gap-2 sm:grid-cols-[1fr,110px,auto] items-center">
-                          <input
-                            disabled={!active}
-                            value={row.url}
-                            onChange={(e) => setRotUrls((prev) => prev.map((r, i) => i === idx ? { ...r, url: e.target.value } : r))}
-                            placeholder={`URL de destino ${idx + 1}`}
-                            type="url"
-                            className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm disabled:bg-slate-100"
-                          />
-                          <input
-                            disabled={!active || rotMode !== "weighted"}
-                            value={row.weight}
-                            onChange={(e) => setRotUrls((prev) => prev.map((r, i) => i === idx ? { ...r, weight: Number(e.target.value) || 0 } : r))}
-                            type="number"
-                            min={0}
-                            max={1000}
-                            title="Peso (só usado no modo ponderado)"
-                            className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm disabled:bg-slate-100"
-                          />
-                          <button
-                            type="button"
-                            disabled={!active || rotUrls.length <= 2}
-                            onClick={() => setRotUrls((prev) => prev.filter((_, i) => i !== idx))}
-                            className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:text-red-600 disabled:opacity-40"
-                            title="Remover"
-                          ><Trash2 className="h-4 w-4" /></button>
-                        </div>
-                      ))}
-                      <button
-                        type="button"
-                        disabled={!active || rotUrls.length >= 20}
-                        onClick={() => setRotUrls((prev) => [...prev, { url: "", weight: 1 }])}
-                        className="inline-flex items-center gap-1 text-xs text-[#0b3d91] hover:text-[#0a3582] disabled:opacity-40"
-                      ><Plus className="h-3.5 w-3.5" /> Adicionar URL</button>
-                    </div>
+                    <RotationRowsEditor
+                      rows={rotUrls}
+                      setRows={setRotUrls}
+                      disabled={!active}
+                      showWeight={rotMode === "weighted"}
+                    />
                     <button
                       type="submit" disabled={!active || creating}
                       className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#0b3d91] hover:bg-[#0a3582] text-white px-5 py-2.5 text-sm font-semibold disabled:opacity-60"
@@ -506,12 +507,12 @@ function EditTargetModal({
   const [url, setUrl] = useState(link.is_rotating ? "" : (link.target_url ?? ""));
 
   // rotating mode state
-  const initialUrls = link.is_rotating && link.short_link_urls?.length
+  const initialUrls: RotRow[] = link.is_rotating && link.short_link_urls?.length
     ? [...link.short_link_urls]
         .sort((a, b) => a.sort_order - b.sort_order)
-        .map((u) => ({ url: u.url, weight: u.weight ?? 1 }))
-    : [{ url: link.target_url ?? "", weight: 1 }, { url: "", weight: 1 }];
-  const [rotUrls, setRotUrls] = useState(initialUrls);
+        .map((u) => urlToRow(u.url, u.weight ?? 1))
+    : [urlToRow(link.target_url ?? "", 1), emptyRotRow("whatsapp")];
+  const [rotUrls, setRotUrls] = useState<RotRow[]>(initialUrls);
   const [rotMode, setRotMode] = useState<RotationMode>(link.rotation_mode ?? "round_robin");
 
   const [saving, setSaving] = useState(false);
@@ -537,10 +538,18 @@ function EditTargetModal({
         }
         toast.success("Destino atualizado");
       } else {
-        const urls = rotUrls
-          .map((u) => ({ url: u.url.trim(), weight: Math.max(0, Math.floor(u.weight)) }))
-          .filter((u) => u.url.length > 0);
-        if (urls.length < 2) { toast.error("Adicione pelo menos 2 URLs"); setSaving(false); return; }
+        const urls: { url: string; weight: number }[] = [];
+        for (const row of rotUrls) {
+          const res = rowToFinalUrl(row);
+          if (!res.ok) {
+            if (row.kind === "whatsapp" || row.url.trim().length > 0) {
+              toast.error(res.reason); setSaving(false); return;
+            }
+            continue;
+          }
+          urls.push({ url: res.url, weight: Math.max(0, Math.floor(row.weight)) });
+        }
+        if (urls.length < 2) { toast.error("Adicione pelo menos 2 destinos"); setSaving(false); return; }
         await updateRotation({ data: { linkId: link.id, rotation_mode: rotMode, urls } });
         toast.success("Rotação atualizada");
       }
@@ -619,35 +628,12 @@ function EditTargetModal({
                   ))}
                 </select>
               </div>
-              <div className="space-y-2">
-                {rotUrls.map((row, idx) => (
-                  <div key={idx} className="grid gap-2 grid-cols-[1fr,90px,auto] items-center">
-                    <input
-                      value={row.url}
-                      onChange={(e) => setRotUrls((prev) => prev.map((r, i) => i === idx ? { ...r, url: e.target.value } : r))}
-                      placeholder={`URL ${idx + 1}`}
-                      type="url"
-                      className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm"
-                    />
-                    <input
-                      disabled={rotMode !== "weighted"}
-                      value={row.weight}
-                      onChange={(e) => setRotUrls((prev) => prev.map((r, i) => i === idx ? { ...r, weight: Number(e.target.value) || 0 } : r))}
-                      type="number" min={0} max={1000}
-                      title="Peso (só ponderado)"
-                      className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm disabled:bg-slate-100"
-                    />
-                    <button type="button" disabled={rotUrls.length <= 2}
-                      onClick={() => setRotUrls((prev) => prev.filter((_, i) => i !== idx))}
-                      className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:text-red-600 disabled:opacity-40"
-                    ><Trash2 className="h-4 w-4" /></button>
-                  </div>
-                ))}
-                <button type="button" disabled={rotUrls.length >= 20}
-                  onClick={() => setRotUrls((prev) => [...prev, { url: "", weight: 1 }])}
-                  className="inline-flex items-center gap-1 text-xs text-[#0b3d91] hover:text-[#0a3582] disabled:opacity-40"
-                ><Plus className="h-3.5 w-3.5" /> Adicionar URL</button>
-              </div>
+              <RotationRowsEditor
+                rows={rotUrls}
+                setRows={setRotUrls}
+                disabled={false}
+                showWeight={rotMode === "weighted"}
+              />
             </>
           )}
 
@@ -664,6 +650,107 @@ function EditTargetModal({
     </div>
   );
 }
+
+function RotationRowsEditor({
+  rows, setRows, disabled, showWeight,
+}: {
+  rows: RotRow[];
+  setRows: React.Dispatch<React.SetStateAction<RotRow[]>>;
+  disabled: boolean;
+  showWeight: boolean;
+}) {
+  const update = (idx: number, patch: Partial<RotRow>) =>
+    setRows((prev) => prev.map((r, i) => (i === idx ? { ...r, ...patch } : r)));
+  const remove = (idx: number) =>
+    setRows((prev) => prev.filter((_, i) => i !== idx));
+
+  return (
+    <div className="space-y-3">
+      {rows.map((row, idx) => (
+        <div key={idx} className="rounded-lg border border-slate-200 bg-slate-50/50 p-3 space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <div className="inline-flex rounded-md border border-slate-200 p-0.5 bg-white">
+              <button
+                type="button" disabled={disabled}
+                onClick={() => update(idx, { kind: "whatsapp" })}
+                className={`px-2.5 py-1 text-[11px] font-medium rounded ${row.kind === "whatsapp" ? "bg-emerald-600 text-white" : "text-slate-500"}`}
+              >WhatsApp</button>
+              <button
+                type="button" disabled={disabled}
+                onClick={() => update(idx, { kind: "url" })}
+                className={`px-2.5 py-1 text-[11px] font-medium rounded ${row.kind === "url" ? "bg-[#0b3d91] text-white" : "text-slate-500"}`}
+              >URL</button>
+            </div>
+            <div className="flex items-center gap-2">
+              {showWeight && (
+                <label className="text-[11px] text-slate-500 flex items-center gap-1">
+                  Peso
+                  <input
+                    disabled={disabled}
+                    value={row.weight}
+                    onChange={(e) => update(idx, { weight: Number(e.target.value) || 0 })}
+                    type="number" min={0} max={1000}
+                    className="w-16 rounded-md border border-slate-300 px-2 py-1 text-xs disabled:bg-slate-100"
+                  />
+                </label>
+              )}
+              <button
+                type="button" disabled={disabled || rows.length <= 2}
+                onClick={() => remove(idx)}
+                className="p-1.5 rounded-md border border-slate-200 text-slate-500 hover:text-red-600 disabled:opacity-40"
+                title="Remover"
+              ><Trash2 className="h-3.5 w-3.5" /></button>
+            </div>
+          </div>
+
+          {row.kind === "whatsapp" ? (
+            <div className="space-y-2">
+              <input
+                disabled={disabled}
+                value={row.phone}
+                onChange={(e) => update(idx, { phone: e.target.value })}
+                placeholder={`Número ${idx + 1} — ex: 11 91234-5678`}
+                type="tel"
+                className="w-full rounded-md border border-slate-300 px-2.5 py-2 text-sm disabled:bg-slate-100"
+              />
+              <textarea
+                disabled={disabled}
+                value={row.message}
+                onChange={(e) => update(idx, { message: e.target.value })}
+                placeholder="Mensagem pré-preenchida (opcional)"
+                rows={2}
+                maxLength={500}
+                className="w-full rounded-md border border-slate-300 px-2.5 py-2 text-sm disabled:bg-slate-100"
+              />
+            </div>
+          ) : (
+            <input
+              disabled={disabled}
+              value={row.url}
+              onChange={(e) => update(idx, { url: e.target.value })}
+              placeholder={`URL de destino ${idx + 1}`}
+              type="url"
+              className="w-full rounded-md border border-slate-300 px-2.5 py-2 text-sm disabled:bg-slate-100"
+            />
+          )}
+        </div>
+      ))}
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          type="button" disabled={disabled || rows.length >= 20}
+          onClick={() => setRows((prev) => [...prev, emptyRotRow("whatsapp")])}
+          className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 hover:text-emerald-800 disabled:opacity-40"
+        ><Plus className="h-3.5 w-3.5" /> Adicionar número de WhatsApp</button>
+        <button
+          type="button" disabled={disabled || rows.length >= 20}
+          onClick={() => setRows((prev) => [...prev, emptyRotRow("url")])}
+          className="inline-flex items-center gap-1 text-xs font-medium text-[#0b3d91] hover:text-[#0a3582] disabled:opacity-40"
+        ><Plus className="h-3.5 w-3.5" /> Adicionar URL</button>
+      </div>
+    </div>
+  );
+}
+
 
 function MetricsModal({ link, onClose }: { link: MyLink; onClose: () => void }) {
   const [data, setData] = useState<{
