@@ -507,12 +507,12 @@ function EditTargetModal({
   const [url, setUrl] = useState(link.is_rotating ? "" : (link.target_url ?? ""));
 
   // rotating mode state
-  const initialUrls = link.is_rotating && link.short_link_urls?.length
+  const initialUrls: RotRow[] = link.is_rotating && link.short_link_urls?.length
     ? [...link.short_link_urls]
         .sort((a, b) => a.sort_order - b.sort_order)
-        .map((u) => ({ url: u.url, weight: u.weight ?? 1 }))
-    : [{ url: link.target_url ?? "", weight: 1 }, { url: "", weight: 1 }];
-  const [rotUrls, setRotUrls] = useState(initialUrls);
+        .map((u) => urlToRow(u.url, u.weight ?? 1))
+    : [urlToRow(link.target_url ?? "", 1), emptyRotRow("whatsapp")];
+  const [rotUrls, setRotUrls] = useState<RotRow[]>(initialUrls);
   const [rotMode, setRotMode] = useState<RotationMode>(link.rotation_mode ?? "round_robin");
 
   const [saving, setSaving] = useState(false);
