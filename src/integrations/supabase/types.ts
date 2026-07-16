@@ -404,12 +404,18 @@ export type Database = {
       }
       link_subscribers: {
         Row: {
+          asaas_customer_id: string | null
+          asaas_last_invoice_url: string | null
+          asaas_last_payment_id: string | null
+          asaas_last_payment_status: string | null
+          asaas_subscription_id: string | null
           created_at: string
           current_period_end: string | null
           email: string | null
           id: string
           last_payment_at: string | null
           name: string | null
+          overdue_since: string | null
           payment_method: string | null
           phone: string | null
           plan_price_cents: number
@@ -417,12 +423,18 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          asaas_customer_id?: string | null
+          asaas_last_invoice_url?: string | null
+          asaas_last_payment_id?: string | null
+          asaas_last_payment_status?: string | null
+          asaas_subscription_id?: string | null
           created_at?: string
           current_period_end?: string | null
           email?: string | null
           id: string
           last_payment_at?: string | null
           name?: string | null
+          overdue_since?: string | null
           payment_method?: string | null
           phone?: string | null
           plan_price_cents?: number
@@ -430,12 +442,18 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          asaas_customer_id?: string | null
+          asaas_last_invoice_url?: string | null
+          asaas_last_payment_id?: string | null
+          asaas_last_payment_status?: string | null
+          asaas_subscription_id?: string | null
           created_at?: string
           current_period_end?: string | null
           email?: string | null
           id?: string
           last_payment_at?: string | null
           name?: string | null
+          overdue_since?: string | null
           payment_method?: string | null
           phone?: string | null
           plan_price_cents?: number
