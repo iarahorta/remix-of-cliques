@@ -538,10 +538,18 @@ function EditTargetModal({
         }
         toast.success("Destino atualizado");
       } else {
-        const urls = rotUrls
-          .map((u) => ({ url: u.url.trim(), weight: Math.max(0, Math.floor(u.weight)) }))
-          .filter((u) => u.url.length > 0);
-        if (urls.length < 2) { toast.error("Adicione pelo menos 2 URLs"); setSaving(false); return; }
+        const urls: { url: string; weight: number }[] = [];
+        for (const row of rotUrls) {
+          const res = rowToFinalUrl(row);
+          if (!res.ok) {
+            if (row.kind === "whatsapp" || row.url.trim().length > 0) {
+              toast.error(res.reason); setSaving(false); return;
+            }
+            continue;
+          }
+          urls.push({ url: res.url, weight: Math.max(0, Math.floor(row.weight)) });
+        }
+        if (urls.length < 2) { toast.error("Adicione pelo menos 2 destinos"); setSaving(false); return; }
         await updateRotation({ data: { linkId: link.id, rotation_mode: rotMode, urls } });
         toast.success("Rotação atualizada");
       }
