@@ -124,12 +124,169 @@ export const listMySubscriberLinks = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase
       .from("short_links")
-      .select("id,slug,target_url,label,click_count,status,created_at,last_clicked_at")
+      .select("id,slug,target_url,label,click_count,status,created_at,last_clicked_at,is_rotating,rotation_mode,short_link_urls(url,weight,sort_order)")
       .eq("user_id", context.userId)
       .eq("is_subscriber_link", true)
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
     return { links: data ?? [] };
+  });
+
+type RotationUrlInput = { url: string; weight?: number | null };
+type RotationMode = "round_robin" | "random" | "weighted" | "sticky";
+
+function normalizeRotationUrls(urls: RotationUrlInput[]): { url: string; weight: number }[] {
+  const out: { url: string; weight: number }[] = [];
+  for (const u of urls ?? []) {
+    const url = (u?.url ?? "").trim();
+    if (!url) continue;
+    if (!/^https?:\/\//i.test(url)) {
+      throw new Error(`URL inválida: ${url} — deve começar com http:// ou https://`);
+    }
+    let w = Number.isFinite(u?.weight as number) ? Math.floor(Number(u!.weight)) : 1;
+    if (w < 0) w = 0;
+    if (w > 1000) w = 1000;
+    out.push({ url, weight: w });
+  }
+  if (out.length < 2) throw new Error("Um link rotativo precisa de pelo menos 2 URLs de destino.");
+  if (out.length > 20) throw new Error("Máximo de 20 URLs por link rotativo.");
+  return out;
+}
+
+export const createSubscriberRotatingLink = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { label?: string | null; rotation_mode: RotationMode; urls: RotationUrlInput[] }) => ({
+    label: (d.label ?? "")?.toString().trim() || null,
+    rotation_mode: (d.rotation_mode ?? "round_robin") as RotationMode,
+    urls: d.urls ?? [],
+  }))
+  .handler(async ({ data, context }) => {
+    const allowedModes: RotationMode[] = ["round_robin", "random", "weighted", "sticky"];
+    if (!allowedModes.includes(data.rotation_mode)) throw new Error("Modo de rotação inválido.");
+    const urls = normalizeRotationUrls(data.urls);
+    await requireActiveSubscription({ supabase: context.supabase, userId: context.userId });
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    let slug = "";
+    let insertedRow: { id: string } | null = null;
+    for (let i = 0; i < 8 && !insertedRow; i++) {
+      const candidate = genSlug(6);
+      const { data: row, error } = await supabaseAdmin
+        .from("short_links")
+        .insert({
+          user_id: context.userId,
+          slug: candidate,
+          is_rotating: true,
+          rotation_mode: data.rotation_mode,
+          rotation_cursor: 0,
+          target_url: urls[0].url,
+          status: "active",
+          label: data.label,
+          is_subscriber_link: true,
+        })
+        .select("id")
+        .maybeSingle();
+      if (!error && row) {
+        slug = candidate;
+        insertedRow = row;
+      }
+    }
+    if (!insertedRow) throw new Error("Não foi possível gerar um slug único, tente novamente.");
+
+    const urlRows = urls.map((u, idx) => ({
+      short_link_id: insertedRow!.id,
+      url: u.url,
+      weight: u.weight,
+      sort_order: idx,
+    }));
+    const { error: urlsErr } = await supabaseAdmin.from("short_link_urls").insert(urlRows);
+    if (urlsErr) {
+      await supabaseAdmin.from("short_links").delete().eq("id", insertedRow.id);
+      throw new Error(urlsErr.message);
+    }
+    return { slug, url: `https://cliques.site/r/${slug}` };
+  });
+
+export const updateSubscriberLinkRotation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { linkId: string; rotation_mode: RotationMode; urls: RotationUrlInput[] }) => ({
+    linkId: d.linkId,
+    rotation_mode: (d.rotation_mode ?? "round_robin") as RotationMode,
+    urls: d.urls ?? [],
+  }))
+  .handler(async ({ data, context }) => {
+    const allowedModes: RotationMode[] = ["round_robin", "random", "weighted", "sticky"];
+    if (!allowedModes.includes(data.rotation_mode)) throw new Error("Modo de rotação inválido.");
+    const urls = normalizeRotationUrls(data.urls);
+    await requireActiveSubscription({ supabase: context.supabase, userId: context.userId });
+
+    const { data: link, error: findErr } = await context.supabase
+      .from("short_links")
+      .select("id,user_id,is_subscriber_link")
+      .eq("id", data.linkId)
+      .maybeSingle();
+    if (findErr) throw new Error(findErr.message);
+    if (!link || link.user_id !== context.userId || !link.is_subscriber_link) {
+      throw new Error("Link não encontrado.");
+    }
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error: updErr } = await supabaseAdmin
+      .from("short_links")
+      .update({
+        is_rotating: true,
+        rotation_mode: data.rotation_mode,
+        rotation_cursor: 0,
+        target_url: urls[0].url,
+      })
+      .eq("id", data.linkId);
+    if (updErr) throw new Error(updErr.message);
+
+    const { error: delErr } = await supabaseAdmin
+      .from("short_link_urls")
+      .delete()
+      .eq("short_link_id", data.linkId);
+    if (delErr) throw new Error(delErr.message);
+
+    const urlRows = urls.map((u, idx) => ({
+      short_link_id: data.linkId,
+      url: u.url,
+      weight: u.weight,
+      sort_order: idx,
+    }));
+    const { error: insErr } = await supabaseAdmin.from("short_link_urls").insert(urlRows);
+    if (insErr) throw new Error(insErr.message);
+    return { ok: true };
+  });
+
+export const convertSubscriberLinkToSingle = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { linkId: string; target_url: string }) => ({
+    linkId: d.linkId,
+    target_url: (d.target_url ?? "").trim(),
+  }))
+  .handler(async ({ data, context }) => {
+    if (!/^https?:\/\//i.test(data.target_url)) {
+      throw new Error("URL inválida — deve começar com http:// ou https://");
+    }
+    await requireActiveSubscription({ supabase: context.supabase, userId: context.userId });
+    const { data: link, error: findErr } = await context.supabase
+      .from("short_links")
+      .select("id,user_id,is_subscriber_link")
+      .eq("id", data.linkId)
+      .maybeSingle();
+    if (findErr) throw new Error(findErr.message);
+    if (!link || link.user_id !== context.userId || !link.is_subscriber_link) {
+      throw new Error("Link não encontrado.");
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error: updErr } = await supabaseAdmin
+      .from("short_links")
+      .update({ is_rotating: false, target_url: data.target_url, rotation_cursor: 0 })
+      .eq("id", data.linkId);
+    if (updErr) throw new Error(updErr.message);
+    await supabaseAdmin.from("short_link_urls").delete().eq("short_link_id", data.linkId);
+    return { ok: true };
   });
 
 export const getMyLinkMetrics = createServerFn({ method: "POST" })
