@@ -7,9 +7,10 @@ import {
   createSubscriberLink,
   listMySubscriberLinks,
   getMyLinkMetrics,
+  updateSubscriberLinkTarget,
 } from "@/lib/link-subscribers.functions";
 import {
-  Loader2, Copy, Check, ExternalLink, BarChart3, X, LogOut, Link2, AlertTriangle,
+  Loader2, Copy, Check, ExternalLink, BarChart3, X, LogOut, Link2, AlertTriangle, Pencil,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -47,6 +48,28 @@ interface MyLink {
 
 const PIX_KEY = "iarachorta@gmail.com";
 
+function normalizePhone(raw: string): string | null {
+  const digits = (raw ?? "").replace(/\D+/g, "");
+  if (digits.length === 10 || digits.length === 11) return "55" + digits;
+  if ((digits.length === 12 || digits.length === 13) && digits.startsWith("55")) return digits;
+  return null;
+}
+
+function buildWaUrl(phone: string, message: string): string {
+  return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+}
+
+function parseWaUrl(url: string | null): { phone: string; message: string } | null {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    if (u.hostname !== "wa.me") return null;
+    const phone = u.pathname.replace(/^\/+/, "");
+    const message = u.searchParams.get("text") ?? "";
+    return { phone, message };
+  } catch { return null; }
+}
+
 function ClientesDashboard() {
   const navigate = useNavigate();
   const [sub, setSub] = useState<Sub | null>(null);
@@ -54,12 +77,16 @@ function ClientesDashboard() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
+  const [mode, setMode] = useState<"normal" | "whatsapp">("normal");
   const [targetUrl, setTargetUrl] = useState("");
+  const [waPhone, setWaPhone] = useState("");
+  const [waMsg, setWaMsg] = useState("");
   const [label, setLabel] = useState("");
   const [creating, setCreating] = useState(false);
 
   const [copied, setCopied] = useState<string | null>(null);
   const [metricsFor, setMetricsFor] = useState<MyLink | null>(null);
+  const [editingFor, setEditingFor] = useState<MyLink | null>(null);
 
   const getSub = useServerFn(getMySubscription);
   const listLinks = useServerFn(listMySubscriberLinks);
@@ -88,11 +115,20 @@ function ClientesDashboard() {
   const doCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!active) return;
+    let finalUrl = targetUrl;
+    if (mode === "whatsapp") {
+      const phone = normalizePhone(waPhone);
+      if (!phone) {
+        toast.error("Número de WhatsApp inválido — use DDD + número");
+        return;
+      }
+      finalUrl = buildWaUrl(phone, waMsg);
+    }
     setCreating(true);
     try {
-      const r: any = await createLink({ data: { target_url: targetUrl, label: label || null } });
+      const r: any = await createLink({ data: { target_url: finalUrl, label: label || null } });
       toast.success(`Link criado: ${r.url}`);
-      setTargetUrl(""); setLabel("");
+      setTargetUrl(""); setLabel(""); setWaPhone(""); setWaMsg("");
       await load();
     } catch (e: any) {
       toast.error(e?.message ?? "Falhou");
@@ -170,29 +206,84 @@ function ClientesDashboard() {
                   Formulário desabilitado — regularize o pagamento para criar novos links.
                 </p>
               )}
-              <form onSubmit={doCreate} className="mt-4 grid gap-3 sm:grid-cols-[1fr,220px,auto]">
-                <input
-                  disabled={!active}
-                  value={targetUrl}
-                  onChange={(e) => setTargetUrl(e.target.value)}
-                  placeholder="https://sua-url-de-destino.com"
-                  required
-                  type="url"
-                  className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm disabled:bg-slate-100"
-                />
-                <input
-                  disabled={!active}
-                  value={label}
-                  onChange={(e) => setLabel(e.target.value)}
-                  placeholder="Rótulo (opcional)"
-                  className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm disabled:bg-slate-100"
-                />
+
+              <div className="mt-4 inline-flex rounded-lg border border-slate-200 p-1 bg-slate-50">
                 <button
-                  type="submit" disabled={!active || creating}
-                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#0b3d91] hover:bg-[#0a3582] text-white px-5 py-2.5 text-sm font-semibold disabled:opacity-60"
-                >
-                  {creating && <Loader2 className="h-4 w-4 animate-spin" />} Criar link
-                </button>
+                  type="button"
+                  disabled={!active}
+                  onClick={() => setMode("normal")}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md ${mode === "normal" ? "bg-white shadow text-slate-900" : "text-slate-500"}`}
+                >Link normal</button>
+                <button
+                  type="button"
+                  disabled={!active}
+                  onClick={() => setMode("whatsapp")}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md ${mode === "whatsapp" ? "bg-white shadow text-slate-900" : "text-slate-500"}`}
+                >Link de WhatsApp</button>
+              </div>
+
+              <form onSubmit={doCreate} className="mt-4 space-y-3">
+                {mode === "normal" ? (
+                  <div className="grid gap-3 sm:grid-cols-[1fr,220px,auto]">
+                    <input
+                      disabled={!active}
+                      value={targetUrl}
+                      onChange={(e) => setTargetUrl(e.target.value)}
+                      placeholder="https://sua-url-de-destino.com"
+                      required
+                      type="url"
+                      className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm disabled:bg-slate-100"
+                    />
+                    <input
+                      disabled={!active}
+                      value={label}
+                      onChange={(e) => setLabel(e.target.value)}
+                      placeholder="Rótulo (opcional)"
+                      className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm disabled:bg-slate-100"
+                    />
+                    <button
+                      type="submit" disabled={!active || creating}
+                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#0b3d91] hover:bg-[#0a3582] text-white px-5 py-2.5 text-sm font-semibold disabled:opacity-60"
+                    >
+                      {creating && <Loader2 className="h-4 w-4 animate-spin" />} Criar link
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <input
+                        disabled={!active}
+                        value={waPhone}
+                        onChange={(e) => setWaPhone(e.target.value)}
+                        placeholder="Ex: 11 91234-5678"
+                        required
+                        type="tel"
+                        className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm disabled:bg-slate-100"
+                      />
+                      <input
+                        disabled={!active}
+                        value={label}
+                        onChange={(e) => setLabel(e.target.value)}
+                        placeholder="Rótulo (opcional)"
+                        className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm disabled:bg-slate-100"
+                      />
+                    </div>
+                    <textarea
+                      disabled={!active}
+                      value={waMsg}
+                      onChange={(e) => setWaMsg(e.target.value)}
+                      placeholder="Mensagem pré-preenchida quando abrirem o link"
+                      rows={3}
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm disabled:bg-slate-100"
+                    />
+                    <button
+                      type="submit" disabled={!active || creating}
+                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#0b3d91] hover:bg-[#0a3582] text-white px-5 py-2.5 text-sm font-semibold disabled:opacity-60"
+                    >
+                      {creating && <Loader2 className="h-4 w-4 animate-spin" />} Criar link de WhatsApp
+                    </button>
+                  </div>
+                )}
               </form>
             </section>
 
@@ -231,6 +322,12 @@ function ClientesDashboard() {
                           <ExternalLink className="h-3.5 w-3.5" /> Abrir
                         </a>
                         <button
+                          onClick={() => setEditingFor(l)}
+                          className="inline-flex items-center gap-1 text-xs text-slate-600 hover:text-slate-900 border border-slate-200 rounded px-2 py-1"
+                        >
+                          <Pencil className="h-3.5 w-3.5" /> Editar destino
+                        </button>
+                        <button
                           onClick={() => setMetricsFor(l)}
                           className="inline-flex items-center gap-1 text-xs text-white bg-[#0b3d91] hover:bg-[#0a3582] rounded px-2.5 py-1"
                         >
@@ -254,6 +351,117 @@ function ClientesDashboard() {
       {metricsFor && (
         <MetricsModal link={metricsFor} onClose={() => setMetricsFor(null)} />
       )}
+      {editingFor && (
+        <EditTargetModal
+          link={editingFor}
+          onClose={() => setEditingFor(null)}
+          onSaved={async () => { setEditingFor(null); await load(); }}
+        />
+      )}
+    </div>
+  );
+}
+
+function EditTargetModal({
+  link, onClose, onSaved,
+}: { link: MyLink; onClose: () => void; onSaved: () => void }) {
+  const wa = parseWaUrl(link.target_url);
+  const [isWa, setIsWa] = useState<boolean>(!!wa);
+  const [phone, setPhone] = useState(wa?.phone ?? "");
+  const [msg, setMsg] = useState(wa?.message ?? "");
+  const [url, setUrl] = useState(link.target_url ?? "");
+  const [saving, setSaving] = useState(false);
+  const update = useServerFn(updateSubscriberLinkTarget);
+
+  const save = async (e: React.FormEvent) => {
+    e.preventDefault();
+    let finalUrl = url;
+    if (isWa) {
+      const normalized = normalizePhone(phone);
+      if (!normalized) {
+        toast.error("Número de WhatsApp inválido — use DDD + número");
+        return;
+      }
+      finalUrl = buildWaUrl(normalized, msg);
+    }
+    setSaving(true);
+    try {
+      await update({ data: { linkId: link.id, target_url: finalUrl } });
+      toast.success("Destino atualizado");
+      onSaved();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Falhou");
+    } finally { setSaving(false); }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="bg-white rounded-2xl shadow-xl w-full max-w-lg">
+        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+          <h3 className="font-semibold text-slate-900">Editar destino — cliques.site/r/{link.slug}</h3>
+          <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-md text-slate-500"><X className="h-5 w-5" /></button>
+        </div>
+        <form onSubmit={save} className="p-6 space-y-4">
+          {wa && (
+            <div className="inline-flex rounded-lg border border-slate-200 p-1 bg-slate-50">
+              <button
+                type="button"
+                onClick={() => setIsWa(true)}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md ${isWa ? "bg-white shadow text-slate-900" : "text-slate-500"}`}
+              >WhatsApp</button>
+              <button
+                type="button"
+                onClick={() => setIsWa(false)}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md ${!isWa ? "bg-white shadow text-slate-900" : "text-slate-500"}`}
+              >URL livre</button>
+            </div>
+          )}
+          {isWa ? (
+            <>
+              <div>
+                <label className="text-xs font-medium text-slate-700">Número de WhatsApp (com DDD)</label>
+                <input
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="Ex: 11 91234-5678"
+                  type="tel"
+                  required
+                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-slate-700">Mensagem</label>
+                <textarea
+                  value={msg}
+                  onChange={(e) => setMsg(e.target.value)}
+                  rows={3}
+                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm"
+                />
+              </div>
+            </>
+          ) : (
+            <div>
+              <label className="text-xs font-medium text-slate-700">URL de destino</label>
+              <input
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                type="url"
+                required
+                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm"
+              />
+            </div>
+          )}
+          <div className="flex justify-end gap-2">
+            <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-slate-600 hover:text-slate-900">Cancelar</button>
+            <button
+              type="submit" disabled={saving}
+              className="inline-flex items-center gap-2 rounded-lg bg-[#0b3d91] hover:bg-[#0a3582] text-white px-5 py-2 text-sm font-semibold disabled:opacity-60"
+            >
+              {saving && <Loader2 className="h-4 w-4 animate-spin" />} Salvar
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
