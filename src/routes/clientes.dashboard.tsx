@@ -161,16 +161,25 @@ function ClientesDashboard() {
     setCreating(true);
     try {
       if (mode === "rotating") {
-        const urls = rotUrls
-          .map((u) => ({ url: u.url.trim(), weight: Math.max(0, Math.floor(u.weight)) }))
-          .filter((u) => u.url.length > 0);
+        const urls: { url: string; weight: number }[] = [];
+        for (const row of rotUrls) {
+          const res = rowToFinalUrl(row);
+          if (!res.ok) {
+            if (row.kind === "whatsapp" || row.url.trim().length > 0) {
+              toast.error(res.reason);
+              setCreating(false); return;
+            }
+            continue;
+          }
+          urls.push({ url: res.url, weight: Math.max(0, Math.floor(row.weight)) });
+        }
         if (urls.length < 2) {
-          toast.error("Adicione pelo menos 2 URLs para rotação.");
+          toast.error("Adicione pelo menos 2 destinos para rotação.");
           setCreating(false); return;
         }
         const r: any = await createRotating({ data: { label: label || null, rotation_mode: rotMode, urls } });
         toast.success(`Link rotativo criado: ${r.url}`);
-        setRotUrls([{ url: "", weight: 1 }, { url: "", weight: 1 }]);
+        setRotUrls([emptyRotRow("whatsapp"), emptyRotRow("whatsapp")]);
         setRotMode("round_robin");
       } else {
         let finalUrl = targetUrl;
