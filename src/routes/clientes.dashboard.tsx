@@ -496,28 +496,54 @@ function EditTargetModal({
   link, onClose, onSaved,
 }: { link: MyLink; onClose: () => void; onSaved: () => void }) {
   const wa = parseWaUrl(link.target_url);
-  const [isWa, setIsWa] = useState<boolean>(!!wa);
+  const initialTab: "single" | "rotating" = link.is_rotating ? "rotating" : "single";
+  const [tab, setTab] = useState<"single" | "rotating">(initialTab);
+
+  // single mode state
+  const [isWa, setIsWa] = useState<boolean>(!!wa && !link.is_rotating);
   const [phone, setPhone] = useState(wa?.phone ?? "");
   const [msg, setMsg] = useState(wa?.message ?? "");
-  const [url, setUrl] = useState(link.target_url ?? "");
+  const [url, setUrl] = useState(link.is_rotating ? "" : (link.target_url ?? ""));
+
+  // rotating mode state
+  const initialUrls = link.is_rotating && link.short_link_urls?.length
+    ? [...link.short_link_urls]
+        .sort((a, b) => a.sort_order - b.sort_order)
+        .map((u) => ({ url: u.url, weight: u.weight ?? 1 }))
+    : [{ url: link.target_url ?? "", weight: 1 }, { url: "", weight: 1 }];
+  const [rotUrls, setRotUrls] = useState(initialUrls);
+  const [rotMode, setRotMode] = useState<RotationMode>(link.rotation_mode ?? "round_robin");
+
   const [saving, setSaving] = useState(false);
-  const update = useServerFn(updateSubscriberLinkTarget);
+  const updateSingle = useServerFn(updateSubscriberLinkTarget);
+  const updateRotation = useServerFn(updateSubscriberLinkRotation);
+  const convertSingle = useServerFn(convertSubscriberLinkToSingle);
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
-    let finalUrl = url;
-    if (isWa) {
-      const normalized = normalizePhone(phone);
-      if (!normalized) {
-        toast.error("Número de WhatsApp inválido — use DDD + número");
-        return;
-      }
-      finalUrl = buildWaUrl(normalized, msg);
-    }
     setSaving(true);
     try {
-      await update({ data: { linkId: link.id, target_url: finalUrl } });
-      toast.success("Destino atualizado");
+      if (tab === "single") {
+        let finalUrl = url;
+        if (isWa) {
+          const normalized = normalizePhone(phone);
+          if (!normalized) { toast.error("Número de WhatsApp inválido"); setSaving(false); return; }
+          finalUrl = buildWaUrl(normalized, msg);
+        }
+        if (link.is_rotating) {
+          await convertSingle({ data: { linkId: link.id, target_url: finalUrl } });
+        } else {
+          await updateSingle({ data: { linkId: link.id, target_url: finalUrl } });
+        }
+        toast.success("Destino atualizado");
+      } else {
+        const urls = rotUrls
+          .map((u) => ({ url: u.url.trim(), weight: Math.max(0, Math.floor(u.weight)) }))
+          .filter((u) => u.url.length > 0);
+        if (urls.length < 2) { toast.error("Adicione pelo menos 2 URLs"); setSaving(false); return; }
+        await updateRotation({ data: { linkId: link.id, rotation_mode: rotMode, urls } });
+        toast.success("Rotação atualizada");
+      }
       onSaved();
     } catch (e: any) {
       toast.error(e?.message ?? "Falhou");
@@ -526,65 +552,108 @@ function EditTargetModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="bg-white rounded-2xl shadow-xl w-full max-w-lg">
-        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-          <h3 className="font-semibold text-slate-900">Editar destino — cliques.site/r/{link.slug}</h3>
+      <div onClick={(e) => e.stopPropagation()} className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white">
+          <h3 className="font-semibold text-slate-900">Editar — cliques.site/r/{link.slug}</h3>
           <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-md text-slate-500"><X className="h-5 w-5" /></button>
         </div>
         <form onSubmit={save} className="p-6 space-y-4">
-          {wa && (
-            <div className="inline-flex rounded-lg border border-slate-200 p-1 bg-slate-50">
-              <button
-                type="button"
-                onClick={() => setIsWa(true)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md ${isWa ? "bg-white shadow text-slate-900" : "text-slate-500"}`}
-              >WhatsApp</button>
-              <button
-                type="button"
-                onClick={() => setIsWa(false)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md ${!isWa ? "bg-white shadow text-slate-900" : "text-slate-500"}`}
-              >URL livre</button>
-            </div>
-          )}
-          {isWa ? (
+          <div className="inline-flex rounded-lg border border-slate-200 p-1 bg-slate-50">
+            <button
+              type="button"
+              onClick={() => setTab("single")}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md ${tab === "single" ? "bg-white shadow text-slate-900" : "text-slate-500"}`}
+            >Destino único</button>
+            <button
+              type="button"
+              onClick={() => setTab("rotating")}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md inline-flex items-center gap-1 ${tab === "rotating" ? "bg-white shadow text-slate-900" : "text-slate-500"}`}
+            ><Shuffle className="h-3.5 w-3.5" /> Rotativo</button>
+          </div>
+
+          {tab === "single" ? (
             <>
-              <div>
-                <label className="text-xs font-medium text-slate-700">Número de WhatsApp (com DDD)</label>
-                <input
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="Ex: 11 91234-5678"
-                  type="tel"
-                  required
-                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm"
-                />
+              <div className="inline-flex rounded-lg border border-slate-200 p-1 bg-slate-50">
+                <button type="button" onClick={() => setIsWa(false)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md ${!isWa ? "bg-white shadow text-slate-900" : "text-slate-500"}`}
+                >URL livre</button>
+                <button type="button" onClick={() => setIsWa(true)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md ${isWa ? "bg-white shadow text-slate-900" : "text-slate-500"}`}
+                >WhatsApp</button>
               </div>
-              <div>
-                <label className="text-xs font-medium text-slate-700">Mensagem</label>
-                <textarea
-                  value={msg}
-                  onChange={(e) => setMsg(e.target.value)}
-                  rows={3}
-                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm"
-                />
-              </div>
+              {isWa ? (
+                <>
+                  <div>
+                    <label className="text-xs font-medium text-slate-700">Número de WhatsApp (com DDD)</label>
+                    <input value={phone} onChange={(e) => setPhone(e.target.value)}
+                      placeholder="Ex: 11 91234-5678" type="tel" required
+                      className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm"/>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-slate-700">Mensagem</label>
+                    <textarea value={msg} onChange={(e) => setMsg(e.target.value)} rows={3}
+                      className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm"/>
+                  </div>
+                </>
+              ) : (
+                <div>
+                  <label className="text-xs font-medium text-slate-700">URL de destino</label>
+                  <input value={url} onChange={(e) => setUrl(e.target.value)} type="url" required
+                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm"/>
+                </div>
+              )}
+              {link.is_rotating && (
+                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded p-2">
+                  Salvar aqui converte o link rotativo em destino único — as URLs adicionais serão removidas.
+                </p>
+              )}
             </>
           ) : (
-            <div>
-              <label className="text-xs font-medium text-slate-700">URL de destino</label>
-              <input
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                type="url"
-                required
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm"
-              />
-            </div>
+            <>
+              <div>
+                <label className="text-xs font-medium text-slate-700">Modo de rotação</label>
+                <select value={rotMode} onChange={(e) => setRotMode(e.target.value as RotationMode)}
+                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm">
+                  {(Object.keys(ROTATION_LABELS) as RotationMode[]).map((m) => (
+                    <option key={m} value={m}>{ROTATION_LABELS[m]}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                {rotUrls.map((row, idx) => (
+                  <div key={idx} className="grid gap-2 grid-cols-[1fr,90px,auto] items-center">
+                    <input
+                      value={row.url}
+                      onChange={(e) => setRotUrls((prev) => prev.map((r, i) => i === idx ? { ...r, url: e.target.value } : r))}
+                      placeholder={`URL ${idx + 1}`}
+                      type="url"
+                      className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm"
+                    />
+                    <input
+                      disabled={rotMode !== "weighted"}
+                      value={row.weight}
+                      onChange={(e) => setRotUrls((prev) => prev.map((r, i) => i === idx ? { ...r, weight: Number(e.target.value) || 0 } : r))}
+                      type="number" min={0} max={1000}
+                      title="Peso (só ponderado)"
+                      className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm disabled:bg-slate-100"
+                    />
+                    <button type="button" disabled={rotUrls.length <= 2}
+                      onClick={() => setRotUrls((prev) => prev.filter((_, i) => i !== idx))}
+                      className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:text-red-600 disabled:opacity-40"
+                    ><Trash2 className="h-4 w-4" /></button>
+                  </div>
+                ))}
+                <button type="button" disabled={rotUrls.length >= 20}
+                  onClick={() => setRotUrls((prev) => [...prev, { url: "", weight: 1 }])}
+                  className="inline-flex items-center gap-1 text-xs text-[#0b3d91] hover:text-[#0a3582] disabled:opacity-40"
+                ><Plus className="h-3.5 w-3.5" /> Adicionar URL</button>
+              </div>
+            </>
           )}
-          <div className="flex justify-end gap-2">
+
+          <div className="flex justify-end gap-2 pt-2">
             <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-slate-600 hover:text-slate-900">Cancelar</button>
-            <button
-              type="submit" disabled={saving}
+            <button type="submit" disabled={saving}
               className="inline-flex items-center gap-2 rounded-lg bg-[#0b3d91] hover:bg-[#0a3582] text-white px-5 py-2 text-sm font-semibold disabled:opacity-60"
             >
               {saving && <Loader2 className="h-4 w-4 animate-spin" />} Salvar
