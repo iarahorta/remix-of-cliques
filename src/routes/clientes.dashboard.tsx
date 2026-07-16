@@ -241,7 +241,7 @@ function ClientesDashboard() {
                 </p>
               )}
 
-              <div className="mt-4 inline-flex rounded-lg border border-slate-200 p-1 bg-slate-50">
+              <div className="mt-4 inline-flex flex-wrap rounded-lg border border-slate-200 p-1 bg-slate-50">
                 <button
                   type="button"
                   disabled={!active}
@@ -254,10 +254,16 @@ function ClientesDashboard() {
                   onClick={() => setMode("whatsapp")}
                   className={`px-3 py-1.5 text-xs font-medium rounded-md ${mode === "whatsapp" ? "bg-white shadow text-slate-900" : "text-slate-500"}`}
                 >Link de WhatsApp</button>
+                <button
+                  type="button"
+                  disabled={!active}
+                  onClick={() => setMode("rotating")}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md inline-flex items-center gap-1 ${mode === "rotating" ? "bg-white shadow text-slate-900" : "text-slate-500"}`}
+                ><Shuffle className="h-3.5 w-3.5" /> Link rotativo</button>
               </div>
 
               <form onSubmit={doCreate} className="mt-4 space-y-3">
-                {mode === "normal" ? (
+                {mode === "normal" && (
                   <div className="grid gap-3 sm:grid-cols-[1fr,220px,auto]">
                     <input
                       disabled={!active}
@@ -282,7 +288,8 @@ function ClientesDashboard() {
                       {creating && <Loader2 className="h-4 w-4 animate-spin" />} Criar link
                     </button>
                   </div>
-                ) : (
+                )}
+                {mode === "whatsapp" && (
                   <div className="space-y-3">
                     <div className="grid gap-3 sm:grid-cols-2">
                       <input
@@ -315,6 +322,81 @@ function ClientesDashboard() {
                       className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#0b3d91] hover:bg-[#0a3582] text-white px-5 py-2.5 text-sm font-semibold disabled:opacity-60"
                     >
                       {creating && <Loader2 className="h-4 w-4 animate-spin" />} Criar link de WhatsApp
+                    </button>
+                  </div>
+                )}
+                {mode === "rotating" && (
+                  <div className="space-y-3">
+                    <p className="text-xs text-slate-500">
+                      O mesmo slug curto redireciona pra URLs diferentes segundo a regra escolhida — ótimo pra dividir tráfego, testes A/B ou revezar contatos.
+                    </p>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div>
+                        <label className="text-xs font-medium text-slate-700">Modo de rotação</label>
+                        <select
+                          disabled={!active}
+                          value={rotMode}
+                          onChange={(e) => setRotMode(e.target.value as RotationMode)}
+                          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm disabled:bg-slate-100"
+                        >
+                          {(Object.keys(ROTATION_LABELS) as RotationMode[]).map((m) => (
+                            <option key={m} value={m}>{ROTATION_LABELS[m]}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-slate-700">Rótulo (opcional)</label>
+                        <input
+                          disabled={!active}
+                          value={label}
+                          onChange={(e) => setLabel(e.target.value)}
+                          placeholder="Ex: Campanha janeiro"
+                          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm disabled:bg-slate-100"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      {rotUrls.map((row, idx) => (
+                        <div key={idx} className="grid gap-2 sm:grid-cols-[1fr,110px,auto] items-center">
+                          <input
+                            disabled={!active}
+                            value={row.url}
+                            onChange={(e) => setRotUrls((prev) => prev.map((r, i) => i === idx ? { ...r, url: e.target.value } : r))}
+                            placeholder={`URL de destino ${idx + 1}`}
+                            type="url"
+                            className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm disabled:bg-slate-100"
+                          />
+                          <input
+                            disabled={!active || rotMode !== "weighted"}
+                            value={row.weight}
+                            onChange={(e) => setRotUrls((prev) => prev.map((r, i) => i === idx ? { ...r, weight: Number(e.target.value) || 0 } : r))}
+                            type="number"
+                            min={0}
+                            max={1000}
+                            title="Peso (só usado no modo ponderado)"
+                            className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm disabled:bg-slate-100"
+                          />
+                          <button
+                            type="button"
+                            disabled={!active || rotUrls.length <= 2}
+                            onClick={() => setRotUrls((prev) => prev.filter((_, i) => i !== idx))}
+                            className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:text-red-600 disabled:opacity-40"
+                            title="Remover"
+                          ><Trash2 className="h-4 w-4" /></button>
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        disabled={!active || rotUrls.length >= 20}
+                        onClick={() => setRotUrls((prev) => [...prev, { url: "", weight: 1 }])}
+                        className="inline-flex items-center gap-1 text-xs text-[#0b3d91] hover:text-[#0a3582] disabled:opacity-40"
+                      ><Plus className="h-3.5 w-3.5" /> Adicionar URL</button>
+                    </div>
+                    <button
+                      type="submit" disabled={!active || creating}
+                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#0b3d91] hover:bg-[#0a3582] text-white px-5 py-2.5 text-sm font-semibold disabled:opacity-60"
+                    >
+                      {creating && <Loader2 className="h-4 w-4 animate-spin" />} Criar link rotativo
                     </button>
                   </div>
                 )}
