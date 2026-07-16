@@ -85,6 +85,29 @@ function parseWaUrl(url: string | null): { phone: string; message: string } | nu
   } catch { return null; }
 }
 
+type RotRow = { kind: "url" | "whatsapp"; url: string; phone: string; message: string; weight: number };
+
+function emptyRotRow(kind: RotRow["kind"] = "url"): RotRow {
+  return { kind, url: "", phone: "", message: "", weight: 1 };
+}
+
+function rowToFinalUrl(row: RotRow): { ok: true; url: string } | { ok: false; reason: string } {
+  if (row.kind === "whatsapp") {
+    const p = normalizePhone(row.phone);
+    if (!p) return { ok: false, reason: "Número de WhatsApp inválido — use DDD + número" };
+    return { ok: true, url: buildWaUrl(p, row.message) };
+  }
+  const t = row.url.trim();
+  if (!t) return { ok: false, reason: "URL vazia" };
+  return { ok: true, url: t };
+}
+
+function urlToRow(u: string, weight: number): RotRow {
+  const wa = parseWaUrl(u);
+  if (wa) return { kind: "whatsapp", url: "", phone: wa.phone, message: wa.message, weight };
+  return { kind: "url", url: u, phone: "", message: "", weight };
+}
+
 function ClientesDashboard() {
   const navigate = useNavigate();
   const [sub, setSub] = useState<Sub | null>(null);
