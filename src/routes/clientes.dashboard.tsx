@@ -92,11 +92,15 @@ function ClientesDashboard() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
-  const [mode, setMode] = useState<"normal" | "whatsapp">("normal");
+  const [mode, setMode] = useState<"normal" | "whatsapp" | "rotating">("normal");
   const [targetUrl, setTargetUrl] = useState("");
   const [waPhone, setWaPhone] = useState("");
   const [waMsg, setWaMsg] = useState("");
   const [label, setLabel] = useState("");
+  const [rotMode, setRotMode] = useState<RotationMode>("round_robin");
+  const [rotUrls, setRotUrls] = useState<{ url: string; weight: number }[]>([
+    { url: "", weight: 1 }, { url: "", weight: 1 },
+  ]);
   const [creating, setCreating] = useState(false);
 
   const [copied, setCopied] = useState<string | null>(null);
@@ -106,6 +110,7 @@ function ClientesDashboard() {
   const getSub = useServerFn(getMySubscription);
   const listLinks = useServerFn(listMySubscriberLinks);
   const createLink = useServerFn(createSubscriberLink);
+  const createRotating = useServerFn(createSubscriberRotatingLink);
 
   const active = useMemo(() => {
     if (!sub) return false;
@@ -130,19 +135,33 @@ function ClientesDashboard() {
   const doCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!active) return;
-    let finalUrl = targetUrl;
-    if (mode === "whatsapp") {
-      const phone = normalizePhone(waPhone);
-      if (!phone) {
-        toast.error("Número de WhatsApp inválido — use DDD + número");
-        return;
-      }
-      finalUrl = buildWaUrl(phone, waMsg);
-    }
     setCreating(true);
     try {
-      const r: any = await createLink({ data: { target_url: finalUrl, label: label || null } });
-      toast.success(`Link criado: ${r.url}`);
+      if (mode === "rotating") {
+        const urls = rotUrls
+          .map((u) => ({ url: u.url.trim(), weight: Math.max(0, Math.floor(u.weight)) }))
+          .filter((u) => u.url.length > 0);
+        if (urls.length < 2) {
+          toast.error("Adicione pelo menos 2 URLs para rotação.");
+          setCreating(false); return;
+        }
+        const r: any = await createRotating({ data: { label: label || null, rotation_mode: rotMode, urls } });
+        toast.success(`Link rotativo criado: ${r.url}`);
+        setRotUrls([{ url: "", weight: 1 }, { url: "", weight: 1 }]);
+        setRotMode("round_robin");
+      } else {
+        let finalUrl = targetUrl;
+        if (mode === "whatsapp") {
+          const phone = normalizePhone(waPhone);
+          if (!phone) {
+            toast.error("Número de WhatsApp inválido — use DDD + número");
+            setCreating(false); return;
+          }
+          finalUrl = buildWaUrl(phone, waMsg);
+        }
+        const r: any = await createLink({ data: { target_url: finalUrl, label: label || null } });
+        toast.success(`Link criado: ${r.url}`);
+      }
       setTargetUrl(""); setLabel(""); setWaPhone(""); setWaMsg("");
       await load();
     } catch (e: any) {
