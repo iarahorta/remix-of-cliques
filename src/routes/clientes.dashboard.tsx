@@ -13,6 +13,10 @@ import {
   convertSubscriberLinkToSingle,
 } from "@/lib/link-subscribers.functions";
 import {
+  ensureSubscriberBilling,
+  cancelSubscriberBilling,
+} from "@/lib/billing.functions";
+import {
   Loader2, Copy, Check, ExternalLink, BarChart3, X, LogOut, Link2, AlertTriangle, Pencil, Plus, Trash2, Shuffle,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -134,6 +138,9 @@ function ClientesDashboard() {
   const listLinks = useServerFn(listMySubscriberLinks);
   const createLink = useServerFn(createSubscriberLink);
   const createRotating = useServerFn(createSubscriberRotatingLink);
+  const ensureBilling = useServerFn(ensureSubscriberBilling);
+  const cancelBilling = useServerFn(cancelSubscriberBilling);
+  const [billingLoading, setBillingLoading] = useState(false);
 
   const active = useMemo(() => {
     if (!sub) return false;
