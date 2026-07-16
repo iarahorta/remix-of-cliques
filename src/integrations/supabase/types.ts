@@ -408,6 +408,8 @@ export type Database = {
           asaas_last_invoice_url: string | null
           asaas_last_payment_id: string | null
           asaas_last_payment_status: string | null
+          asaas_payment_link_id: string | null
+          asaas_payment_link_url: string | null
           asaas_subscription_id: string | null
           created_at: string
           current_period_end: string | null
@@ -427,6 +429,8 @@ export type Database = {
           asaas_last_invoice_url?: string | null
           asaas_last_payment_id?: string | null
           asaas_last_payment_status?: string | null
+          asaas_payment_link_id?: string | null
+          asaas_payment_link_url?: string | null
           asaas_subscription_id?: string | null
           created_at?: string
           current_period_end?: string | null
@@ -446,6 +450,8 @@ export type Database = {
           asaas_last_invoice_url?: string | null
           asaas_last_payment_id?: string | null
           asaas_last_payment_status?: string | null
+          asaas_payment_link_id?: string | null
+          asaas_payment_link_url?: string | null
           asaas_subscription_id?: string | null
           created_at?: string
           current_period_end?: string | null
