@@ -418,11 +418,25 @@ function ClientesDashboard() {
                     return (
                       <li key={l.id} className="px-6 py-4 flex flex-wrap items-center gap-3">
                         <div className="min-w-0 flex-1">
-                          <div className="text-sm font-medium text-slate-900">{short}</div>
-                          <div className="text-xs text-slate-500 truncate max-w-md">
-                            {l.label ? <span className="mr-2 text-slate-700">[{l.label}]</span> : null}
-                            → {l.target_url ?? "—"}
+                          <div className="text-sm font-medium text-slate-900 flex items-center gap-2">
+                            {short}
+                            {l.is_rotating && (
+                              <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider font-semibold text-[#0b3d91] bg-[#0b3d91]/10 rounded px-1.5 py-0.5">
+                                <Shuffle className="h-3 w-3" /> {ROTATION_LABELS[l.rotation_mode] ?? l.rotation_mode}
+                              </span>
+                            )}
                           </div>
+                          {l.is_rotating ? (
+                            <div className="text-xs text-slate-500 mt-0.5">
+                              {l.label ? <span className="mr-2 text-slate-700">[{l.label}]</span> : null}
+                              → {l.short_link_urls?.length ?? 0} URLs em rotação
+                            </div>
+                          ) : (
+                            <div className="text-xs text-slate-500 truncate max-w-md">
+                              {l.label ? <span className="mr-2 text-slate-700">[{l.label}]</span> : null}
+                              → {l.target_url ?? "—"}
+                            </div>
+                          )}
                         </div>
                         <button
                           onClick={() => copyLink(l.slug)}
@@ -441,7 +455,7 @@ function ClientesDashboard() {
                           onClick={() => setEditingFor(l)}
                           className="inline-flex items-center gap-1 text-xs text-slate-600 hover:text-slate-900 border border-slate-200 rounded px-2 py-1"
                         >
-                          <Pencil className="h-3.5 w-3.5" /> Editar destino
+                          <Pencil className="h-3.5 w-3.5" /> Editar
                         </button>
                         <button
                           onClick={() => setMetricsFor(l)}
