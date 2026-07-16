@@ -46,17 +46,19 @@ export const Route = createFileRoute("/api/public/links")({
         const limit = Math.min(Number(url.searchParams.get("limit") ?? 100), 500);
         const offset = Number(url.searchParams.get("offset") ?? 0);
         const q = url.searchParams.get("q");
+        const subscriberId = url.searchParams.get("subscriber_id");
         const { supabaseAdmin } = await import(
           "@/integrations/supabase/client.server"
         );
         let query = supabaseAdmin
           .from("short_links")
           .select(
-            "id,slug,target_url,is_rotating,status,click_count,last_clicked_at,label,created_at,updated_at"
+            "id,slug,target_url,is_rotating,rotation_mode,rotation_cursor,status,click_count,last_clicked_at,label,user_id,created_at,updated_at"
           )
           .order("created_at", { ascending: false })
           .range(offset, offset + limit - 1);
         if (q) query = query.ilike("slug", `%${q}%`);
+        if (subscriberId) query = query.eq("user_id", subscriberId);
         const { data, error } = await query;
         if (error)
           return new Response(JSON.stringify({ error: error.message }), {
