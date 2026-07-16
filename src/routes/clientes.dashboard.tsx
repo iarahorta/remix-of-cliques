@@ -5,12 +5,15 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   getMySubscription,
   createSubscriberLink,
+  createSubscriberRotatingLink,
   listMySubscriberLinks,
   getMyLinkMetrics,
   updateSubscriberLinkTarget,
+  updateSubscriberLinkRotation,
+  convertSubscriberLinkToSingle,
 } from "@/lib/link-subscribers.functions";
 import {
-  Loader2, Copy, Check, ExternalLink, BarChart3, X, LogOut, Link2, AlertTriangle, Pencil,
+  Loader2, Copy, Check, ExternalLink, BarChart3, X, LogOut, Link2, AlertTriangle, Pencil, Plus, Trash2, Shuffle,
 } from "lucide-react";
 import { toast } from "sonner";
 
