@@ -35,12 +35,14 @@ export const ensureSubscriberBilling = createServerFn({ method: "POST" })
 
     // 1) Ensure customer
     if (!sub.asaas_customer_id) {
-      if (!sub.name || !sub.email) {
-        throw new Error("Complete seu cadastro (nome e email) antes de gerar a cobrança.");
+      const email = (sub.email ?? "").trim();
+      if (!email) {
+        throw new Error("Complete seu cadastro (email) antes de gerar a cobrança.");
       }
+      const name = (sub.name ?? "").trim() || email.split("@")[0];
       const cust = await upsertAsaasCustomer({
-        name: sub.name,
-        email: sub.email,
+        name,
+        email,
         mobilePhone: sub.phone ?? undefined,
         externalReference: sub.id,
       });
