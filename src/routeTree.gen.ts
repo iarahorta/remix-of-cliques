@@ -15,6 +15,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ClientesIndexRouteImport } from './routes/clientes.index'
 import { Route as RSlugRouteImport } from './routes/r.$slug'
 import { Route as AuthenticatedEncurtadorRouteImport } from './routes/_authenticated/encurtador'
 import { Route as AuthenticatedAssinantesRouteImport } from './routes/_authenticated/assinantes'
@@ -49,6 +50,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClientesIndexRoute = ClientesIndexRouteImport.update({
+  id: '/clientes/',
+  path: '/clientes/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RSlugRoute = RSlugRouteImport.update({
@@ -92,6 +98,7 @@ export interface FileRoutesByFullPath {
   '/assinantes': typeof AuthenticatedAssinantesRoute
   '/encurtador': typeof AuthenticatedEncurtadorRoute
   '/r/$slug': typeof RSlugRoute
+  '/clientes/': typeof ClientesIndexRoute
   '/api/public/links': typeof ApiPublicLinksRouteWithChildren
   '/api/public/links/$slug': typeof ApiPublicLinksSlugRouteWithChildren
   '/api/public/links/$slug/clicks': typeof ApiPublicLinksSlugClicksRoute
@@ -105,6 +112,7 @@ export interface FileRoutesByTo {
   '/assinantes': typeof AuthenticatedAssinantesRoute
   '/encurtador': typeof AuthenticatedEncurtadorRoute
   '/r/$slug': typeof RSlugRoute
+  '/clientes': typeof ClientesIndexRoute
   '/api/public/links': typeof ApiPublicLinksRouteWithChildren
   '/api/public/links/$slug': typeof ApiPublicLinksSlugRouteWithChildren
   '/api/public/links/$slug/clicks': typeof ApiPublicLinksSlugClicksRoute
@@ -120,6 +128,7 @@ export interface FileRoutesById {
   '/_authenticated/assinantes': typeof AuthenticatedAssinantesRoute
   '/_authenticated/encurtador': typeof AuthenticatedEncurtadorRoute
   '/r/$slug': typeof RSlugRoute
+  '/clientes/': typeof ClientesIndexRoute
   '/api/public/links': typeof ApiPublicLinksRouteWithChildren
   '/api/public/links/$slug': typeof ApiPublicLinksSlugRouteWithChildren
   '/api/public/links/$slug/clicks': typeof ApiPublicLinksSlugClicksRoute
@@ -135,6 +144,7 @@ export interface FileRouteTypes {
     | '/assinantes'
     | '/encurtador'
     | '/r/$slug'
+    | '/clientes/'
     | '/api/public/links'
     | '/api/public/links/$slug'
     | '/api/public/links/$slug/clicks'
@@ -148,6 +158,7 @@ export interface FileRouteTypes {
     | '/assinantes'
     | '/encurtador'
     | '/r/$slug'
+    | '/clientes'
     | '/api/public/links'
     | '/api/public/links/$slug'
     | '/api/public/links/$slug/clicks'
@@ -162,6 +173,7 @@ export interface FileRouteTypes {
     | '/_authenticated/assinantes'
     | '/_authenticated/encurtador'
     | '/r/$slug'
+    | '/clientes/'
     | '/api/public/links'
     | '/api/public/links/$slug'
     | '/api/public/links/$slug/clicks'
@@ -175,6 +187,7 @@ export interface RootRouteChildren {
   PortalRoute: typeof PortalRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   RSlugRoute: typeof RSlugRoute
+  ClientesIndexRoute: typeof ClientesIndexRoute
   ApiPublicLinksRoute: typeof ApiPublicLinksRouteWithChildren
 }
 
@@ -220,6 +233,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/clientes/': {
+      id: '/clientes/'
+      path: '/clientes'
+      fullPath: '/clientes/'
+      preLoaderRoute: typeof ClientesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/r/$slug': {
@@ -311,6 +331,7 @@ const rootRouteChildren: RootRouteChildren = {
   PortalRoute: PortalRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   RSlugRoute: RSlugRoute,
+  ClientesIndexRoute: ClientesIndexRoute,
   ApiPublicLinksRoute: ApiPublicLinksRouteWithChildren,
 }
 export const routeTree = rootRouteImport
