@@ -29,6 +29,7 @@ async function asaas(path: string, init?: RequestInit): Promise<any> {
       json?.errors?.[0]?.description ||
       json?.message ||
       `asaas ${res.status}`;
+    console.error("[asaas] request failed", { path, status: res.status, message: msg });
     throw new Error(msg);
   }
   return json;
@@ -65,6 +66,24 @@ export async function createAsaasSubscription(input: {
   return asaas("/subscriptions", {
     method: "POST",
     body: JSON.stringify({ ...input, cycle: "MONTHLY" }),
+  });
+}
+
+export async function createAsaasPaymentLink(input: {
+  name: string;
+  value: number;
+  billingType: AsaasBillingType;
+  chargeType: "DETACHED" | "RECURRENT" | "INSTALLMENT";
+  subscriptionCycle?: "MONTHLY";
+  description?: string;
+  externalReference: string;
+  dueDateLimitDays?: number;
+  notificationEnabled?: boolean;
+  isAddressRequired?: boolean;
+}) {
+  return asaas("/paymentLinks", {
+    method: "POST",
+    body: JSON.stringify(input),
   });
 }
 
