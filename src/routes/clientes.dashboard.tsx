@@ -13,6 +13,10 @@ import {
   convertSubscriberLinkToSingle,
 } from "@/lib/link-subscribers.functions";
 import {
+  ensureSubscriberBilling,
+  cancelSubscriberBilling,
+} from "@/lib/billing.functions";
+import {
   Loader2, Copy, Check, ExternalLink, BarChart3, X, LogOut, Link2, AlertTriangle, Pencil, Plus, Trash2, Shuffle,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -134,6 +138,9 @@ function ClientesDashboard() {
   const listLinks = useServerFn(listMySubscriberLinks);
   const createLink = useServerFn(createSubscriberLink);
   const createRotating = useServerFn(createSubscriberRotatingLink);
+  const ensureBilling = useServerFn(ensureSubscriberBilling);
+  const cancelBilling = useServerFn(cancelSubscriberBilling);
+  const [billingLoading, setBillingLoading] = useState(false);
 
   const active = useMemo(() => {
     if (!sub) return false;
@@ -237,32 +244,98 @@ function ClientesDashboard() {
         ) : (
           <>
             {/* Subscription status */}
-            <section className={`rounded-2xl border p-6 ${active ? "bg-emerald-50 border-emerald-200" : "bg-amber-50 border-amber-200"}`}>
-              {active ? (
-                <div>
-                  <h2 className="font-semibold text-emerald-900">Assinatura ativa</h2>
-                  <p className="text-sm text-emerald-800 mt-1">
-                    Válida até <strong>{new Date(sub!.current_period_end!).toLocaleDateString("pt-BR")}</strong>.
-                  </p>
-                </div>
-              ) : (
-                <div>
-                  <div className="flex items-center gap-2 text-amber-900 font-semibold">
-                    <AlertTriangle className="h-5 w-5" /> Assinatura pendente — R$ 19,90/mês
-                  </div>
-                  <p className="text-sm text-amber-900 mt-2">
-                    Envie o pagamento via <strong>PIX</strong> para a chave abaixo e depois avise a Iara com o comprovante para liberar seu acesso.
-                  </p>
-                  <div className="mt-3 flex flex-wrap items-center gap-2">
-                    <code className="bg-white border border-amber-200 text-slate-800 rounded px-3 py-1.5 text-sm">{PIX_KEY}</code>
-                    <button
-                      onClick={async () => { try { await navigator.clipboard.writeText(PIX_KEY); toast.success("Chave PIX copiada"); } catch {} }}
-                      className="inline-flex items-center gap-1 text-xs bg-amber-900/10 hover:bg-amber-900/20 text-amber-900 px-2.5 py-1.5 rounded"
-                    ><Copy className="h-3.5 w-3.5" /> Copiar</button>
-                  </div>
-                </div>
-              )}
-            </section>
+            {(() => {
+              const status = sub?.status ?? "pending_payment";
+              const isActive = active;
+              const isSuspended = status === "suspended";
+              const openInvoice = async () => {
+                setBillingLoading(true);
+                try {
+                  const r: any = await ensureBilling({});
+                  if (r?.invoiceUrl) {
+                    window.open(r.invoiceUrl, "_blank", "noopener,noreferrer");
+                  } else {
+                    toast.error("Não foi possível gerar a fatura agora — tente de novo em instantes.");
+                  }
+                } catch (e: any) {
+                  toast.error(e?.message ?? "Erro ao gerar cobrança");
+                } finally {
+                  setBillingLoading(false);
+                }
+              };
+              const doCancel = async () => {
+                if (!confirm("Cancelar sua assinatura? O acesso é interrompido.")) return;
+                setBillingLoading(true);
+                try {
+                  await cancelBilling({});
+                  toast.success("Assinatura cancelada");
+                  await load();
+                } catch (e: any) {
+                  toast.error(e?.message ?? "Erro ao cancelar");
+                } finally {
+                  setBillingLoading(false);
+                }
+              };
+              const boxCls = isActive
+                ? "bg-emerald-50 border-emerald-200"
+                : isSuspended
+                  ? "bg-red-50 border-red-200"
+                  : "bg-amber-50 border-amber-200";
+              return (
+                <section className={`rounded-2xl border p-6 ${boxCls}`}>
+                  {isActive ? (
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <h2 className="font-semibold text-emerald-900">Assinatura ativa</h2>
+                        <p className="text-sm text-emerald-800 mt-1">
+                          Válida até <strong>{new Date(sub!.current_period_end!).toLocaleDateString("pt-BR")}</strong>.
+                        </p>
+                      </div>
+                      <button
+                        onClick={doCancel}
+                        disabled={billingLoading}
+                        className="text-xs text-emerald-900/70 hover:text-emerald-900 underline underline-offset-2 disabled:opacity-50"
+                      >Cancelar assinatura</button>
+                    </div>
+                  ) : isSuspended ? (
+                    <div>
+                      <div className="flex items-center gap-2 text-red-900 font-semibold">
+                        <AlertTriangle className="h-5 w-5" /> Assinatura suspensa
+                      </div>
+                      <p className="text-sm text-red-900 mt-2">
+                        Reative pagando a próxima fatura — R$ 19,90/mês (PIX, cartão ou boleto).
+                      </p>
+                      <button
+                        onClick={openInvoice}
+                        disabled={billingLoading}
+                        className="mt-3 inline-flex items-center gap-2 rounded-lg bg-red-700 hover:bg-red-800 disabled:opacity-60 text-white text-sm font-medium px-4 py-2"
+                      >
+                        {billingLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
+                        Reativar por R$ 19,90
+                      </button>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="flex items-center gap-2 text-amber-900 font-semibold">
+                        <AlertTriangle className="h-5 w-5" /> Sua assinatura precisa de pagamento
+                      </div>
+                      <p className="text-sm text-amber-900 mt-2">
+                        R$ 19,90/mês — escolha PIX, cartão ou boleto na tela de pagamento.
+                      </p>
+                      <button
+                        onClick={openInvoice}
+                        disabled={billingLoading}
+                        className="mt-3 inline-flex items-center gap-2 rounded-lg bg-amber-600 hover:bg-amber-700 disabled:opacity-60 text-white text-sm font-medium px-4 py-2"
+                      >
+                        {billingLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
+                        Pagar R$ 19,90
+                      </button>
+                    </div>
+                  )}
+                </section>
+              );
+            })()}
+
 
             {/* Create form */}
             <section className="bg-white border border-slate-200 rounded-2xl p-6">

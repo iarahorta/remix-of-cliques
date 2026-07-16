@@ -22,8 +22,10 @@ import { Route as AuthenticatedEncurtadorRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAssinantesRouteImport } from './routes/_authenticated/assinantes'
 import { Route as ApiPublicSubscribersRouteImport } from './routes/api/public/subscribers'
 import { Route as ApiPublicLinksRouteImport } from './routes/api/public/links'
+import { Route as ApiPublicWebhooksAsaasRouteImport } from './routes/api/public/webhooks.asaas'
 import { Route as ApiPublicSubscribersIdRouteImport } from './routes/api/public/subscribers.$id'
 import { Route as ApiPublicLinksSlugRouteImport } from './routes/api/public/links.$slug'
+import { Route as ApiPublicHooksAsaasSweepRouteImport } from './routes/api/public/hooks.asaas-sweep'
 import { Route as ApiPublicLinksSlugRotateRouteImport } from './routes/api/public/links.$slug.rotate'
 import { Route as ApiPublicLinksSlugClicksRouteImport } from './routes/api/public/links.$slug.clicks'
 
@@ -91,6 +93,11 @@ const ApiPublicLinksRoute = ApiPublicLinksRouteImport.update({
   path: '/api/public/links',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicWebhooksAsaasRoute = ApiPublicWebhooksAsaasRouteImport.update({
+  id: '/api/public/webhooks/asaas',
+  path: '/api/public/webhooks/asaas',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicSubscribersIdRoute = ApiPublicSubscribersIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -101,6 +108,12 @@ const ApiPublicLinksSlugRoute = ApiPublicLinksSlugRouteImport.update({
   path: '/$slug',
   getParentRoute: () => ApiPublicLinksRoute,
 } as any)
+const ApiPublicHooksAsaasSweepRoute =
+  ApiPublicHooksAsaasSweepRouteImport.update({
+    id: '/api/public/hooks/asaas-sweep',
+    path: '/api/public/hooks/asaas-sweep',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicLinksSlugRotateRoute =
   ApiPublicLinksSlugRotateRouteImport.update({
     id: '/rotate',
@@ -127,8 +140,10 @@ export interface FileRoutesByFullPath {
   '/clientes/': typeof ClientesIndexRoute
   '/api/public/links': typeof ApiPublicLinksRouteWithChildren
   '/api/public/subscribers': typeof ApiPublicSubscribersRouteWithChildren
+  '/api/public/hooks/asaas-sweep': typeof ApiPublicHooksAsaasSweepRoute
   '/api/public/links/$slug': typeof ApiPublicLinksSlugRouteWithChildren
   '/api/public/subscribers/$id': typeof ApiPublicSubscribersIdRoute
+  '/api/public/webhooks/asaas': typeof ApiPublicWebhooksAsaasRoute
   '/api/public/links/$slug/clicks': typeof ApiPublicLinksSlugClicksRoute
   '/api/public/links/$slug/rotate': typeof ApiPublicLinksSlugRotateRoute
 }
@@ -145,8 +160,10 @@ export interface FileRoutesByTo {
   '/clientes': typeof ClientesIndexRoute
   '/api/public/links': typeof ApiPublicLinksRouteWithChildren
   '/api/public/subscribers': typeof ApiPublicSubscribersRouteWithChildren
+  '/api/public/hooks/asaas-sweep': typeof ApiPublicHooksAsaasSweepRoute
   '/api/public/links/$slug': typeof ApiPublicLinksSlugRouteWithChildren
   '/api/public/subscribers/$id': typeof ApiPublicSubscribersIdRoute
+  '/api/public/webhooks/asaas': typeof ApiPublicWebhooksAsaasRoute
   '/api/public/links/$slug/clicks': typeof ApiPublicLinksSlugClicksRoute
   '/api/public/links/$slug/rotate': typeof ApiPublicLinksSlugRotateRoute
 }
@@ -165,8 +182,10 @@ export interface FileRoutesById {
   '/clientes/': typeof ClientesIndexRoute
   '/api/public/links': typeof ApiPublicLinksRouteWithChildren
   '/api/public/subscribers': typeof ApiPublicSubscribersRouteWithChildren
+  '/api/public/hooks/asaas-sweep': typeof ApiPublicHooksAsaasSweepRoute
   '/api/public/links/$slug': typeof ApiPublicLinksSlugRouteWithChildren
   '/api/public/subscribers/$id': typeof ApiPublicSubscribersIdRoute
+  '/api/public/webhooks/asaas': typeof ApiPublicWebhooksAsaasRoute
   '/api/public/links/$slug/clicks': typeof ApiPublicLinksSlugClicksRoute
   '/api/public/links/$slug/rotate': typeof ApiPublicLinksSlugRotateRoute
 }
@@ -185,8 +204,10 @@ export interface FileRouteTypes {
     | '/clientes/'
     | '/api/public/links'
     | '/api/public/subscribers'
+    | '/api/public/hooks/asaas-sweep'
     | '/api/public/links/$slug'
     | '/api/public/subscribers/$id'
+    | '/api/public/webhooks/asaas'
     | '/api/public/links/$slug/clicks'
     | '/api/public/links/$slug/rotate'
   fileRoutesByTo: FileRoutesByTo
@@ -203,8 +224,10 @@ export interface FileRouteTypes {
     | '/clientes'
     | '/api/public/links'
     | '/api/public/subscribers'
+    | '/api/public/hooks/asaas-sweep'
     | '/api/public/links/$slug'
     | '/api/public/subscribers/$id'
+    | '/api/public/webhooks/asaas'
     | '/api/public/links/$slug/clicks'
     | '/api/public/links/$slug/rotate'
   id:
@@ -222,8 +245,10 @@ export interface FileRouteTypes {
     | '/clientes/'
     | '/api/public/links'
     | '/api/public/subscribers'
+    | '/api/public/hooks/asaas-sweep'
     | '/api/public/links/$slug'
     | '/api/public/subscribers/$id'
+    | '/api/public/webhooks/asaas'
     | '/api/public/links/$slug/clicks'
     | '/api/public/links/$slug/rotate'
   fileRoutesById: FileRoutesById
@@ -240,6 +265,8 @@ export interface RootRouteChildren {
   ClientesIndexRoute: typeof ClientesIndexRoute
   ApiPublicLinksRoute: typeof ApiPublicLinksRouteWithChildren
   ApiPublicSubscribersRoute: typeof ApiPublicSubscribersRouteWithChildren
+  ApiPublicHooksAsaasSweepRoute: typeof ApiPublicHooksAsaasSweepRoute
+  ApiPublicWebhooksAsaasRoute: typeof ApiPublicWebhooksAsaasRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -335,6 +362,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicLinksRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/webhooks/asaas': {
+      id: '/api/public/webhooks/asaas'
+      path: '/api/public/webhooks/asaas'
+      fullPath: '/api/public/webhooks/asaas'
+      preLoaderRoute: typeof ApiPublicWebhooksAsaasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/subscribers/$id': {
       id: '/api/public/subscribers/$id'
       path: '/$id'
@@ -348,6 +382,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/public/links/$slug'
       preLoaderRoute: typeof ApiPublicLinksSlugRouteImport
       parentRoute: typeof ApiPublicLinksRoute
+    }
+    '/api/public/hooks/asaas-sweep': {
+      id: '/api/public/hooks/asaas-sweep'
+      path: '/api/public/hooks/asaas-sweep'
+      fullPath: '/api/public/hooks/asaas-sweep'
+      preLoaderRoute: typeof ApiPublicHooksAsaasSweepRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/links/$slug/rotate': {
       id: '/api/public/links/$slug/rotate'
@@ -427,17 +468,9 @@ const rootRouteChildren: RootRouteChildren = {
   ClientesIndexRoute: ClientesIndexRoute,
   ApiPublicLinksRoute: ApiPublicLinksRouteWithChildren,
   ApiPublicSubscribersRoute: ApiPublicSubscribersRouteWithChildren,
+  ApiPublicHooksAsaasSweepRoute: ApiPublicHooksAsaasSweepRoute,
+  ApiPublicWebhooksAsaasRoute: ApiPublicWebhooksAsaasRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
