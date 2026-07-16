@@ -1,12 +1,13 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useState } from "react";
-import { Link2, LogOut, Menu, Sparkles } from "lucide-react";
+import { Link2, LogOut, Menu, Sparkles, Users } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 const navItems = [
   { title: "Encurtador", url: "/encurtador", icon: Link2 },
+  { title: "Assinantes", url: "/assinantes", icon: Users },
 ] as const;
 
 function Brand() {
