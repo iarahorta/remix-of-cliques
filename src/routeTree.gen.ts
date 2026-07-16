@@ -22,6 +22,7 @@ import { Route as AuthenticatedEncurtadorRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAssinantesRouteImport } from './routes/_authenticated/assinantes'
 import { Route as ApiPublicSubscribersRouteImport } from './routes/api/public/subscribers'
 import { Route as ApiPublicLinksRouteImport } from './routes/api/public/links'
+import { Route as AuthenticatedConfiguracoesAsaasRouteImport } from './routes/_authenticated/configuracoes.asaas'
 import { Route as ApiPublicWebhooksAsaasRouteImport } from './routes/api/public/webhooks.asaas'
 import { Route as ApiPublicSubscribersIdRouteImport } from './routes/api/public/subscribers.$id'
 import { Route as ApiPublicLinksSlugRouteImport } from './routes/api/public/links.$slug'
@@ -93,6 +94,12 @@ const ApiPublicLinksRoute = ApiPublicLinksRouteImport.update({
   path: '/api/public/links',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedConfiguracoesAsaasRoute =
+  AuthenticatedConfiguracoesAsaasRouteImport.update({
+    id: '/configuracoes/asaas',
+    path: '/configuracoes/asaas',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ApiPublicWebhooksAsaasRoute = ApiPublicWebhooksAsaasRouteImport.update({
   id: '/api/public/webhooks/asaas',
   path: '/api/public/webhooks/asaas',
@@ -138,6 +145,7 @@ export interface FileRoutesByFullPath {
   '/clientes/dashboard': typeof ClientesDashboardRoute
   '/r/$slug': typeof RSlugRoute
   '/clientes/': typeof ClientesIndexRoute
+  '/configuracoes/asaas': typeof AuthenticatedConfiguracoesAsaasRoute
   '/api/public/links': typeof ApiPublicLinksRouteWithChildren
   '/api/public/subscribers': typeof ApiPublicSubscribersRouteWithChildren
   '/api/public/hooks/asaas-sweep': typeof ApiPublicHooksAsaasSweepRoute
@@ -158,6 +166,7 @@ export interface FileRoutesByTo {
   '/clientes/dashboard': typeof ClientesDashboardRoute
   '/r/$slug': typeof RSlugRoute
   '/clientes': typeof ClientesIndexRoute
+  '/configuracoes/asaas': typeof AuthenticatedConfiguracoesAsaasRoute
   '/api/public/links': typeof ApiPublicLinksRouteWithChildren
   '/api/public/subscribers': typeof ApiPublicSubscribersRouteWithChildren
   '/api/public/hooks/asaas-sweep': typeof ApiPublicHooksAsaasSweepRoute
@@ -180,6 +189,7 @@ export interface FileRoutesById {
   '/clientes/dashboard': typeof ClientesDashboardRoute
   '/r/$slug': typeof RSlugRoute
   '/clientes/': typeof ClientesIndexRoute
+  '/_authenticated/configuracoes/asaas': typeof AuthenticatedConfiguracoesAsaasRoute
   '/api/public/links': typeof ApiPublicLinksRouteWithChildren
   '/api/public/subscribers': typeof ApiPublicSubscribersRouteWithChildren
   '/api/public/hooks/asaas-sweep': typeof ApiPublicHooksAsaasSweepRoute
@@ -202,6 +212,7 @@ export interface FileRouteTypes {
     | '/clientes/dashboard'
     | '/r/$slug'
     | '/clientes/'
+    | '/configuracoes/asaas'
     | '/api/public/links'
     | '/api/public/subscribers'
     | '/api/public/hooks/asaas-sweep'
@@ -222,6 +233,7 @@ export interface FileRouteTypes {
     | '/clientes/dashboard'
     | '/r/$slug'
     | '/clientes'
+    | '/configuracoes/asaas'
     | '/api/public/links'
     | '/api/public/subscribers'
     | '/api/public/hooks/asaas-sweep'
@@ -243,6 +255,7 @@ export interface FileRouteTypes {
     | '/clientes/dashboard'
     | '/r/$slug'
     | '/clientes/'
+    | '/_authenticated/configuracoes/asaas'
     | '/api/public/links'
     | '/api/public/subscribers'
     | '/api/public/hooks/asaas-sweep'
@@ -362,6 +375,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicLinksRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/configuracoes/asaas': {
+      id: '/_authenticated/configuracoes/asaas'
+      path: '/configuracoes/asaas'
+      fullPath: '/configuracoes/asaas'
+      preLoaderRoute: typeof AuthenticatedConfiguracoesAsaasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/webhooks/asaas': {
       id: '/api/public/webhooks/asaas'
       path: '/api/public/webhooks/asaas'
@@ -410,11 +430,13 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAssinantesRoute: typeof AuthenticatedAssinantesRoute
   AuthenticatedEncurtadorRoute: typeof AuthenticatedEncurtadorRoute
+  AuthenticatedConfiguracoesAsaasRoute: typeof AuthenticatedConfiguracoesAsaasRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAssinantesRoute: AuthenticatedAssinantesRoute,
   AuthenticatedEncurtadorRoute: AuthenticatedEncurtadorRoute,
+  AuthenticatedConfiguracoesAsaasRoute: AuthenticatedConfiguracoesAsaasRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -474,13 +496,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
