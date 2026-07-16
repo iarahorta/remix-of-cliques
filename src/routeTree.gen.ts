@@ -24,6 +24,7 @@ import { Route as ApiPublicSubscribersRouteImport } from './routes/api/public/su
 import { Route as ApiPublicLinksRouteImport } from './routes/api/public/links'
 import { Route as ApiPublicSubscribersIdRouteImport } from './routes/api/public/subscribers.$id'
 import { Route as ApiPublicLinksSlugRouteImport } from './routes/api/public/links.$slug'
+import { Route as ApiPublicLinksSlugRotateRouteImport } from './routes/api/public/links.$slug.rotate'
 import { Route as ApiPublicLinksSlugClicksRouteImport } from './routes/api/public/links.$slug.clicks'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -100,6 +101,12 @@ const ApiPublicLinksSlugRoute = ApiPublicLinksSlugRouteImport.update({
   path: '/$slug',
   getParentRoute: () => ApiPublicLinksRoute,
 } as any)
+const ApiPublicLinksSlugRotateRoute =
+  ApiPublicLinksSlugRotateRouteImport.update({
+    id: '/rotate',
+    path: '/rotate',
+    getParentRoute: () => ApiPublicLinksSlugRoute,
+  } as any)
 const ApiPublicLinksSlugClicksRoute =
   ApiPublicLinksSlugClicksRouteImport.update({
     id: '/clicks',
@@ -123,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/api/public/links/$slug': typeof ApiPublicLinksSlugRouteWithChildren
   '/api/public/subscribers/$id': typeof ApiPublicSubscribersIdRoute
   '/api/public/links/$slug/clicks': typeof ApiPublicLinksSlugClicksRoute
+  '/api/public/links/$slug/rotate': typeof ApiPublicLinksSlugRotateRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -140,6 +148,7 @@ export interface FileRoutesByTo {
   '/api/public/links/$slug': typeof ApiPublicLinksSlugRouteWithChildren
   '/api/public/subscribers/$id': typeof ApiPublicSubscribersIdRoute
   '/api/public/links/$slug/clicks': typeof ApiPublicLinksSlugClicksRoute
+  '/api/public/links/$slug/rotate': typeof ApiPublicLinksSlugRotateRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -159,6 +168,7 @@ export interface FileRoutesById {
   '/api/public/links/$slug': typeof ApiPublicLinksSlugRouteWithChildren
   '/api/public/subscribers/$id': typeof ApiPublicSubscribersIdRoute
   '/api/public/links/$slug/clicks': typeof ApiPublicLinksSlugClicksRoute
+  '/api/public/links/$slug/rotate': typeof ApiPublicLinksSlugRotateRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -178,6 +188,7 @@ export interface FileRouteTypes {
     | '/api/public/links/$slug'
     | '/api/public/subscribers/$id'
     | '/api/public/links/$slug/clicks'
+    | '/api/public/links/$slug/rotate'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -195,6 +206,7 @@ export interface FileRouteTypes {
     | '/api/public/links/$slug'
     | '/api/public/subscribers/$id'
     | '/api/public/links/$slug/clicks'
+    | '/api/public/links/$slug/rotate'
   id:
     | '__root__'
     | '/'
@@ -213,6 +225,7 @@ export interface FileRouteTypes {
     | '/api/public/links/$slug'
     | '/api/public/subscribers/$id'
     | '/api/public/links/$slug/clicks'
+    | '/api/public/links/$slug/rotate'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -336,6 +349,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicLinksSlugRouteImport
       parentRoute: typeof ApiPublicLinksRoute
     }
+    '/api/public/links/$slug/rotate': {
+      id: '/api/public/links/$slug/rotate'
+      path: '/rotate'
+      fullPath: '/api/public/links/$slug/rotate'
+      preLoaderRoute: typeof ApiPublicLinksSlugRotateRouteImport
+      parentRoute: typeof ApiPublicLinksSlugRoute
+    }
     '/api/public/links/$slug/clicks': {
       id: '/api/public/links/$slug/clicks'
       path: '/clicks'
@@ -361,10 +381,12 @@ const AuthenticatedRouteRouteWithChildren =
 
 interface ApiPublicLinksSlugRouteChildren {
   ApiPublicLinksSlugClicksRoute: typeof ApiPublicLinksSlugClicksRoute
+  ApiPublicLinksSlugRotateRoute: typeof ApiPublicLinksSlugRotateRoute
 }
 
 const ApiPublicLinksSlugRouteChildren: ApiPublicLinksSlugRouteChildren = {
   ApiPublicLinksSlugClicksRoute: ApiPublicLinksSlugClicksRoute,
+  ApiPublicLinksSlugRotateRoute: ApiPublicLinksSlugRotateRoute,
 }
 
 const ApiPublicLinksSlugRouteWithChildren =

@@ -606,6 +606,7 @@ export type Database = {
           short_link_id: string
           sort_order: number
           url: string
+          weight: number
         }
         Insert: {
           created_at?: string
@@ -613,6 +614,7 @@ export type Database = {
           short_link_id: string
           sort_order?: number
           url: string
+          weight?: number
         }
         Update: {
           created_at?: string
@@ -620,6 +622,7 @@ export type Database = {
           short_link_id?: string
           sort_order?: number
           url?: string
+          weight?: number
         }
         Relationships: [
           {
@@ -641,7 +644,9 @@ export type Database = {
           is_subscriber_link: boolean
           label: string | null
           last_clicked_at: string | null
+          rotation_cursor: number
           rotation_index: number
+          rotation_mode: string
           slug: string
           status: string
           target_url: string | null
@@ -657,7 +662,9 @@ export type Database = {
           is_subscriber_link?: boolean
           label?: string | null
           last_clicked_at?: string | null
+          rotation_cursor?: number
           rotation_index?: number
+          rotation_mode?: string
           slug: string
           status?: string
           target_url?: string | null
@@ -673,7 +680,9 @@ export type Database = {
           is_subscriber_link?: boolean
           label?: string | null
           last_clicked_at?: string | null
+          rotation_cursor?: number
           rotation_index?: number
+          rotation_mode?: string
           slug?: string
           status?: string
           target_url?: string | null
@@ -813,7 +822,6 @@ export type Database = {
       bump_short_link_click: {
         Args: { _slug: string }
         Returns: {
-          is_rotating: boolean
           status: string
           target: string
         }[]

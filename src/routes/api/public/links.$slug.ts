@@ -38,7 +38,7 @@ export const Route = createFileRoute("/api/public/links/$slug")({
         const { data: link, error } = await supabaseAdmin
           .from("short_links")
           .select(
-            "id,slug,target_url,is_rotating,status,click_count,last_clicked_at,label,created_at,updated_at"
+            "id,slug,target_url,is_rotating,rotation_mode,rotation_cursor,status,click_count,last_clicked_at,label,user_id,created_at,updated_at"
           )
           .eq("slug", slug)
           .maybeSingle();
@@ -54,13 +54,13 @@ export const Route = createFileRoute("/api/public/links/$slug")({
           });
         const { data: urls } = await supabaseAdmin
           .from("short_link_urls")
-          .select("url,sort_order")
+          .select("url,sort_order,weight")
           .eq("short_link_id", link.id)
           .order("sort_order");
         return Response.json({ link, rotation_urls: urls ?? [] });
       },
 
-      // PATCH: { target_url?, rotation_urls?, status?, label? }
+      // PATCH: { target_url?, rotation_urls?, rotation_mode?, status?, label? }
       PATCH: async ({ request, params }) => {
         if (!checkAuth(request)) return unauthorized();
         const slug = params.slug.toLowerCase();
@@ -92,10 +92,17 @@ export const Route = createFileRoute("/api/public/links/$slug")({
           label?: string;
           status?: string;
           is_rotating?: boolean;
+          rotation_mode?: string;
         } = {};
         if (typeof body.target_url === "string") patch.target_url = body.target_url;
         if (typeof body.label === "string") patch.label = body.label;
         if (typeof body.status === "string") patch.status = body.status;
+        if (
+          typeof body.rotation_mode === "string" &&
+          ["round_robin", "random", "weighted", "sticky"].includes(body.rotation_mode)
+        ) {
+          patch.rotation_mode = body.rotation_mode;
+        }
         if (Array.isArray(body.rotation_urls))
           patch.is_rotating = body.rotation_urls.length > 0;
 
@@ -117,11 +124,22 @@ export const Route = createFileRoute("/api/public/links/$slug")({
             .delete()
             .eq("short_link_id", existing.id);
           if (body.rotation_urls.length > 0) {
-            const rows = body.rotation_urls.map((u: string, i: number) => ({
-              short_link_id: existing.id,
-              url: u,
-              sort_order: i,
-            }));
+            const rows = body.rotation_urls.map((u: any, i: number) => {
+              if (typeof u === "string") {
+                return {
+                  short_link_id: existing.id,
+                  url: u,
+                  sort_order: i,
+                  weight: 1,
+                };
+              }
+              return {
+                short_link_id: existing.id,
+                url: String(u.url),
+                sort_order: i,
+                weight: Math.max(0, Math.min(1000, Number(u.weight ?? 1))),
+              };
+            });
             await supabaseAdmin.from("short_link_urls").insert(rows);
           }
         }
