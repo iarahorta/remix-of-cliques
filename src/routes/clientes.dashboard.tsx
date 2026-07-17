@@ -23,7 +23,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/clientes/dashboard")({
   ssr: false,
-  head: () => ({ meta: [{ title: "Meu Painel — cliques" }, { name: "robots", content: "noindex,nofollow" }] }),
+  head: () => ({ meta: [{ title: "Meu Painel — zpclik" }, { name: "robots", content: "noindex,nofollow" }] }),
   beforeLoad: async () => {
     const { data } = await supabase.auth.getUser();
     if (!data.user) throw redirect({ to: "/clientes" });
@@ -209,7 +209,7 @@ function ClientesDashboard() {
   };
 
   const copyLink = async (slug: string) => {
-    const url = `https://cliques.site/r/${slug}`;
+    const url = `https://www.zpclik.site/r/${slug}`;
     try { await navigator.clipboard.writeText(url); setCopied(slug); setTimeout(() => setCopied(null), 1500); } catch {}
   };
 
@@ -226,7 +226,7 @@ function ClientesDashboard() {
             <div className="h-8 w-8 rounded-md bg-[#0b3d91] text-white flex items-center justify-center">
               <Link2 className="h-4 w-4" />
             </div>
-            <span>cliques</span>
+            <span>zpclik</span>
           </div>
           <div className="flex items-center gap-3">
             <span className="text-sm text-slate-500 hidden sm:inline">{sub?.email ?? sub?.name ?? ""}</span>
@@ -496,7 +496,7 @@ function ClientesDashboard() {
               ) : (
                 <ul className="divide-y divide-slate-100">
                   {links.map((l) => {
-                    const short = `cliques.site/r/${l.slug}`;
+                    const short = `www.zpclik.site/r/${l.slug}`;
                     return (
                       <li key={l.id} className="px-6 py-4 flex flex-wrap items-center gap-3">
                         <div className="min-w-0 flex-1">
