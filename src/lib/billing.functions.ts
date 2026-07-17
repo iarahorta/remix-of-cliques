@@ -38,7 +38,7 @@ export const ensureSubscriberBilling = createServerFn({ method: "POST" })
     // failures when the app only has name/email/phone.
     if (!sub.asaas_subscription_id && !sub.asaas_payment_link_url) {
       const created = await createAsaasPaymentLink({
-        name: "cliques.site — assinatura mensal",
+        name: "www.zpclik.site — assinatura mensal",
         value: PLAN_VALUE_BRL,
         billingType: "UNDEFINED",
         chargeType: "RECURRENT",

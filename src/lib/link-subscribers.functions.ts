@@ -116,7 +116,7 @@ export const createSubscriberLink = createServerFn({ method: "POST" })
       }
     }
     if (!inserted) throw new Error("Não foi possível gerar um slug único, tente novamente.");
-    return { slug, url: `https://cliques.site/r/${slug}` };
+    return { slug, url: `https://www.zpclik.site/r/${slug}` };
   });
 
 export const listMySubscriberLinks = createServerFn({ method: "GET" })
@@ -204,7 +204,7 @@ export const createSubscriberRotatingLink = createServerFn({ method: "POST" })
       await supabaseAdmin.from("short_links").delete().eq("id", insertedRow.id);
       throw new Error(urlsErr.message);
     }
-    return { slug, url: `https://cliques.site/r/${slug}` };
+    return { slug, url: `https://www.zpclik.site/r/${slug}` };
   });
 
 export const updateSubscriberLinkRotation = createServerFn({ method: "POST" })
