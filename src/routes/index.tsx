@@ -5,7 +5,7 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "zpclik — Encurtador de Links Inteligente" },
-      { name: "description", content: "Encurte links, acompanhe cliques reais e distribua tráfego com rotação inteligente." },
+      { name: "description", content: "Encurte links, acompanhe acessos reais e distribua tráfego com rotação inteligente." },
       { name: "robots", content: "noindex,nofollow" },
     ],
   }),
