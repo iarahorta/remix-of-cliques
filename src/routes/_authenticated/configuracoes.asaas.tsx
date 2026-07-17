@@ -10,7 +10,7 @@ import {
 } from "@/lib/asaas-admin.functions";
 
 export const Route = createFileRoute("/_authenticated/configuracoes/asaas")({
-  head: () => ({ meta: [{ title: "Configurações Asaas — cliques" }] }),
+  head: () => ({ meta: [{ title: "Configurações Asaas — zpclik" }] }),
   component: ConfiguracoesAsaas,
 });
 

@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Lock, CheckCircle2 } from "lucide-react";
 
 export const Route = createFileRoute("/reset-password")({
-  head: () => ({ meta: [{ title: "Redefinir senha — cliques" }, { name: "robots", content: "noindex,nofollow" }] }),
+  head: () => ({ meta: [{ title: "Redefinir senha — zpclik" }, { name: "robots", content: "noindex,nofollow" }] }),
   component: ResetPasswordPage,
 });
 

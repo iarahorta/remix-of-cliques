@@ -17,7 +17,7 @@ function Brand() {
       <div className="h-8 w-8 rounded-md bg-[#0b3d91] text-white flex items-center justify-center">
         <Sparkles className="h-4 w-4" />
       </div>
-      <span className="text-lg">cliques</span>
+      <span className="text-lg">zpclik</span>
     </div>
   );
 }
