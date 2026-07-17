@@ -190,7 +190,7 @@ export function LandingPlans() {
               </h3>
               <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
                 Links curtos ilimitados no domínio <span className="font-semibold text-foreground">www.zpclik.site</span>,
-                métricas de cliques reais (filtramos bots automaticamente) e rotação entre vários destinos —
+                métricas de acessos reais (filtramos bots automaticamente) e rotação entre vários destinos —
                 perfeito pra distribuir tráfego entre grupos, ofertas e páginas.
                 <span className="block mt-1">Só R$ 19,90/mês. Assine em segundos.</span>
               </p>

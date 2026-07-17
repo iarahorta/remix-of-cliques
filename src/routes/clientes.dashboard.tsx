@@ -553,7 +553,7 @@ function ClientesDashboard() {
             </section>
 
             <p className="text-xs text-slate-500 text-center">
-              Apenas cliques reais são contabilizados — tráfego de robôs e crawlers é filtrado automaticamente.
+              Apenas acessos reais são contabilizados — tráfego de robôs e crawlers é filtrado automaticamente.
               {" "}<Link to="/portal" className="underline">Sobre nós</Link>
             </p>
           </>
@@ -866,7 +866,7 @@ function MetricsModal({ link, onClose }: { link: MyLink; onClose: () => void }) 
         <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white">
           <div>
             <h3 className="font-semibold text-slate-900">Métricas — www.zpclik.site/r/{link.slug}</h3>
-            <p className="text-xs text-slate-500">Apenas cliques reais — bots filtrados automaticamente</p>
+            <p className="text-xs text-slate-500">Apenas acessos reais — bots filtrados automaticamente</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-md text-slate-500">
             <X className="h-5 w-5" />
