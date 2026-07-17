@@ -291,7 +291,10 @@ export const convertSubscriberLinkToSingle = createServerFn({ method: "POST" })
 
 export const getMyLinkMetrics = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { shortLinkId: string }) => ({ shortLinkId: d.shortLinkId }))
+  .inputValidator((d: { shortLinkId: string; days?: number }) => ({
+    shortLinkId: d.shortLinkId,
+    days: Math.min(365, Math.max(1, Number(d.days ?? 30))),
+  }))
   .handler(async ({ data, context }) => {
     const { data: link, error: linkErr } = await context.supabase
       .from("short_links")
@@ -301,42 +304,118 @@ export const getMyLinkMetrics = createServerFn({ method: "POST" })
     if (linkErr) throw new Error(linkErr.message);
     if (!link || link.user_id !== context.userId) throw new Error("Link não encontrado");
 
-    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const since = new Date(Date.now() - data.days * 24 * 60 * 60 * 1000).toISOString();
     const { data: clicks, error } = await context.supabase
       .from("short_link_clicks")
-      .select("created_at,country,city,is_bot")
+      .select("id,created_at,country,region,city,ip,user_agent,referer,target_url,is_bot")
       .eq("short_link_id", link.id)
       .eq("is_bot", false)
       .gte("created_at", since)
       .order("created_at", { ascending: false })
-      .limit(5000);
+      .limit(10000);
     if (error) throw new Error(error.message);
 
     const rows = clicks ?? [];
     const byDay = new Map<string, number>();
-    // Seed last 30 days
-    for (let i = 29; i >= 0; i--) {
+    for (let i = data.days - 1; i >= 0; i--) {
       const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
       const key = d.toISOString().slice(0, 10);
       byDay.set(key, 0);
     }
     const byCountry = new Map<string, number>();
     const byCity = new Map<string, number>();
-    for (const c of rows) {
-      const key = (c.created_at as string).slice(0, 10);
-      byDay.set(key, (byDay.get(key) ?? 0) + 1);
-      if (c.country) byCountry.set(c.country, (byCountry.get(c.country) ?? 0) + 1);
-      if (c.city) byCity.set(c.city, (byCity.get(c.city) ?? 0) + 1);
-    }
-    const daily = Array.from(byDay.entries()).map(([day, count]) => ({ day, count }));
-    const topCountries = Array.from(byCountry.entries())
-      .sort((a, b) => b[1] - a[1]).slice(0, 5)
-      .map(([name, count]) => ({ name, count }));
-    const topCities = Array.from(byCity.entries())
-      .sort((a, b) => b[1] - a[1]).slice(0, 5)
-      .map(([name, count]) => ({ name, count }));
+    const byRegion = new Map<string, number>();
+    const byHour = new Map<number, number>();
+    const byReferer = new Map<string, number>();
+    const byDevice = new Map<string, number>();
+    const byBrowser = new Map<string, number>();
+    const byOs = new Map<string, number>();
+    const byTarget = new Map<string, number>();
+    const uniqueIps = new Set<string>();
+    for (let h = 0; h < 24; h++) byHour.set(h, 0);
 
-    return { total: rows.length, daily, topCountries, topCities };
+    const inc = (m: Map<string, number>, k: string | null | undefined) => {
+      if (!k) return;
+      m.set(k, (m.get(k) ?? 0) + 1);
+    };
+    const parseUA = (ua: string | null | undefined) => {
+      const s = (ua ?? "").toLowerCase();
+      let device = "Desktop";
+      if (/ipad|tablet/.test(s)) device = "Tablet";
+      else if (/mobi|iphone|android/.test(s)) device = "Mobile";
+      let os = "Outro";
+      if (/iphone|ipad|ios|mac os x/.test(s)) os = /mac os x/.test(s) && !/mobile/.test(s) ? "macOS" : "iOS";
+      else if (/android/.test(s)) os = "Android";
+      else if (/windows/.test(s)) os = "Windows";
+      else if (/linux/.test(s)) os = "Linux";
+      let browser = "Outro";
+      if (/edg\//.test(s)) browser = "Edge";
+      else if (/opr\/|opera/.test(s)) browser = "Opera";
+      else if (/chrome/.test(s)) browser = "Chrome";
+      else if (/firefox/.test(s)) browser = "Firefox";
+      else if (/safari/.test(s)) browser = "Safari";
+      return { device, os, browser };
+    };
+    const parseRef = (r: string | null | undefined) => {
+      if (!r) return "Direto";
+      try { return new URL(r).hostname.replace(/^www\./, ""); } catch { return "Outro"; }
+    };
+
+    for (const c of rows) {
+      const iso = c.created_at as string;
+      byDay.set(iso.slice(0, 10), (byDay.get(iso.slice(0, 10)) ?? 0) + 1);
+      const h = new Date(iso).getUTCHours();
+      byHour.set(h, (byHour.get(h) ?? 0) + 1);
+      inc(byCountry, c.country);
+      inc(byCity, c.city);
+      inc(byRegion, c.region);
+      inc(byReferer, parseRef(c.referer));
+      inc(byTarget, c.target_url);
+      if (c.ip) uniqueIps.add(c.ip);
+      const ua = parseUA(c.user_agent);
+      inc(byDevice, ua.device);
+      inc(byBrowser, ua.browser);
+      inc(byOs, ua.os);
+    }
+    const topN = (m: Map<string, number>, n = 8) =>
+      Array.from(m.entries()).sort((a, b) => b[1] - a[1]).slice(0, n).map(([name, count]) => ({ name, count }));
+    const daily = Array.from(byDay.entries()).map(([day, count]) => ({ day, count }));
+    const hourly = Array.from(byHour.entries()).sort((a, b) => a[0] - b[0]).map(([hour, count]) => ({ hour, count }));
+
+    const clicksDetailed = rows.map((c: any) => {
+      const ua = parseUA(c.user_agent);
+      return {
+        id: c.id,
+        created_at: c.created_at,
+        ip: c.ip ?? null,
+        country: c.country ?? null,
+        region: c.region ?? null,
+        city: c.city ?? null,
+        referer: c.referer ?? null,
+        referer_host: parseRef(c.referer),
+        user_agent: c.user_agent ?? null,
+        device: ua.device,
+        browser: ua.browser,
+        os: ua.os,
+        target_url: c.target_url ?? null,
+      };
+    });
+
+    return {
+      total: rows.length,
+      unique_ips: uniqueIps.size,
+      daily,
+      hourly,
+      topCountries: topN(byCountry),
+      topRegions: topN(byRegion),
+      topCities: topN(byCity),
+      topReferers: topN(byReferer),
+      topDevices: topN(byDevice),
+      topBrowsers: topN(byBrowser),
+      topOs: topN(byOs),
+      topTargets: topN(byTarget),
+      clicks: clicksDetailed,
+    };
   });
 
 export const updateSubscriberLinkTarget = createServerFn({ method: "POST" })
