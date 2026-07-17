@@ -8,11 +8,11 @@ import { Loader2, Link2, BarChart3, ShieldCheck, Zap } from "lucide-react";
 export const Route = createFileRoute("/clientes/")({
   head: () => ({
     meta: [
-      { title: "Encurtador de Links por Assinatura — cliques" },
+      { title: "Encurtador de Links por Assinatura — zpclik" },
       {
         name: "description",
         content:
-          "Encurte links, acompanhe cliques reais (sem robôs) e gerencie tudo num painel simples. R$ 19,90/mês.",
+          "Encurte links, acompanhe acessos reais (sem robôs) e gerencie tudo num painel simples. R$ 19,90/mês.",
       },
     ],
   }),
@@ -89,14 +89,14 @@ function ClientesLanding() {
       <div className="max-w-6xl mx-auto px-6 py-12 lg:py-20 grid lg:grid-cols-2 gap-12 items-start">
         <div>
           <div className="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-slate-500 font-semibold">
-            <Link2 className="h-4 w-4" /> cliques
+            <Link2 className="h-4 w-4" /> zpclik
           </div>
           <h1 className="mt-4 text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-slate-900 leading-tight">
             Encurtador de Links por Assinatura
           </h1>
           <p className="mt-4 text-slate-600 text-base sm:text-lg leading-relaxed">
             Crie links curtos em segundos, compartilhe onde quiser e acompanhe apenas os
-            <strong> cliques reais </strong> — filtramos automaticamente robôs e crawlers.
+            <strong> acessos reais </strong> — filtramos automaticamente robôs e crawlers.
           </p>
           <div className="mt-8 flex items-baseline gap-2">
             <span className="text-4xl font-bold text-slate-900">R$ 19,90</span>
@@ -106,11 +106,11 @@ function ClientesLanding() {
           <ul className="mt-8 space-y-3 text-sm text-slate-700">
             <li className="flex items-start gap-3">
               <Zap className="h-5 w-5 text-[#0b3d91] shrink-0 mt-0.5" />
-              Links curtos ilimitados no domínio cliques.site
+              Links curtos ilimitados no domínio www.zpclik.site
             </li>
             <li className="flex items-start gap-3">
               <BarChart3 className="h-5 w-5 text-[#0b3d91] shrink-0 mt-0.5" />
-              Métricas de cliques reais, por dia e por localização
+              Métricas de acessos reais, por dia e por localização
             </li>
             <li className="flex items-start gap-3">
               <ShieldCheck className="h-5 w-5 text-[#0b3d91] shrink-0 mt-0.5" />

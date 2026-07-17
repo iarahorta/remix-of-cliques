@@ -13,7 +13,7 @@ async function asaas(path: string, init?: RequestInit): Promise<any> {
       access_token: key,
       accept: "application/json",
       "Content-Type": "application/json",
-      "User-Agent": "cliques.site/1.0.0",
+      "User-Agent": "www.zpclik.site/1.0.0",
       ...(init?.headers ?? {}),
     },
   });

@@ -11,7 +11,7 @@ import {
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/assinantes")({
-  head: () => ({ meta: [{ title: "Assinantes — cliques" }] }),
+  head: () => ({ meta: [{ title: "Assinantes — zpclik" }] }),
   component: Assinantes,
 });
 

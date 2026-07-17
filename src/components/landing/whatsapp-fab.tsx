@@ -3,7 +3,7 @@ import { trackEvent } from "@/lib/meta-pixel";
 import { trackClick } from "@/lib/pixel-tracking";
 
 const WHATSAPP_NUMBER = "5531975225821";
-const WHATSAPP_MESSAGE = "Ola HS, venho do site e quero saber mais!";
+const WHATSAPP_MESSAGE = "Ola, venho do site e quero saber mais!";
 export const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`;
 
 export function WhatsAppFab() {

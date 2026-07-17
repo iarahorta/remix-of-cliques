@@ -23,7 +23,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/clientes/dashboard")({
   ssr: false,
-  head: () => ({ meta: [{ title: "Meu Painel — cliques" }, { name: "robots", content: "noindex,nofollow" }] }),
+  head: () => ({ meta: [{ title: "Meu Painel — zpclik" }, { name: "robots", content: "noindex,nofollow" }] }),
   beforeLoad: async () => {
     const { data } = await supabase.auth.getUser();
     if (!data.user) throw redirect({ to: "/clientes" });
@@ -209,7 +209,7 @@ function ClientesDashboard() {
   };
 
   const copyLink = async (slug: string) => {
-    const url = `https://cliques.site/r/${slug}`;
+    const url = `https://www.zpclik.site/r/${slug}`;
     try { await navigator.clipboard.writeText(url); setCopied(slug); setTimeout(() => setCopied(null), 1500); } catch {}
   };
 
@@ -226,7 +226,7 @@ function ClientesDashboard() {
             <div className="h-8 w-8 rounded-md bg-[#0b3d91] text-white flex items-center justify-center">
               <Link2 className="h-4 w-4" />
             </div>
-            <span>cliques</span>
+            <span>zpclik</span>
           </div>
           <div className="flex items-center gap-3">
             <span className="text-sm text-slate-500 hidden sm:inline">{sub?.email ?? sub?.name ?? ""}</span>
@@ -496,7 +496,7 @@ function ClientesDashboard() {
               ) : (
                 <ul className="divide-y divide-slate-100">
                   {links.map((l) => {
-                    const short = `cliques.site/r/${l.slug}`;
+                    const short = `www.zpclik.site/r/${l.slug}`;
                     return (
                       <li key={l.id} className="px-6 py-4 flex flex-wrap items-center gap-3">
                         <div className="min-w-0 flex-1">
@@ -553,7 +553,7 @@ function ClientesDashboard() {
             </section>
 
             <p className="text-xs text-slate-500 text-center">
-              Apenas cliques reais são contabilizados — tráfego de robôs e crawlers é filtrado automaticamente.
+              Apenas acessos reais são contabilizados — tráfego de robôs e crawlers é filtrado automaticamente.
               {" "}<Link to="/portal" className="underline">Sobre nós</Link>
             </p>
           </>
@@ -644,7 +644,7 @@ function EditTargetModal({
     <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4" onClick={onClose}>
       <div onClick={(e) => e.stopPropagation()} className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white">
-          <h3 className="font-semibold text-slate-900">Editar — cliques.site/r/{link.slug}</h3>
+          <h3 className="font-semibold text-slate-900">Editar — www.zpclik.site/r/{link.slug}</h3>
           <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-md text-slate-500"><X className="h-5 w-5" /></button>
         </div>
         <form onSubmit={save} className="p-6 space-y-4">
@@ -865,8 +865,8 @@ function MetricsModal({ link, onClose }: { link: MyLink; onClose: () => void }) 
       >
         <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white">
           <div>
-            <h3 className="font-semibold text-slate-900">Métricas — cliques.site/r/{link.slug}</h3>
-            <p className="text-xs text-slate-500">Apenas cliques reais — bots filtrados automaticamente</p>
+            <h3 className="font-semibold text-slate-900">Métricas — www.zpclik.site/r/{link.slug}</h3>
+            <p className="text-xs text-slate-500">Apenas acessos reais — bots filtrados automaticamente</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-md text-slate-500">
             <X className="h-5 w-5" />

@@ -169,7 +169,7 @@ export function LandingPlans() {
         ))}
       </div>
 
-      {/* CTA Encurtador — atrai novos assinantes pro cliques.site */}
+      {/* CTA Encurtador — atrai novos assinantes pro www.zpclik.site */}
       <Scroll3D delay={100} intensity={0.9}>
         <div className="mt-14 card-premium relative overflow-hidden p-8 md:p-10">
           <div
@@ -183,22 +183,20 @@ export function LandingPlans() {
           <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
             <div className="max-w-2xl">
               <p className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.3em] text-gold-gradient">
-                <Sparkles className="h-3.5 w-3.5" /> Novo produto HS
+                <Sparkles className="h-3.5 w-3.5" /> Novo produto
               </p>
               <h3 className="mt-3 font-display text-2xl sm:text-3xl">
                 Encurtador de links com rotação inteligente
               </h3>
               <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
-                Links curtos ilimitados no domínio <span className="font-semibold text-foreground">cliques.site</span>,
-                métricas de cliques reais (filtramos bots automaticamente) e rotação entre vários destinos —
+                Links curtos ilimitados no domínio <span className="font-semibold text-foreground">www.zpclik.site</span>,
+                métricas de acessos reais (filtramos bots automaticamente) e rotação entre vários destinos —
                 perfeito pra distribuir tráfego entre grupos, ofertas e páginas.
                 <span className="block mt-1">Só R$ 19,90/mês. Assine em segundos.</span>
               </p>
             </div>
             <a
-              href="https://cliques.site"
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/clientes"
               onClick={() => trackClick("Plan_Encurtador", { plan: "encurtador" })}
               className="shrink-0 inline-flex items-center justify-center gap-2 rounded-lg bg-gold-metal px-6 py-3 text-sm font-bold uppercase tracking-wider transition-transform hover:scale-[1.03]"
             >
