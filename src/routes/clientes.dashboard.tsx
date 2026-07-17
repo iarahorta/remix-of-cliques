@@ -644,7 +644,7 @@ function EditTargetModal({
     <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4" onClick={onClose}>
       <div onClick={(e) => e.stopPropagation()} className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white">
-          <h3 className="font-semibold text-slate-900">Editar — cliques.site/r/{link.slug}</h3>
+          <h3 className="font-semibold text-slate-900">Editar — www.zpclik.site/r/{link.slug}</h3>
           <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-md text-slate-500"><X className="h-5 w-5" /></button>
         </div>
         <form onSubmit={save} className="p-6 space-y-4">
@@ -865,7 +865,7 @@ function MetricsModal({ link, onClose }: { link: MyLink; onClose: () => void }) 
       >
         <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white">
           <div>
-            <h3 className="font-semibold text-slate-900">Métricas — cliques.site/r/{link.slug}</h3>
+            <h3 className="font-semibold text-slate-900">Métricas — www.zpclik.site/r/{link.slug}</h3>
             <p className="text-xs text-slate-500">Apenas cliques reais — bots filtrados automaticamente</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-md text-slate-500">
