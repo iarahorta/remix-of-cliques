@@ -12,7 +12,7 @@ export const Route = createFileRoute("/clientes/")({
       {
         name: "description",
         content:
-          "Encurte links, acompanhe cliques reais (sem robôs) e gerencie tudo num painel simples. R$ 19,90/mês.",
+          "Encurte links, acompanhe acessos reais (sem robôs) e gerencie tudo num painel simples. R$ 19,90/mês.",
       },
     ],
   }),
@@ -96,7 +96,7 @@ function ClientesLanding() {
           </h1>
           <p className="mt-4 text-slate-600 text-base sm:text-lg leading-relaxed">
             Crie links curtos em segundos, compartilhe onde quiser e acompanhe apenas os
-            <strong> cliques reais </strong> — filtramos automaticamente robôs e crawlers.
+            <strong> acessos reais </strong> — filtramos automaticamente robôs e crawlers.
           </p>
           <div className="mt-8 flex items-baseline gap-2">
             <span className="text-4xl font-bold text-slate-900">R$ 19,90</span>
@@ -110,7 +110,7 @@ function ClientesLanding() {
             </li>
             <li className="flex items-start gap-3">
               <BarChart3 className="h-5 w-5 text-[#0b3d91] shrink-0 mt-0.5" />
-              Métricas de cliques reais, por dia e por localização
+              Métricas de acessos reais, por dia e por localização
             </li>
             <li className="flex items-start gap-3">
               <ShieldCheck className="h-5 w-5 text-[#0b3d91] shrink-0 mt-0.5" />
