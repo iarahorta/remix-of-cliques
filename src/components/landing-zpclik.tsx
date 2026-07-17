@@ -290,11 +290,23 @@ function Pricing() {
           <span className="inline-flex items-center gap-1 rounded-full bg-gold-metal px-3 py-1 text-[10px] font-bold uppercase tracking-widest">
             <Rocket className="h-3 w-3" /> Plano zpclik Pro
           </span>
-          <div className="mt-6 flex items-baseline gap-2">
-            <span className="font-display text-5xl text-gold-gradient">R$ 19,90</span>
-            <span className="text-sm text-muted-foreground">/mês</span>
+          <div className="mt-6 flex flex-col gap-1">
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-muted-foreground line-through decoration-red-500/70 decoration-2">DE R$ 39,90</span>
+              <span className="rounded-full bg-red-500/15 text-red-400 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider">-50%</span>
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-xs uppercase tracking-widest text-[#f0c95a]">por apenas</span>
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="font-display text-5xl text-gold-gradient">R$ 19,90</span>
+              <span className="text-sm text-muted-foreground">/mês</span>
+            </div>
           </div>
-          <p className="mt-2 text-xs text-muted-foreground">
+          <p className="mt-3 text-xs text-muted-foreground">
+            🔥 Oferta de lançamento por tempo limitado. Preço trava enquanto sua assinatura estiver ativa.
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
             Pagamento recorrente via Asaas (Pix ou cartão). Cancele quando quiser.
           </p>
 
