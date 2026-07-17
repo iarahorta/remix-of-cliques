@@ -834,77 +834,189 @@ function RotationRowsEditor({
 
 
 function MetricsModal({ link, onClose }: { link: MyLink; onClose: () => void }) {
+  type Row = { name: string; count: number };
+  type Click = {
+    id: string; created_at: string; ip: string | null;
+    country: string | null; region: string | null; city: string | null;
+    referer: string | null; referer_host: string;
+    user_agent: string | null; device: string; browser: string; os: string;
+    target_url: string | null;
+  };
   const [data, setData] = useState<{
-    total: number;
+    total: number; unique_ips: number;
     daily: { day: string; count: number }[];
-    topCountries: { name: string; count: number }[];
-    topCities: { name: string; count: number }[];
+    hourly: { hour: number; count: number }[];
+    topCountries: Row[]; topRegions: Row[]; topCities: Row[];
+    topReferers: Row[]; topDevices: Row[]; topBrowsers: Row[]; topOs: Row[]; topTargets: Row[];
+    clicks: Click[];
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+  const [days, setDays] = useState(30);
+  const [q, setQ] = useState("");
   const getMetrics = useServerFn(getMyLinkMetrics);
 
   useEffect(() => {
+    setLoading(true);
     (async () => {
       try {
-        const r: any = await getMetrics({ data: { shortLinkId: link.id } });
+        const r: any = await getMetrics({ data: { shortLinkId: link.id, days } });
         setData(r);
       } catch (e: any) {
         setErr(e?.message ?? "Erro");
       } finally { setLoading(false); }
     })();
-  }, [link.id]);
+  }, [link.id, days]);
 
   const max = data ? Math.max(1, ...data.daily.map((d) => d.count)) : 1;
+  const maxH = data ? Math.max(1, ...data.hourly.map((d) => d.count)) : 1;
+
+  const filtered = data?.clicks.filter((c) => {
+    if (!q.trim()) return true;
+    const s = q.toLowerCase();
+    return [c.ip, c.country, c.region, c.city, c.device, c.browser, c.os, c.referer_host, c.target_url, c.user_agent]
+      .some((v) => (v ?? "").toLowerCase().includes(s));
+  }) ?? [];
+
+  const exportCSV = () => {
+    if (!data) return;
+    const headers = ["data_utc","ip","pais","regiao","cidade","dispositivo","navegador","so","referer","destino","user_agent"];
+    const esc = (v: any) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const lines = filtered.map((c) => [
+      c.created_at, c.ip, c.country, c.region, c.city, c.device, c.browser, c.os, c.referer_host, c.target_url, c.user_agent
+    ].map(esc).join(","));
+    const csv = "\uFEFF" + headers.join(",") + "\n" + lines.join("\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    const a = document.createElement("a");
+    a.href = url; a.download = `zpclik-${link.slug}-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+  };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto"
+        className="bg-neutral-950 border border-yellow-500/20 rounded-2xl shadow-2xl w-full max-w-6xl max-h-[92vh] overflow-y-auto text-neutral-100"
       >
-        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white">
+        <div className="px-6 py-4 border-b border-yellow-500/20 flex items-center justify-between sticky top-0 bg-neutral-950/95 backdrop-blur z-10">
           <div>
-            <h3 className="font-semibold text-slate-900">Métricas — www.zpclik.site/r/{link.slug}</h3>
-            <p className="text-xs text-slate-500">Apenas acessos reais — bots filtrados automaticamente</p>
+            <h3 className="font-semibold text-lg bg-gradient-to-r from-yellow-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent">
+              Analytics Premium — /r/{link.slug}
+            </h3>
+            <p className="text-xs text-neutral-400">Acessos reais · bots filtrados · dados completos por clique</p>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-md text-slate-500">
-            <X className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <select
+              value={days}
+              onChange={(e) => setDays(Number(e.target.value))}
+              className="text-xs bg-neutral-900 border border-yellow-500/20 rounded-md px-2 py-1.5 text-neutral-200"
+            >
+              <option value={1}>24h</option>
+              <option value={7}>7 dias</option>
+              <option value={30}>30 dias</option>
+              <option value={90}>90 dias</option>
+              <option value={365}>1 ano</option>
+            </select>
+            <button onClick={exportCSV} disabled={!data} className="text-xs px-3 py-1.5 rounded-md bg-yellow-500 hover:bg-yellow-400 text-black font-semibold disabled:opacity-40">
+              Exportar CSV
+            </button>
+            <button onClick={onClose} className="p-2 hover:bg-neutral-800 rounded-md text-neutral-400">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
         <div className="p-6 space-y-6">
           {loading ? (
-            <div className="flex items-center gap-2 text-slate-500 text-sm"><Loader2 className="h-4 w-4 animate-spin" /> Carregando…</div>
+            <div className="flex items-center gap-2 text-neutral-400 text-sm"><Loader2 className="h-4 w-4 animate-spin" /> Carregando…</div>
           ) : err ? (
-            <div className="text-sm text-red-700">{err}</div>
+            <div className="text-sm text-red-400">{err}</div>
           ) : data ? (
             <>
-              <div className="rounded-xl bg-slate-50 border border-slate-200 p-5">
-                <div className="text-xs uppercase tracking-wider text-slate-500">Cliques reais (últimos 30 dias)</div>
-                <div className="mt-1 text-4xl font-bold text-slate-900">{data.total}</div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <KPI label="Cliques reais" value={data.total} />
+                <KPI label="IPs únicos" value={data.unique_ips} />
+                <KPI label="Países" value={data.topCountries.length} />
+                <KPI label="Dispositivos" value={data.topDevices.length} />
               </div>
 
               <div>
-                <h4 className="text-sm font-semibold text-slate-800 mb-3">Cliques por dia</h4>
-                <div className="flex items-end gap-1 h-32 bg-slate-50 border border-slate-200 rounded-xl p-3">
+                <h4 className="text-sm font-semibold text-yellow-300 mb-3">Cliques por dia</h4>
+                <div className="flex items-end gap-1 h-32 bg-neutral-900/60 border border-yellow-500/10 rounded-xl p-3">
                   {data.daily.map((d) => (
                     <div key={d.day} title={`${d.day}: ${d.count}`} className="flex-1 flex flex-col justify-end">
-                      <div
-                        className="w-full bg-[#0b3d91] rounded-t"
-                        style={{ height: `${(d.count / max) * 100}%`, minHeight: d.count > 0 ? 2 : 0 }}
-                      />
+                      <div className="w-full bg-gradient-to-t from-amber-600 to-yellow-300 rounded-t"
+                        style={{ height: `${(d.count / max) * 100}%`, minHeight: d.count > 0 ? 2 : 0 }} />
                     </div>
                   ))}
                 </div>
-                <div className="mt-1 flex justify-between text-[10px] text-slate-400">
-                  <span>{data.daily[0]?.day}</span>
-                  <span>{data.daily[data.daily.length - 1]?.day}</span>
+                <div className="mt-1 flex justify-between text-[10px] text-neutral-500">
+                  <span>{data.daily[0]?.day}</span><span>{data.daily[data.daily.length - 1]?.day}</span>
                 </div>
               </div>
 
-              <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <h4 className="text-sm font-semibold text-yellow-300 mb-3">Cliques por hora (UTC)</h4>
+                <div className="flex items-end gap-1 h-24 bg-neutral-900/60 border border-yellow-500/10 rounded-xl p-3">
+                  {data.hourly.map((h) => (
+                    <div key={h.hour} title={`${h.hour}h: ${h.count}`} className="flex-1 flex flex-col justify-end">
+                      <div className="w-full bg-yellow-500/70 rounded-t" style={{ height: `${(h.count / maxH) * 100}%`, minHeight: h.count > 0 ? 2 : 0 }} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-3">
                 <StatList title="Top países" rows={data.topCountries} />
                 <StatList title="Top cidades" rows={data.topCities} />
+                <StatList title="Top regiões" rows={data.topRegions} />
+                <StatList title="Top referrers" rows={data.topReferers} />
+                <StatList title="Dispositivos" rows={data.topDevices} />
+                <StatList title="Navegadores" rows={data.topBrowsers} />
+                <StatList title="Sistemas" rows={data.topOs} />
+                <StatList title="Destinos" rows={data.topTargets} />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-2 gap-3">
+                  <h4 className="text-sm font-semibold text-yellow-300">Cliques detalhados</h4>
+                  <input
+                    value={q} onChange={(e) => setQ(e.target.value)}
+                    placeholder="Filtrar por IP, cidade, dispositivo, destino…"
+                    className="text-xs bg-neutral-900 border border-yellow-500/20 rounded-md px-3 py-1.5 flex-1 max-w-xs text-neutral-100 placeholder:text-neutral-500"
+                  />
+                  <span className="text-xs text-neutral-500">{filtered.length} / {data.clicks.length}</span>
+                </div>
+                <div className="overflow-x-auto rounded-xl border border-yellow-500/10">
+                  <table className="w-full text-xs">
+                    <thead className="bg-neutral-900 text-yellow-300/80 uppercase tracking-wider">
+                      <tr>
+                        <th className="text-left px-3 py-2">Data (UTC)</th>
+                        <th className="text-left px-3 py-2">IP</th>
+                        <th className="text-left px-3 py-2">Local</th>
+                        <th className="text-left px-3 py-2">Dispositivo</th>
+                        <th className="text-left px-3 py-2">Navegador / SO</th>
+                        <th className="text-left px-3 py-2">Referrer</th>
+                        <th className="text-left px-3 py-2">Destino</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filtered.slice(0, 500).map((c) => (
+                        <tr key={c.id} className="border-t border-neutral-800 hover:bg-neutral-900/60">
+                          <td className="px-3 py-1.5 text-neutral-300 whitespace-nowrap">{new Date(c.created_at).toLocaleString("pt-BR")}</td>
+                          <td className="px-3 py-1.5 font-mono text-neutral-400">{c.ip ?? "—"}</td>
+                          <td className="px-3 py-1.5 text-neutral-300">{[c.city, c.region, c.country].filter(Boolean).join(", ") || "—"}</td>
+                          <td className="px-3 py-1.5 text-neutral-300">{c.device}</td>
+                          <td className="px-3 py-1.5 text-neutral-400">{c.browser} · {c.os}</td>
+                          <td className="px-3 py-1.5 text-neutral-400">{c.referer_host}</td>
+                          <td className="px-3 py-1.5 text-neutral-400 max-w-[220px] truncate" title={c.target_url ?? ""}>{c.target_url ?? "—"}</td>
+                        </tr>
+                      ))}
+                      {filtered.length === 0 && (
+                        <tr><td colSpan={7} className="text-center py-6 text-neutral-500">Nenhum clique nesse período.</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </>
           ) : null}
@@ -914,18 +1026,27 @@ function MetricsModal({ link, onClose }: { link: MyLink; onClose: () => void }) 
   );
 }
 
+function KPI({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-xl bg-gradient-to-br from-neutral-900 to-neutral-950 border border-yellow-500/20 p-4">
+      <div className="text-[10px] uppercase tracking-wider text-neutral-400">{label}</div>
+      <div className="mt-1 text-2xl font-bold bg-gradient-to-r from-yellow-200 to-amber-500 bg-clip-text text-transparent">{value}</div>
+    </div>
+  );
+}
+
 function StatList({ title, rows }: { title: string; rows: { name: string; count: number }[] }) {
   return (
-    <div className="rounded-xl border border-slate-200 p-4">
-      <h4 className="text-sm font-semibold text-slate-800 mb-3">{title}</h4>
+    <div className="rounded-xl border border-yellow-500/10 bg-neutral-900/40 p-4">
+      <h4 className="text-xs font-semibold text-yellow-300 mb-2 uppercase tracking-wider">{title}</h4>
       {rows.length === 0 ? (
-        <p className="text-xs text-slate-400">Sem dados ainda.</p>
+        <p className="text-xs text-neutral-500">Sem dados.</p>
       ) : (
-        <ul className="space-y-1.5 text-sm">
+        <ul className="space-y-1 text-xs">
           {rows.map((r) => (
-            <li key={r.name} className="flex justify-between text-slate-700">
+            <li key={r.name} className="flex justify-between text-neutral-300 gap-2">
               <span className="truncate">{r.name}</span>
-              <span className="font-semibold text-slate-900">{r.count}</span>
+              <span className="font-semibold text-yellow-300">{r.count}</span>
             </li>
           ))}
         </ul>
