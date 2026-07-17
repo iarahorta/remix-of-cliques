@@ -51,8 +51,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Portal do Cliente — Acesso Seguro" },
-      { name: "description", content: "Portal do cliente para acesso a serviços e atendimento online." },
+      { title: "zpclik — Encurtador de Links Inteligente" },
+      { name: "description", content: "Encurte links, acompanhe cliques reais e distribua tráfego com rotação inteligente." },
       { property: "og:type", content: "website" },
       { property: "og:title", content: "Portal do Cliente — Acesso Seguro" },
       { name: "twitter:title", content: "Portal do Cliente — Acesso Seguro" },
