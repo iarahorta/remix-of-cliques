@@ -50,36 +50,36 @@
 :root {
   --radius: 0.625rem;
 
-  /* zpclik — light, brand #0b3d91 */
-  --background: oklch(0.99 0.003 250);
-  --foreground: oklch(0.22 0.02 255);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.02 255);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.02 255);
+  /* zpclik — dark premium, black + gold */
+  --background: oklch(0.14 0.008 60);
+  --foreground: oklch(0.97 0.01 80);
+  --card: oklch(0.18 0.012 60);
+  --card-foreground: oklch(0.97 0.01 80);
+  --popover: oklch(0.18 0.012 60);
+  --popover-foreground: oklch(0.97 0.01 80);
 
-  --primary: oklch(0.36 0.16 265);            /* #0b3d91 */
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.96 0.01 250);
-  --secondary-foreground: oklch(0.3 0.02 255);
-  --muted: oklch(0.96 0.005 250);
-  --muted-foreground: oklch(0.5 0.02 255);
-  --accent: oklch(0.94 0.04 250);
-  --accent-foreground: oklch(0.3 0.05 260);
-  --destructive: oklch(0.6 0.22 25);
+  --primary: oklch(0.78 0.15 82);              /* gold */
+  --primary-foreground: oklch(0.15 0.01 60);
+  --secondary: oklch(0.22 0.012 60);
+  --secondary-foreground: oklch(0.95 0.01 80);
+  --muted: oklch(0.22 0.01 60);
+  --muted-foreground: oklch(0.68 0.02 80);
+  --accent: oklch(0.28 0.04 75);
+  --accent-foreground: oklch(0.95 0.03 85);
+  --destructive: oklch(0.62 0.22 25);
   --destructive-foreground: oklch(0.99 0 0);
-  --border: oklch(0.9 0.01 250);
-  --input: oklch(0.98 0.005 250);
-  --ring: oklch(0.36 0.16 265);
+  --border: oklch(0.28 0.02 70 / 0.6);
+  --input: oklch(0.22 0.012 60);
+  --ring: oklch(0.78 0.15 82);
 
-  --sidebar: oklch(1 0 0);
-  --sidebar-foreground: oklch(0.3 0.02 255);
-  --sidebar-primary: oklch(0.36 0.16 265);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.96 0.01 250);
-  --sidebar-accent-foreground: oklch(0.3 0.02 255);
-  --sidebar-border: oklch(0.9 0.01 250);
-  --sidebar-ring: oklch(0.36 0.16 265);
+  --sidebar: oklch(0.16 0.01 60);
+  --sidebar-foreground: oklch(0.95 0.01 80);
+  --sidebar-primary: oklch(0.78 0.15 82);
+  --sidebar-primary-foreground: oklch(0.15 0.01 60);
+  --sidebar-accent: oklch(0.22 0.012 60);
+  --sidebar-accent-foreground: oklch(0.95 0.01 80);
+  --sidebar-border: oklch(0.28 0.02 70 / 0.6);
+  --sidebar-ring: oklch(0.78 0.15 82);
 }
 
 @layer base {
@@ -93,25 +93,33 @@
   h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: -0.01em; }
 }
 
-/* Repurposed brand utilities (kept for backward-compat with existing components) */
+/* zpclik — premium gold utilities */
 @utility text-gold-gradient {
-  color: #0b3d91;
+  background: linear-gradient(135deg, #f7e08a 0%, #d4a537 45%, #b8862b 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 @utility bg-gold-metal {
-  background: #0b3d91;
-  color: #ffffff;
-  box-shadow: 0 4px 14px -4px rgba(11, 61, 145, 0.45);
+  background: linear-gradient(135deg, #f4d97a 0%, #d4a537 55%, #a8791f 100%);
+  color: #12100a;
+  box-shadow: 0 10px 30px -12px rgba(212, 165, 55, 0.55), inset 0 1px 0 rgba(255,255,255,0.35);
 }
 
 @utility bg-bronze-metal {
-  background: #0b3d91;
-  color: #ffffff;
+  background: linear-gradient(135deg, #6b4a1a 0%, #3b2a10 100%);
+  color: #f5e6b3;
 }
 
 @utility card-premium {
-  background: var(--color-card);
-  border: 1px solid var(--color-border);
+  background: linear-gradient(180deg, oklch(0.19 0.014 65) 0%, oklch(0.15 0.01 60) 100%);
+  border: 1px solid oklch(0.32 0.04 80 / 0.4);
   border-radius: var(--radius-lg);
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 1px 0 rgba(255, 220, 130, 0.06) inset, 0 20px 50px -30px rgba(0,0,0,0.8);
+}
+
+@utility gold-border {
+  border: 1px solid;
+  border-image: linear-gradient(135deg, #f4d97a, #a8791f) 1;
 }
