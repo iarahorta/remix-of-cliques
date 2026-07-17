@@ -50,7 +50,7 @@
 :root {
   --radius: 0.625rem;
 
-  /* cliques — light, brand #0b3d91 */
+  /* zpclik — light, brand #0b3d91 */
   --background: oklch(0.99 0.003 250);
   --foreground: oklch(0.22 0.02 255);
   --card: oklch(1 0 0);
