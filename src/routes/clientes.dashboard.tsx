@@ -157,6 +157,47 @@ function ClientesDashboard() {
     return sub.status === "active" && !!sub.current_period_end && sub.current_period_end >= today;
   }, [sub]);
 
+  // Alertas de vencimento / bloqueio por atraso
+  const { daysUntilEnd, daysOverdue, expiringSoon, locked } = useMemo(() => {
+    if (!sub?.current_period_end) {
+      return { daysUntilEnd: null as number | null, daysOverdue: 0, expiringSoon: false, locked: sub?.status !== "active" };
+    }
+    const MS = 24 * 60 * 60 * 1000;
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const end = new Date(sub.current_period_end + "T00:00:00");
+    const diffDays = Math.floor((end.getTime() - today.getTime()) / MS);
+    const overdue = diffDays < 0 ? -diffDays : 0;
+    return {
+      daysUntilEnd: diffDays,
+      daysOverdue: overdue,
+      expiringSoon: diffDays >= 0 && diffDays <= 3 && sub.status === "active",
+      locked: overdue > 3 || sub.status === "suspended",
+    };
+  }, [sub]);
+
+  // Abre PIX automaticamente quando bloqueado
+  const openInvoiceAuto = async () => {
+    setBillingLoading(true);
+    try {
+      const r: any = await createPix({});
+      if (r?.orderId) {
+        setPixModal({
+          orderId: String(r.orderId),
+          copyPaste: r.copyPaste ?? null,
+          qrcode: r.qrcode ?? null,
+          amount: Number(r.amount ?? 19.9),
+        });
+        setPixCopied(false);
+      } else {
+        toast.error("Não foi possível gerar o PIX agora — tente de novo em instantes.");
+      }
+    } catch (e: any) {
+      toast.error(e?.message ?? "Erro ao gerar cobrança");
+    } finally {
+      setBillingLoading(false);
+    }
+  };
+
   const load = async () => {
     setLoading(true); setErr(null);
     try {
@@ -301,10 +342,25 @@ function ClientesDashboard() {
                   {isActive ? (
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
-                        <h2 className="font-semibold text-emerald-900">Assinatura ativa</h2>
+                        <h2 className="font-semibold text-emerald-900">
+                          {expiringSoon ? "Sua assinatura vence em breve" : "Assinatura ativa"}
+                        </h2>
                         <p className="text-sm text-emerald-800 mt-1">
-                          Válida até <strong>{new Date(sub!.current_period_end!).toLocaleDateString("pt-BR")}</strong>.
+                          Válida até <strong>{new Date(sub!.current_period_end!).toLocaleDateString("pt-BR")}</strong>
+                          {expiringSoon && daysUntilEnd !== null && (
+                            <> — {daysUntilEnd === 0 ? "vence hoje" : daysUntilEnd === 1 ? "vence amanhã" : `faltam ${daysUntilEnd} dias`}.</>
+                          )}
                         </p>
+                        {expiringSoon && (
+                          <button
+                            onClick={openInvoice}
+                            disabled={billingLoading}
+                            className="mt-3 inline-flex items-center gap-2 rounded-lg bg-emerald-700 hover:bg-emerald-800 disabled:opacity-60 text-white text-sm font-medium px-4 py-2"
+                          >
+                            {billingLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
+                            Antecipar renovação — R$ 19,90
+                          </button>
+                        )}
                       </div>
                       <button
                         onClick={doCancel}
@@ -332,10 +388,15 @@ function ClientesDashboard() {
                   ) : (
                     <div>
                       <div className="flex items-center gap-2 text-amber-900 font-semibold">
-                        <AlertTriangle className="h-5 w-5" /> Sua assinatura precisa de pagamento
+                        <AlertTriangle className="h-5 w-5" />
+                        {daysOverdue > 0
+                          ? `Assinatura vencida há ${daysOverdue} ${daysOverdue === 1 ? "dia" : "dias"}`
+                          : "Sua assinatura precisa de pagamento"}
                       </div>
                       <p className="text-sm text-amber-900 mt-2">
-                        R$ 19,90/mês — escolha PIX, cartão ou boleto na tela de pagamento.
+                        {daysOverdue > 0
+                          ? `Pague R$ 19,90 via PIX para reativar. Após 3 dias de atraso o painel é bloqueado.`
+                          : "R$ 19,90/mês — pague via PIX pra ativar sua conta."}
                       </p>
                       <button
                         onClick={openInvoice}
