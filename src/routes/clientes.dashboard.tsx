@@ -714,15 +714,18 @@ function ClientesDashboard() {
               </div>
               <button onClick={() => setPixModal(null)} className="text-slate-400 hover:text-slate-700 text-xl leading-none">×</button>
             </div>
-            {pixModal.qrcode && (
-              <div className="mt-4 flex justify-center">
-                <img
-                  src={pixModal.qrcode.startsWith("data:") || pixModal.qrcode.startsWith("http") ? pixModal.qrcode : `data:image/png;base64,${pixModal.qrcode}`}
-                  alt="QR Code PIX"
-                  className="w-56 h-56 rounded-lg border border-slate-200"
-                />
-              </div>
-            )}
+            {(() => {
+              const src = pixModal.qrcode
+                ? (pixModal.qrcode.startsWith("data:") || pixModal.qrcode.startsWith("http")
+                    ? pixModal.qrcode
+                    : `data:image/png;base64,${pixModal.qrcode}`)
+                : pixQrDataUrl;
+              return src ? (
+                <div className="mt-4 flex justify-center">
+                  <img src={src} alt="QR Code PIX" className="w-56 h-56 rounded-lg border border-slate-200" />
+                </div>
+              ) : null;
+            })()}
             {pixModal.copyPaste && (
               <div className="mt-4">
                 <label className="text-xs font-medium text-slate-700">Código copia-e-cola</label>
