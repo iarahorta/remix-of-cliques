@@ -17,6 +17,10 @@ import {
   cancelSubscriberBilling,
 } from "@/lib/billing.functions";
 import {
+  createAsgardPixCharge,
+  getAsgardChargeStatus,
+} from "@/lib/asgard-billing.functions";
+import {
   Loader2, Copy, Check, ExternalLink, BarChart3, X, LogOut, Link2, AlertTriangle, Pencil, Plus, Trash2, Shuffle,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -141,6 +145,11 @@ function ClientesDashboard() {
   const ensureBilling = useServerFn(ensureSubscriberBilling);
   const cancelBilling = useServerFn(cancelSubscriberBilling);
   const [billingLoading, setBillingLoading] = useState(false);
+  const createPix = useServerFn(createAsgardPixCharge);
+  const checkPix = useServerFn(getAsgardChargeStatus);
+  const [pixModal, setPixModal] = useState<{ orderId: string; copyPaste: string | null; qrcode: string | null; amount: number } | null>(null);
+  const [pixCopied, setPixCopied] = useState(false);
+  const [pixChecking, setPixChecking] = useState(false);
 
   const active = useMemo(() => {
     if (!sub) return false;
@@ -249,23 +258,21 @@ function ClientesDashboard() {
               const isActive = active;
               const isSuspended = status === "suspended";
               const openInvoice = async () => {
-                const paymentTab = window.open("about:blank", "_blank");
-                paymentTab?.document.write("<title>Gerando cobrança...</title><p>Gerando cobrança...</p>");
                 setBillingLoading(true);
                 try {
-                  const r: any = await ensureBilling({});
-                  if (r?.invoiceUrl) {
-                    if (paymentTab) {
-                      paymentTab.location.href = r.invoiceUrl;
-                    } else {
-                      window.location.href = r.invoiceUrl;
-                    }
+                  const r: any = await createPix({});
+                  if (r?.orderId) {
+                    setPixModal({
+                      orderId: String(r.orderId),
+                      copyPaste: r.copyPaste ?? null,
+                      qrcode: r.qrcode ?? null,
+                      amount: Number(r.amount ?? 19.9),
+                    });
+                    setPixCopied(false);
                   } else {
-                    paymentTab?.close();
-                    toast.error("Não foi possível gerar a fatura agora — tente de novo em instantes.");
+                    toast.error("Não foi possível gerar o PIX agora — tente de novo em instantes.");
                   }
                 } catch (e: any) {
-                  paymentTab?.close();
                   toast.error(e?.message ?? "Erro ao gerar cobrança");
                 } finally {
                   setBillingLoading(false);
@@ -562,6 +569,71 @@ function ClientesDashboard() {
 
       {metricsFor && (
         <MetricsModal link={metricsFor} onClose={() => setMetricsFor(null)} />
+      )}
+      {pixModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setPixModal(null)}>
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900">Pague R$ {pixModal.amount.toFixed(2).replace(".", ",")} via PIX</h3>
+                <p className="text-xs text-slate-500 mt-1">Sua assinatura é ativada automaticamente após a confirmação.</p>
+              </div>
+              <button onClick={() => setPixModal(null)} className="text-slate-400 hover:text-slate-700 text-xl leading-none">×</button>
+            </div>
+            {pixModal.qrcode && (
+              <div className="mt-4 flex justify-center">
+                <img
+                  src={pixModal.qrcode.startsWith("data:") || pixModal.qrcode.startsWith("http") ? pixModal.qrcode : `data:image/png;base64,${pixModal.qrcode}`}
+                  alt="QR Code PIX"
+                  className="w-56 h-56 rounded-lg border border-slate-200"
+                />
+              </div>
+            )}
+            {pixModal.copyPaste && (
+              <div className="mt-4">
+                <label className="text-xs font-medium text-slate-700">Código copia-e-cola</label>
+                <textarea
+                  readOnly
+                  value={pixModal.copyPaste}
+                  className="mt-1 w-full h-24 rounded-lg border border-slate-200 bg-slate-50 p-2 text-xs font-mono resize-none"
+                  onFocus={(e) => e.currentTarget.select()}
+                />
+                <button
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(pixModal.copyPaste!);
+                      setPixCopied(true);
+                      setTimeout(() => setPixCopied(false), 2500);
+                    } catch { toast.error("Copie manualmente"); }
+                  }}
+                  className="mt-2 w-full rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium py-2"
+                >{pixCopied ? "Copiado ✓" : "Copiar código PIX"}</button>
+              </div>
+            )}
+            <button
+              onClick={async () => {
+                setPixChecking(true);
+                try {
+                  const r: any = await checkPix({ data: { orderId: pixModal.orderId } });
+                  if (r?.status === "completed") {
+                    toast.success("Pagamento confirmado! Assinatura ativada.");
+                    setPixModal(null);
+                    await load();
+                  } else {
+                    toast.message("Ainda não recebemos a confirmação. Assim que o PIX cair, sua assinatura é liberada automaticamente.");
+                  }
+                } catch (e: any) {
+                  toast.error(e?.message ?? "Erro ao verificar");
+                } finally { setPixChecking(false); }
+              }}
+              disabled={pixChecking}
+              className="mt-3 w-full rounded-lg border border-slate-300 hover:bg-slate-50 text-slate-800 text-sm font-medium py-2 disabled:opacity-60"
+            >{pixChecking ? "Verificando…" : "Já paguei — verificar agora"}</button>
+            <p className="mt-3 text-[11px] text-slate-500 text-center">
+              Este PIX expira em alguns minutos. Se expirar, feche e gere um novo.
+            </p>
+          </div>
+        </div>
       )}
       {editingFor && (
         <EditTargetModal
