@@ -24,6 +24,7 @@ import {
   Loader2, Copy, Check, ExternalLink, BarChart3, X, LogOut, Link2, AlertTriangle, Pencil, Plus, Trash2, Shuffle,
 } from "lucide-react";
 import { toast } from "sonner";
+import QRCode from "qrcode";
 
 export const Route = createFileRoute("/clientes/dashboard")({
   ssr: false,
@@ -151,6 +152,18 @@ function ClientesDashboard() {
   const [pixModal, setPixModal] = useState<{ orderId: string; copyPaste: string | null; qrcode: string | null; amount: number } | null>(null);
   const [pixCopied, setPixCopied] = useState(false);
   const [pixChecking, setPixChecking] = useState(false);
+  const [pixQrDataUrl, setPixQrDataUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!pixModal) { setPixQrDataUrl(null); return; }
+    if (pixModal.qrcode) { setPixQrDataUrl(null); return; }
+    if (!pixModal.copyPaste) return;
+    let cancelled = false;
+    QRCode.toDataURL(pixModal.copyPaste, { width: 320, margin: 1, errorCorrectionLevel: "M" })
+      .then((url) => { if (!cancelled) setPixQrDataUrl(url); })
+      .catch(() => { if (!cancelled) setPixQrDataUrl(null); });
+    return () => { cancelled = true; };
+  }, [pixModal]);
 
   const active = useMemo(() => {
     if (!sub) return false;
@@ -701,15 +714,18 @@ function ClientesDashboard() {
               </div>
               <button onClick={() => setPixModal(null)} className="text-slate-400 hover:text-slate-700 text-xl leading-none">×</button>
             </div>
-            {pixModal.qrcode && (
-              <div className="mt-4 flex justify-center">
-                <img
-                  src={pixModal.qrcode.startsWith("data:") || pixModal.qrcode.startsWith("http") ? pixModal.qrcode : `data:image/png;base64,${pixModal.qrcode}`}
-                  alt="QR Code PIX"
-                  className="w-56 h-56 rounded-lg border border-slate-200"
-                />
-              </div>
-            )}
+            {(() => {
+              const src = pixModal.qrcode
+                ? (pixModal.qrcode.startsWith("data:") || pixModal.qrcode.startsWith("http")
+                    ? pixModal.qrcode
+                    : `data:image/png;base64,${pixModal.qrcode}`)
+                : pixQrDataUrl;
+              return src ? (
+                <div className="mt-4 flex justify-center">
+                  <img src={src} alt="QR Code PIX" className="w-56 h-56 rounded-lg border border-slate-200" />
+                </div>
+              ) : null;
+            })()}
             {pixModal.copyPaste && (
               <div className="mt-4">
                 <label className="text-xs font-medium text-slate-700">Código copia-e-cola</label>
