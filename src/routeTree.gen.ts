@@ -23,6 +23,7 @@ import { Route as AuthenticatedAssinantesRouteImport } from './routes/_authentic
 import { Route as ApiPublicSubscribersRouteImport } from './routes/api/public/subscribers'
 import { Route as ApiPublicLinksRouteImport } from './routes/api/public/links'
 import { Route as AuthenticatedConfiguracoesAsaasRouteImport } from './routes/_authenticated/configuracoes.asaas'
+import { Route as ApiPublicWebhooksAsgardRouteImport } from './routes/api/public/webhooks.asgard'
 import { Route as ApiPublicWebhooksAsaasRouteImport } from './routes/api/public/webhooks.asaas'
 import { Route as ApiPublicSubscribersIdRouteImport } from './routes/api/public/subscribers.$id'
 import { Route as ApiPublicLinksSlugRouteImport } from './routes/api/public/links.$slug'
@@ -100,6 +101,11 @@ const AuthenticatedConfiguracoesAsaasRoute =
     path: '/configuracoes/asaas',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicWebhooksAsgardRoute = ApiPublicWebhooksAsgardRouteImport.update({
+  id: '/api/public/webhooks/asgard',
+  path: '/api/public/webhooks/asgard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicWebhooksAsaasRoute = ApiPublicWebhooksAsaasRouteImport.update({
   id: '/api/public/webhooks/asaas',
   path: '/api/public/webhooks/asaas',
@@ -152,6 +158,7 @@ export interface FileRoutesByFullPath {
   '/api/public/links/$slug': typeof ApiPublicLinksSlugRouteWithChildren
   '/api/public/subscribers/$id': typeof ApiPublicSubscribersIdRoute
   '/api/public/webhooks/asaas': typeof ApiPublicWebhooksAsaasRoute
+  '/api/public/webhooks/asgard': typeof ApiPublicWebhooksAsgardRoute
   '/api/public/links/$slug/clicks': typeof ApiPublicLinksSlugClicksRoute
   '/api/public/links/$slug/rotate': typeof ApiPublicLinksSlugRotateRoute
 }
@@ -173,6 +180,7 @@ export interface FileRoutesByTo {
   '/api/public/links/$slug': typeof ApiPublicLinksSlugRouteWithChildren
   '/api/public/subscribers/$id': typeof ApiPublicSubscribersIdRoute
   '/api/public/webhooks/asaas': typeof ApiPublicWebhooksAsaasRoute
+  '/api/public/webhooks/asgard': typeof ApiPublicWebhooksAsgardRoute
   '/api/public/links/$slug/clicks': typeof ApiPublicLinksSlugClicksRoute
   '/api/public/links/$slug/rotate': typeof ApiPublicLinksSlugRotateRoute
 }
@@ -196,6 +204,7 @@ export interface FileRoutesById {
   '/api/public/links/$slug': typeof ApiPublicLinksSlugRouteWithChildren
   '/api/public/subscribers/$id': typeof ApiPublicSubscribersIdRoute
   '/api/public/webhooks/asaas': typeof ApiPublicWebhooksAsaasRoute
+  '/api/public/webhooks/asgard': typeof ApiPublicWebhooksAsgardRoute
   '/api/public/links/$slug/clicks': typeof ApiPublicLinksSlugClicksRoute
   '/api/public/links/$slug/rotate': typeof ApiPublicLinksSlugRotateRoute
 }
@@ -219,6 +228,7 @@ export interface FileRouteTypes {
     | '/api/public/links/$slug'
     | '/api/public/subscribers/$id'
     | '/api/public/webhooks/asaas'
+    | '/api/public/webhooks/asgard'
     | '/api/public/links/$slug/clicks'
     | '/api/public/links/$slug/rotate'
   fileRoutesByTo: FileRoutesByTo
@@ -240,6 +250,7 @@ export interface FileRouteTypes {
     | '/api/public/links/$slug'
     | '/api/public/subscribers/$id'
     | '/api/public/webhooks/asaas'
+    | '/api/public/webhooks/asgard'
     | '/api/public/links/$slug/clicks'
     | '/api/public/links/$slug/rotate'
   id:
@@ -262,6 +273,7 @@ export interface FileRouteTypes {
     | '/api/public/links/$slug'
     | '/api/public/subscribers/$id'
     | '/api/public/webhooks/asaas'
+    | '/api/public/webhooks/asgard'
     | '/api/public/links/$slug/clicks'
     | '/api/public/links/$slug/rotate'
   fileRoutesById: FileRoutesById
@@ -280,6 +292,7 @@ export interface RootRouteChildren {
   ApiPublicSubscribersRoute: typeof ApiPublicSubscribersRouteWithChildren
   ApiPublicHooksAsaasSweepRoute: typeof ApiPublicHooksAsaasSweepRoute
   ApiPublicWebhooksAsaasRoute: typeof ApiPublicWebhooksAsaasRoute
+  ApiPublicWebhooksAsgardRoute: typeof ApiPublicWebhooksAsgardRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -381,6 +394,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/configuracoes/asaas'
       preLoaderRoute: typeof AuthenticatedConfiguracoesAsaasRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/webhooks/asgard': {
+      id: '/api/public/webhooks/asgard'
+      path: '/api/public/webhooks/asgard'
+      fullPath: '/api/public/webhooks/asgard'
+      preLoaderRoute: typeof ApiPublicWebhooksAsgardRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/webhooks/asaas': {
       id: '/api/public/webhooks/asaas'
@@ -492,6 +512,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicSubscribersRoute: ApiPublicSubscribersRouteWithChildren,
   ApiPublicHooksAsaasSweepRoute: ApiPublicHooksAsaasSweepRoute,
   ApiPublicWebhooksAsaasRoute: ApiPublicWebhooksAsaasRoute,
+  ApiPublicWebhooksAsgardRoute: ApiPublicWebhooksAsgardRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
