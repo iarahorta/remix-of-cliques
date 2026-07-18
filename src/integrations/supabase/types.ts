@@ -32,6 +32,56 @@ export type Database = {
         }
         Relationships: []
       }
+      asgard_pix_charges: {
+        Row: {
+          amount: number
+          copy_paste: string | null
+          created_at: string
+          id: string
+          order_id: string
+          paid_at: string | null
+          qrcode: string | null
+          status: string
+          subscriber_id: string
+          transaction_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          copy_paste?: string | null
+          created_at?: string
+          id?: string
+          order_id: string
+          paid_at?: string | null
+          qrcode?: string | null
+          status?: string
+          subscriber_id: string
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          copy_paste?: string | null
+          created_at?: string
+          id?: string
+          order_id?: string
+          paid_at?: string | null
+          qrcode?: string | null
+          status?: string
+          subscriber_id?: string
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asgard_pix_charges_subscriber_id_fkey"
+            columns: ["subscriber_id"]
+            isOneToOne: false
+            referencedRelation: "link_subscribers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaign_deliveries: {
         Row: {
           campaign_id: string
@@ -411,6 +461,8 @@ export type Database = {
           asaas_payment_link_id: string | null
           asaas_payment_link_url: string | null
           asaas_subscription_id: string | null
+          asgard_last_charge_status: string | null
+          asgard_last_order_id: string | null
           created_at: string
           current_period_end: string | null
           email: string | null
@@ -432,6 +484,8 @@ export type Database = {
           asaas_payment_link_id?: string | null
           asaas_payment_link_url?: string | null
           asaas_subscription_id?: string | null
+          asgard_last_charge_status?: string | null
+          asgard_last_order_id?: string | null
           created_at?: string
           current_period_end?: string | null
           email?: string | null
@@ -453,6 +507,8 @@ export type Database = {
           asaas_payment_link_id?: string | null
           asaas_payment_link_url?: string | null
           asaas_subscription_id?: string | null
+          asgard_last_charge_status?: string | null
+          asgard_last_order_id?: string | null
           created_at?: string
           current_period_end?: string | null
           email?: string | null
