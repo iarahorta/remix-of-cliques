@@ -17,6 +17,7 @@ import {
   Sparkles,
   ChevronDown,
 } from "lucide-react";
+import logoAsset from "@/assets/zpclik-logo.png.asset.json";
 
 function GoldStar() {
   return (
@@ -31,9 +32,7 @@ function Nav() {
     <header className="sticky top-0 z-40 border-b border-[oklch(0.32_0.04_80/_0.25)] bg-[oklch(0.12_0.008_60/_0.85)] backdrop-blur-xl">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
         <a href="/" className="flex items-center gap-2">
-          <div className="grid h-9 w-9 place-items-center rounded-lg bg-gold-metal">
-            <Link2 className="h-4 w-4" />
-          </div>
+          <img src={logoAsset.url} alt="zpclik" className="h-10 w-10 rounded-lg object-cover ring-1 ring-[oklch(0.5_0.1_80/_0.4)]" />
           <span className="font-display text-lg tracking-wide">
             <span className="text-gold-gradient">zp</span>clik
           </span>
