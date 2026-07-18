@@ -145,6 +145,11 @@ function ClientesDashboard() {
   const ensureBilling = useServerFn(ensureSubscriberBilling);
   const cancelBilling = useServerFn(cancelSubscriberBilling);
   const [billingLoading, setBillingLoading] = useState(false);
+  const createPix = useServerFn(createAsgardPixCharge);
+  const checkPix = useServerFn(getAsgardChargeStatus);
+  const [pixModal, setPixModal] = useState<{ orderId: string; copyPaste: string | null; qrcode: string | null; amount: number } | null>(null);
+  const [pixCopied, setPixCopied] = useState(false);
+  const [pixChecking, setPixChecking] = useState(false);
 
   const active = useMemo(() => {
     if (!sub) return false;
