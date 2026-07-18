@@ -152,6 +152,18 @@ function ClientesDashboard() {
   const [pixModal, setPixModal] = useState<{ orderId: string; copyPaste: string | null; qrcode: string | null; amount: number } | null>(null);
   const [pixCopied, setPixCopied] = useState(false);
   const [pixChecking, setPixChecking] = useState(false);
+  const [pixQrDataUrl, setPixQrDataUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!pixModal) { setPixQrDataUrl(null); return; }
+    if (pixModal.qrcode) { setPixQrDataUrl(null); return; }
+    if (!pixModal.copyPaste) return;
+    let cancelled = false;
+    QRCode.toDataURL(pixModal.copyPaste, { width: 320, margin: 1, errorCorrectionLevel: "M" })
+      .then((url) => { if (!cancelled) setPixQrDataUrl(url); })
+      .catch(() => { if (!cancelled) setPixQrDataUrl(null); });
+    return () => { cancelled = true; };
+  }, [pixModal]);
 
   const active = useMemo(() => {
     if (!sub) return false;
