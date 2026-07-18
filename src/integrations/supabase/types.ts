@@ -463,6 +463,7 @@ export type Database = {
           asaas_subscription_id: string | null
           asgard_last_charge_status: string | null
           asgard_last_order_id: string | null
+          cpf: string | null
           created_at: string
           current_period_end: string | null
           email: string | null
@@ -486,6 +487,7 @@ export type Database = {
           asaas_subscription_id?: string | null
           asgard_last_charge_status?: string | null
           asgard_last_order_id?: string | null
+          cpf?: string | null
           created_at?: string
           current_period_end?: string | null
           email?: string | null
@@ -509,6 +511,7 @@ export type Database = {
           asaas_subscription_id?: string | null
           asgard_last_charge_status?: string | null
           asgard_last_order_id?: string | null
+          cpf?: string | null
           created_at?: string
           current_period_end?: string | null
           email?: string | null
