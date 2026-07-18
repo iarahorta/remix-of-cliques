@@ -631,6 +631,34 @@ function ClientesDashboard() {
       {metricsFor && (
         <MetricsModal link={metricsFor} onClose={() => setMetricsFor(null)} />
       )}
+      {locked && !pixModal && !loading && (
+        <div className="fixed inset-0 z-40 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border-2 border-red-200">
+            <div className="flex items-center gap-2 text-red-700 font-semibold">
+              <AlertTriangle className="h-6 w-6" />
+              <h3 className="text-lg">Acesso bloqueado</h3>
+            </div>
+            <p className="text-sm text-slate-700 mt-3">
+              {sub?.status === "suspended"
+                ? "Sua assinatura está suspensa."
+                : `Sua assinatura está com ${daysOverdue} dias de atraso.`}
+              {" "}Pra desbloquear o painel e voltar a usar seus links, gere e pague um PIX de R$ 19,90.
+            </p>
+            <button
+              onClick={openInvoiceAuto}
+              disabled={billingLoading}
+              className="mt-4 w-full inline-flex items-center justify-center gap-2 rounded-lg bg-red-700 hover:bg-red-800 disabled:opacity-60 text-white text-sm font-semibold px-4 py-2.5"
+            >
+              {billingLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
+              Gerar PIX de R$ 19,90
+            </button>
+            <button
+              onClick={signOut}
+              className="mt-2 w-full text-xs text-slate-500 hover:text-slate-800 py-1.5"
+            >Sair</button>
+          </div>
+        </div>
+      )}
       {pixModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setPixModal(null)}>
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
