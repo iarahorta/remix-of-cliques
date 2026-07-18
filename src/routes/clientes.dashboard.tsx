@@ -40,6 +40,7 @@ interface Sub {
   name: string | null;
   email: string | null;
   phone: string | null;
+  cpf: string | null;
   status: string;
   current_period_end: string | null;
   last_payment_at: string | null;
