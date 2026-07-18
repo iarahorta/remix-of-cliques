@@ -333,7 +333,7 @@ function ClientesDashboard() {
               const openInvoice = async () => {
                 setBillingLoading(true);
                 try {
-                  const r: any = await createPix({});
+                  const r: any = await requestPix();
                   if (r?.orderId) {
                     setPixModal({
                       orderId: String(r.orderId),
@@ -342,7 +342,7 @@ function ClientesDashboard() {
                       amount: Number(r.amount ?? 19.9),
                     });
                     setPixCopied(false);
-                  } else {
+                  } else if (r !== null) {
                     toast.error("Não foi possível gerar o PIX agora — tente de novo em instantes.");
                   }
                 } catch (e: any) {
