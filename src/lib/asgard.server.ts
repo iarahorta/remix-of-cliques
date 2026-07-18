@@ -30,11 +30,15 @@ export async function createAsgardPix(input: {
   externalReference?: string;
   idempotencyKey?: string;
 }): Promise<AsgardPixResponse> {
+  const cpfDigits = (input.cpf ?? "").replace(/\D+/g, "");
+  if (cpfDigits.length !== 11) {
+    throw new Error("CPF inválido — informe um CPF com 11 dígitos.");
+  }
   const body = {
     customer: {
       email: input.email,
       name: input.name ?? undefined,
-      cpf: input.cpf ?? undefined,
+      cpf: cpfDigits,
       phone: input.phone ?? undefined,
     },
     amount: Number(input.amount.toFixed(2)),
@@ -42,7 +46,8 @@ export async function createAsgardPix(input: {
     metadata: input.externalReference ? { external_id: input.externalReference } : undefined,
   };
   const h = headers();
-  if (input.idempotencyKey) h["Idempotency-Key"] = input.idempotencyKey;
+  h["Accept"] = "application/json";
+  h["Idempotency-Key"] = input.idempotencyKey ?? `pix-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
   const res = await fetch(`${ASGARD_BASE}/payments/pix`, {
     method: "POST",
     headers: h,
@@ -50,13 +55,17 @@ export async function createAsgardPix(input: {
   });
   const text = await res.text();
   if (!res.ok) {
-    throw new Error(`AsgardPay ${res.status}: ${text.slice(0, 300)}`);
+    let msg = text.slice(0, 300);
+    try { const j = JSON.parse(text); if (j?.message) msg = j.message; } catch { /* html error */ }
+    throw new Error(`AsgardPay ${res.status}: ${msg}`);
   }
   return JSON.parse(text) as AsgardPixResponse;
 }
 
 export async function getAsgardOrder(orderId: string | number) {
-  const res = await fetch(`${ASGARD_BASE}/payments/${orderId}`, { headers: headers() });
+  const h = headers();
+  h["Accept"] = "application/json";
+  const res = await fetch(`${ASGARD_BASE}/payments/${orderId}`, { headers: h });
   const text = await res.text();
   if (!res.ok) throw new Error(`AsgardPay ${res.status}: ${text.slice(0, 300)}`);
   return JSON.parse(text) as { order_id: number; status: string; amount: number; copy_paste?: string; qrcode?: string; metadata?: any };

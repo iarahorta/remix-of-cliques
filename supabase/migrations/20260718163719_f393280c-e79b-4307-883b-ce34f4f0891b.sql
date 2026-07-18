@@ -1,0 +1,1 @@
+ALTER TABLE public.link_subscribers ADD COLUMN IF NOT EXISTS cpf text;

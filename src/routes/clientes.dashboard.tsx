@@ -40,6 +40,7 @@ interface Sub {
   name: string | null;
   email: string | null;
   phone: string | null;
+  cpf: string | null;
   status: string;
   current_period_end: string | null;
   last_payment_at: string | null;
@@ -176,10 +177,41 @@ function ClientesDashboard() {
   }, [sub]);
 
   // Abre PIX automaticamente quando bloqueado
+  const askCpf = (): string | null => {
+    const raw = window.prompt(
+      "Para gerar seu PIX, informe seu CPF (somente números):",
+      (sub?.cpf ?? "").replace(/\D+/g, ""),
+    );
+    if (raw == null) return null;
+    const digits = raw.replace(/\D+/g, "");
+    if (digits.length !== 11) {
+      toast.error("CPF inválido — informe os 11 dígitos.");
+      return null;
+    }
+    return digits;
+  };
+
+  const requestPix = async (): Promise<any | null> => {
+    const storedCpf = (sub?.cpf ?? "").replace(/\D+/g, "");
+    let cpf = storedCpf.length === 11 ? storedCpf : (askCpf() ?? "");
+    if (!cpf) return null;
+    try {
+      return await createPix({ data: { cpf } });
+    } catch (e: any) {
+      const msg = String(e?.message ?? "");
+      if (msg.includes("CPF_REQUIRED") || msg.toLowerCase().includes("cpf")) {
+        const retryCpf = askCpf();
+        if (!retryCpf) return null;
+        return await createPix({ data: { cpf: retryCpf } });
+      }
+      throw e;
+    }
+  };
+
   const openInvoiceAuto = async () => {
     setBillingLoading(true);
     try {
-      const r: any = await createPix({});
+      const r: any = await requestPix();
       if (r?.orderId) {
         setPixModal({
           orderId: String(r.orderId),
@@ -188,7 +220,7 @@ function ClientesDashboard() {
           amount: Number(r.amount ?? 19.9),
         });
         setPixCopied(false);
-      } else {
+      } else if (r !== null) {
         toast.error("Não foi possível gerar o PIX agora — tente de novo em instantes.");
       }
     } catch (e: any) {
@@ -301,7 +333,7 @@ function ClientesDashboard() {
               const openInvoice = async () => {
                 setBillingLoading(true);
                 try {
-                  const r: any = await createPix({});
+                  const r: any = await requestPix();
                   if (r?.orderId) {
                     setPixModal({
                       orderId: String(r.orderId),
@@ -310,7 +342,7 @@ function ClientesDashboard() {
                       amount: Number(r.amount ?? 19.9),
                     });
                     setPixCopied(false);
-                  } else {
+                  } else if (r !== null) {
                     toast.error("Não foi possível gerar o PIX agora — tente de novo em instantes.");
                   }
                 } catch (e: any) {

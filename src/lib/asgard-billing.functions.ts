@@ -5,7 +5,10 @@ const PLAN_VALUE_BRL = 19.9;
 
 export const createAsgardPixCharge = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .inputValidator((d: { cpf?: string } | undefined) => ({
+    cpf: (d?.cpf ?? "").replace(/\D+/g, ""),
+  }))
+  .handler(async ({ context, data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { createAsgardPix } = await import("./asgard.server");
 
@@ -18,6 +21,14 @@ export const createAsgardPixCharge = createServerFn({ method: "POST" })
     if (!sub) throw new Error("Assinatura não encontrada — complete seu cadastro.");
     const email = ((sub as any).email ?? "").trim();
     if (!email) throw new Error("Complete seu cadastro (email) antes de gerar o PIX.");
+    const storedCpf = ((sub as any).cpf ?? "").replace(/\D+/g, "");
+    const cpf = data.cpf && data.cpf.length === 11 ? data.cpf : storedCpf;
+    if (cpf.length !== 11) {
+      throw new Error("CPF_REQUIRED");
+    }
+    if (cpf !== storedCpf) {
+      await supabaseAdmin.from("link_subscribers").update({ cpf } as any).eq("id", sub.id);
+    }
 
     // Reuse existing pending charge if it's very recent (last 20min) to avoid duplicates
     const twentyMinAgo = new Date(Date.now() - 20 * 60 * 1000).toISOString();
@@ -45,6 +56,7 @@ export const createAsgardPixCharge = createServerFn({ method: "POST" })
       amount: PLAN_VALUE_BRL,
       email,
       name: (sub as any).name ?? undefined,
+      cpf,
       phone: (sub as any).phone ?? undefined,
       externalReference: sub.id,
       idempotencyKey: idem,
