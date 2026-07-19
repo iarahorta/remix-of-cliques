@@ -21,7 +21,7 @@ import {
   getAsgardChargeStatus,
 } from "@/lib/asgard-billing.functions";
 import {
-  Loader2, Copy, Check, ExternalLink, BarChart3, X, LogOut, Link2, AlertTriangle, Pencil, Plus, Trash2, Shuffle,
+  Loader2, Copy, Check, ExternalLink, BarChart3, X, LogOut, Link2, AlertTriangle, Pencil, Plus, Trash2, Shuffle, HelpCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import QRCode from "qrcode";
@@ -65,21 +65,28 @@ interface MyLink {
 
 type RotationMode = "round_robin" | "random" | "weighted" | "sticky";
 const ROTATION_LABELS: Record<RotationMode, string> = {
-  round_robin: "Revezar em ordem (1 clique = próximo destino)",
-  random: "Sortear aleatoriamente a cada clique",
-  weighted: "Distribuir por porcentagem (peso)",
-  sticky: "Fixar no 1º destino (só troca se você editar)",
+  round_robin: "Revezar um por um (1 → 2 → 3 → 1)",
+  random: "Sortear aleatoriamente",
+  weighted: "Distribuir por peso (%)",
+  sticky: "Sempre o 1º destino",
 };
 
 const ROTATION_HELP: Record<RotationMode, string> = {
   round_robin:
-    "A cada clique o link manda pro próximo destino da lista, em ordem. Ex: clique 1 → destino 1, clique 2 → destino 2, clique 3 → destino 1 de novo.",
+    "Com 3 números cadastrados: clique 1 vai pro 1º, clique 2 pro 2º, clique 3 pro 3º, clique 4 volta pro 1º. Ideal para dividir atendimento igualmente.",
   random:
-    "A cada clique o link sorteia um destino aleatório da lista. Ideal pra distribuir tráfego sem padrão previsível.",
+    "Cada clique sorteia um destino. Com 3 números, cada um fica com cerca de 33% de chance. Bom para testes ou distribuição natural.",
   weighted:
-    "Você define um peso pra cada destino. Quanto maior o peso, mais cliques ele recebe. Ex: peso 70 vs 30 = 70% dos cliques no primeiro.",
+    "Você define pesos para cada destino. Se colocar 70 no 1º e 30 no 2º, aproximadamente 70% dos cliques vão para o 1º e 30% para o 2º. A soma dos pesos não precisa ser 100.",
   sticky:
-    "Todos os cliques vão pro 1º destino da lista. Use se quiser trocar o destino manualmente sem gerar um link novo.",
+    "Todos os cliques caem no primeiro destino da lista. Se ele for bloqueado, basta trocar o 1º lugar aqui no painel — o link curto continua o mesmo.",
+};
+
+const ROTATION_EXAMPLES: Record<RotationMode, string> = {
+  round_robin: "Ex.: revezar 10 números de WhatsApp para não sobrecarregar um atendente.",
+  random: "Ex.: mandar leads para 5 vendedores sem ordem definida.",
+  weighted: "Ex.: 70% dos cliques para o vendedor sênior e 30% para o estagiário.",
+  sticky: "Ex.: usar um link em uma campanha e trocar o destino sem reimprimir material.",
 };
 
 const PIX_KEY = "iarachorta@gmail.com";
