@@ -73,6 +73,26 @@ const ROTATION_LABELS: Record<RotationMode, string> = {
 
 const PIX_KEY = "iarachorta@gmail.com";
 
+function getProviderQrImageSrc(qrcode: string | null | undefined): string | null {
+  const value = (qrcode ?? "").trim();
+  if (!value) return null;
+  if (value.startsWith("data:image/") || value.startsWith("blob:") || value.startsWith("http")) return value;
+  if (value.startsWith("<svg")) return `data:image/svg+xml;utf8,${encodeURIComponent(value)}`;
+  if (value.startsWith("000201") || value.toLowerCase().includes("br.gov.bcb.pix")) return null;
+  if (/^[A-Za-z0-9+/=\s]+$/.test(value) && value.length > 120) {
+    return `data:image/png;base64,${value.replace(/\s+/g, "")}`;
+  }
+  return null;
+}
+
+function getPixPayloadForQr(copyPaste: string | null | undefined, qrcode: string | null | undefined): string | null {
+  const copy = (copyPaste ?? "").trim();
+  if (copy) return copy;
+  const qr = (qrcode ?? "").trim();
+  if (qr.startsWith("000201") || qr.toLowerCase().includes("br.gov.bcb.pix")) return qr;
+  return null;
+}
+
 function normalizePhone(raw: string): string | null {
   const digits = (raw ?? "").replace(/\D+/g, "");
   if (digits.length === 10 || digits.length === 11) return "55" + digits;
@@ -156,10 +176,10 @@ function ClientesDashboard() {
 
   useEffect(() => {
     if (!pixModal) { setPixQrDataUrl(null); return; }
-    if (pixModal.qrcode) { setPixQrDataUrl(null); return; }
-    if (!pixModal.copyPaste) return;
+    const payload = getPixPayloadForQr(pixModal.copyPaste, pixModal.qrcode);
+    if (!payload) { setPixQrDataUrl(null); return; }
     let cancelled = false;
-    QRCode.toDataURL(pixModal.copyPaste, { width: 320, margin: 1, errorCorrectionLevel: "M" })
+    QRCode.toDataURL(payload, { width: 320, margin: 1, errorCorrectionLevel: "M" })
       .then((url) => { if (!cancelled) setPixQrDataUrl(url); })
       .catch(() => { if (!cancelled) setPixQrDataUrl(null); });
     return () => { cancelled = true; };
@@ -715,16 +735,16 @@ function ClientesDashboard() {
               <button onClick={() => setPixModal(null)} className="text-slate-400 hover:text-slate-700 text-xl leading-none">×</button>
             </div>
             {(() => {
-              const src = pixModal.qrcode
-                ? (pixModal.qrcode.startsWith("data:") || pixModal.qrcode.startsWith("http")
-                    ? pixModal.qrcode
-                    : `data:image/png;base64,${pixModal.qrcode}`)
-                : pixQrDataUrl;
+              const src = getProviderQrImageSrc(pixModal.qrcode) ?? pixQrDataUrl;
               return src ? (
                 <div className="mt-4 flex justify-center">
                   <img src={src} alt="QR Code PIX" className="w-56 h-56 rounded-lg border border-slate-200" />
                 </div>
-              ) : null;
+              ) : (
+                <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 text-center">
+                  QR Code carregando. Se não aparecer, use o código copia-e-cola abaixo.
+                </div>
+              );
             })()}
             {pixModal.copyPaste && (
               <div className="mt-4">
