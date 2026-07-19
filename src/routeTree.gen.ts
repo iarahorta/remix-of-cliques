@@ -17,7 +17,9 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ClientesIndexRouteImport } from './routes/clientes.index'
 import { Route as RSlugRouteImport } from './routes/r.$slug'
 import { Route as ClientesDashboardRouteImport } from './routes/clientes.dashboard'
+import { Route as AuthenticatedParceirosRouteImport } from './routes/_authenticated/parceiros'
 import { Route as AuthenticatedEncurtadorRouteImport } from './routes/_authenticated/encurtador'
+import { Route as AuthenticatedComissoesRouteImport } from './routes/_authenticated/comissoes'
 import { Route as AuthenticatedAssinantesRouteImport } from './routes/_authenticated/assinantes'
 import { Route as ApiPublicWebhooksAsgardRouteImport } from './routes/api/public/webhooks.asgard'
 
@@ -60,9 +62,19 @@ const ClientesDashboardRoute = ClientesDashboardRouteImport.update({
   path: '/clientes/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedParceirosRoute = AuthenticatedParceirosRouteImport.update({
+  id: '/parceiros',
+  path: '/parceiros',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedEncurtadorRoute = AuthenticatedEncurtadorRouteImport.update({
   id: '/encurtador',
   path: '/encurtador',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedComissoesRoute = AuthenticatedComissoesRouteImport.update({
+  id: '/comissoes',
+  path: '/comissoes',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAssinantesRoute = AuthenticatedAssinantesRouteImport.update({
@@ -82,7 +94,9 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/assinantes': typeof AuthenticatedAssinantesRoute
+  '/comissoes': typeof AuthenticatedComissoesRoute
   '/encurtador': typeof AuthenticatedEncurtadorRoute
+  '/parceiros': typeof AuthenticatedParceirosRoute
   '/clientes/dashboard': typeof ClientesDashboardRoute
   '/r/$slug': typeof RSlugRoute
   '/clientes/': typeof ClientesIndexRoute
@@ -94,7 +108,9 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/assinantes': typeof AuthenticatedAssinantesRoute
+  '/comissoes': typeof AuthenticatedComissoesRoute
   '/encurtador': typeof AuthenticatedEncurtadorRoute
+  '/parceiros': typeof AuthenticatedParceirosRoute
   '/clientes/dashboard': typeof ClientesDashboardRoute
   '/r/$slug': typeof RSlugRoute
   '/clientes': typeof ClientesIndexRoute
@@ -108,7 +124,9 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/assinantes': typeof AuthenticatedAssinantesRoute
+  '/_authenticated/comissoes': typeof AuthenticatedComissoesRoute
   '/_authenticated/encurtador': typeof AuthenticatedEncurtadorRoute
+  '/_authenticated/parceiros': typeof AuthenticatedParceirosRoute
   '/clientes/dashboard': typeof ClientesDashboardRoute
   '/r/$slug': typeof RSlugRoute
   '/clientes/': typeof ClientesIndexRoute
@@ -122,7 +140,9 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/assinantes'
+    | '/comissoes'
     | '/encurtador'
+    | '/parceiros'
     | '/clientes/dashboard'
     | '/r/$slug'
     | '/clientes/'
@@ -134,7 +154,9 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/assinantes'
+    | '/comissoes'
     | '/encurtador'
+    | '/parceiros'
     | '/clientes/dashboard'
     | '/r/$slug'
     | '/clientes'
@@ -147,7 +169,9 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/_authenticated/assinantes'
+    | '/_authenticated/comissoes'
     | '/_authenticated/encurtador'
+    | '/_authenticated/parceiros'
     | '/clientes/dashboard'
     | '/r/$slug'
     | '/clientes/'
@@ -224,11 +248,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClientesDashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/parceiros': {
+      id: '/_authenticated/parceiros'
+      path: '/parceiros'
+      fullPath: '/parceiros'
+      preLoaderRoute: typeof AuthenticatedParceirosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/encurtador': {
       id: '/_authenticated/encurtador'
       path: '/encurtador'
       fullPath: '/encurtador'
       preLoaderRoute: typeof AuthenticatedEncurtadorRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/comissoes': {
+      id: '/_authenticated/comissoes'
+      path: '/comissoes'
+      fullPath: '/comissoes'
+      preLoaderRoute: typeof AuthenticatedComissoesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/assinantes': {
@@ -250,12 +288,16 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAssinantesRoute: typeof AuthenticatedAssinantesRoute
+  AuthenticatedComissoesRoute: typeof AuthenticatedComissoesRoute
   AuthenticatedEncurtadorRoute: typeof AuthenticatedEncurtadorRoute
+  AuthenticatedParceirosRoute: typeof AuthenticatedParceirosRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAssinantesRoute: AuthenticatedAssinantesRoute,
+  AuthenticatedComissoesRoute: AuthenticatedComissoesRoute,
   AuthenticatedEncurtadorRoute: AuthenticatedEncurtadorRoute,
+  AuthenticatedParceirosRoute: AuthenticatedParceirosRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -275,13 +317,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

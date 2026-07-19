@@ -404,6 +404,48 @@ export type Database = {
         }
         Relationships: []
       }
+      gateway_fee_rules: {
+        Row: {
+          active: boolean
+          created_at: string
+          effective_from: string
+          effective_to: string | null
+          fixed_cents: number
+          gateway: string
+          id: string
+          method: string
+          notes: string | null
+          percent_bps: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          effective_from?: string
+          effective_to?: string | null
+          fixed_cents?: number
+          gateway: string
+          id?: string
+          method: string
+          notes?: string | null
+          percent_bps?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          effective_from?: string
+          effective_to?: string | null
+          fixed_cents?: number
+          gateway?: string
+          id?: string
+          method?: string
+          notes?: string | null
+          percent_bps?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       landing_plans: {
         Row: {
           active: boolean
@@ -463,6 +505,7 @@ export type Database = {
           asaas_subscription_id: string | null
           asgard_last_charge_status: string | null
           asgard_last_order_id: string | null
+          attributed_at: string | null
           cpf: string | null
           created_at: string
           current_period_end: string | null
@@ -471,9 +514,11 @@ export type Database = {
           last_payment_at: string | null
           name: string | null
           overdue_since: string | null
+          partner_id: string | null
           payment_method: string | null
           phone: string | null
           plan_price_cents: number
+          referral_id: string | null
           status: string
           updated_at: string
         }
@@ -487,6 +532,7 @@ export type Database = {
           asaas_subscription_id?: string | null
           asgard_last_charge_status?: string | null
           asgard_last_order_id?: string | null
+          attributed_at?: string | null
           cpf?: string | null
           created_at?: string
           current_period_end?: string | null
@@ -495,9 +541,11 @@ export type Database = {
           last_payment_at?: string | null
           name?: string | null
           overdue_since?: string | null
+          partner_id?: string | null
           payment_method?: string | null
           phone?: string | null
           plan_price_cents?: number
+          referral_id?: string | null
           status?: string
           updated_at?: string
         }
@@ -511,6 +559,7 @@ export type Database = {
           asaas_subscription_id?: string | null
           asgard_last_charge_status?: string | null
           asgard_last_order_id?: string | null
+          attributed_at?: string | null
           cpf?: string | null
           created_at?: string
           current_period_end?: string | null
@@ -519,13 +568,30 @@ export type Database = {
           last_payment_at?: string | null
           name?: string | null
           overdue_since?: string | null
+          partner_id?: string | null
           payment_method?: string | null
           phone?: string | null
           plan_price_cents?: number
+          referral_id?: string | null
           status?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "link_subscribers_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "link_subscribers_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "partner_referrals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       message_templates: {
         Row: {
@@ -595,6 +661,301 @@ export type Database = {
           price_cents?: number
           slug?: string
           sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      partner_commissions: {
+        Row: {
+          commission_bps: number
+          commission_cents: number
+          created_at: string
+          gateway_fee_cents: number
+          gross_cents: number
+          id: string
+          net_cents: number | null
+          notes: string | null
+          other_fee_cents: number
+          paid_at: string | null
+          paid_method: string | null
+          paid_ref: string | null
+          partner_id: string
+          product_code: string
+          source_id: string
+          source_type: string
+          status: Database["public"]["Enums"]["commission_status"]
+          subscriber_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          commission_bps: number
+          commission_cents: number
+          created_at?: string
+          gateway_fee_cents?: number
+          gross_cents: number
+          id?: string
+          net_cents?: number | null
+          notes?: string | null
+          other_fee_cents?: number
+          paid_at?: string | null
+          paid_method?: string | null
+          paid_ref?: string | null
+          partner_id: string
+          product_code?: string
+          source_id: string
+          source_type: string
+          status?: Database["public"]["Enums"]["commission_status"]
+          subscriber_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          commission_bps?: number
+          commission_cents?: number
+          created_at?: string
+          gateway_fee_cents?: number
+          gross_cents?: number
+          id?: string
+          net_cents?: number | null
+          notes?: string | null
+          other_fee_cents?: number
+          paid_at?: string | null
+          paid_method?: string | null
+          paid_ref?: string | null
+          partner_id?: string
+          product_code?: string
+          source_id?: string
+          source_type?: string
+          status?: Database["public"]["Enums"]["commission_status"]
+          subscriber_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_commissions_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_commissions_subscriber_id_fkey"
+            columns: ["subscriber_id"]
+            isOneToOne: false
+            referencedRelation: "link_subscribers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partner_payouts: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          paid_at: string | null
+          paid_ref: string | null
+          partner_id: string
+          status: string
+          total_cents: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          paid_ref?: string | null
+          partner_id: string
+          status?: string
+          total_cents: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          paid_ref?: string | null
+          partner_id?: string
+          status?: string
+          total_cents?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_payouts_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partner_products: {
+        Row: {
+          active: boolean
+          commission_bps: number
+          created_at: string
+          id: string
+          partner_id: string
+          product_code: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          commission_bps: number
+          created_at?: string
+          id?: string
+          partner_id: string
+          product_code: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          commission_bps?: number
+          created_at?: string
+          id?: string
+          partner_id?: string
+          product_code?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_products_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partner_referrals: {
+        Row: {
+          attributed_at: string | null
+          created_at: string
+          expires_at: string
+          first_seen_at: string
+          id: string
+          ip_hash: string | null
+          landing_url: string | null
+          partner_id: string
+          public_token: string
+          referer: string | null
+          subscriber_id: string | null
+          user_agent: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
+          visitor_id: string
+        }
+        Insert: {
+          attributed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          first_seen_at?: string
+          id?: string
+          ip_hash?: string | null
+          landing_url?: string | null
+          partner_id: string
+          public_token: string
+          referer?: string | null
+          subscriber_id?: string | null
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+          visitor_id: string
+        }
+        Update: {
+          attributed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          first_seen_at?: string
+          id?: string
+          ip_hash?: string | null
+          landing_url?: string | null
+          partner_id?: string
+          public_token?: string
+          referer?: string | null
+          subscriber_id?: string | null
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+          visitor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_referrals_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_referrals_subscriber_id_fkey"
+            columns: ["subscriber_id"]
+            isOneToOne: false
+            referencedRelation: "link_subscribers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partners: {
+        Row: {
+          created_at: string
+          default_commission_bps: number
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          owner_user_id: string | null
+          phone: string | null
+          pix_key: string | null
+          pix_key_type: string | null
+          public_token: string
+          status: Database["public"]["Enums"]["partner_status"]
+          tax_id: string | null
+          type: Database["public"]["Enums"]["partner_type"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          default_commission_bps?: number
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          owner_user_id?: string | null
+          phone?: string | null
+          pix_key?: string | null
+          pix_key_type?: string | null
+          public_token: string
+          status?: Database["public"]["Enums"]["partner_status"]
+          tax_id?: string | null
+          type?: Database["public"]["Enums"]["partner_type"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          default_commission_bps?: number
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          owner_user_id?: string | null
+          phone?: string | null
+          pix_key?: string | null
+          pix_key_type?: string | null
+          public_token?: string
+          status?: Database["public"]["Enums"]["partner_status"]
+          tax_id?: string | null
+          type?: Database["public"]["Enums"]["partner_type"]
           updated_at?: string
         }
         Relationships: []
@@ -909,6 +1270,34 @@ export type Database = {
           target: string
         }[]
       }
+      generate_partner_token: { Args: never; Returns: string }
+      get_partner_by_token: {
+        Args: { _token: string }
+        Returns: {
+          active: boolean
+          token: string
+        }[]
+      }
+      record_partner_commission: {
+        Args: {
+          _gateway?: string
+          _gross_cents: number
+          _method?: string
+          _product_code?: string
+          _source_id: string
+          _source_type: string
+          _subscriber_id: string
+        }
+        Returns: string
+      }
+      resolve_commission_bps: {
+        Args: { _partner_id: string; _product_code: string }
+        Returns: number
+      }
+      reverse_partner_commission: {
+        Args: { _source_id: string; _source_type: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_permission:
@@ -931,7 +1320,20 @@ export type Database = {
         | "processing"
         | "completed"
         | "cancelled"
+      commission_status:
+        | "pending"
+        | "approved"
+        | "paid"
+        | "canceled"
+        | "reversed"
       file_kind: "contacts" | "media" | "report"
+      partner_status: "active" | "inactive" | "suspended"
+      partner_type:
+        | "manager"
+        | "white_label"
+        | "affiliate"
+        | "agency"
+        | "reseller"
       tx_type: "recharge" | "debit" | "refund" | "adjustment"
     }
     CompositeTypes: {
@@ -1082,7 +1484,22 @@ export const Constants = {
         "completed",
         "cancelled",
       ],
+      commission_status: [
+        "pending",
+        "approved",
+        "paid",
+        "canceled",
+        "reversed",
+      ],
       file_kind: ["contacts", "media", "report"],
+      partner_status: ["active", "inactive", "suspended"],
+      partner_type: [
+        "manager",
+        "white_label",
+        "affiliate",
+        "agency",
+        "reseller",
+      ],
       tx_type: ["recharge", "debit", "refund", "adjustment"],
     },
   },

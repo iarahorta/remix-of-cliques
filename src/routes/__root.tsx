@@ -84,6 +84,51 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      // Visitor ID persistente (90 dias)
+      let vid: string = localStorage.getItem("zpk_vid") ?? "";
+      if (!vid) {
+        vid = (crypto as any).randomUUID?.() ?? Math.random().toString(36).slice(2) + Date.now().toString(36);
+        localStorage.setItem("zpk_vid", vid);
+      }
+      const params = new URLSearchParams(window.location.search);
+      const ref = params.get("ref");
+      if (ref && /^[A-Za-z0-9_-]{4,24}$/.test(ref)) {
+        const existing = localStorage.getItem("zpk_ref");
+        // First-touch: mantém a primeira atribuição
+        if (!existing) {
+          localStorage.setItem("zpk_ref", ref);
+          localStorage.setItem("zpk_ref_at", String(Date.now()));
+          // 90 dias
+          document.cookie = `zpk_ref=${ref}; path=/; max-age=${60 * 60 * 24 * 90}; SameSite=Lax`;
+          // Registra visita atribuída no servidor (fire-and-forget)
+          const refVal = ref;
+          const vidVal = vid;
+          import("@/lib/partner-attribution.functions").then(({ trackReferralVisit }) => {
+            trackReferralVisit({ data: {
+              token: refVal,
+              visitor_id: vidVal,
+              landing_url: window.location.href,
+              referer: document.referrer || undefined,
+              utm_source: params.get("utm_source") || undefined,
+              utm_medium: params.get("utm_medium") || undefined,
+              utm_campaign: params.get("utm_campaign") || undefined,
+              utm_content: params.get("utm_content") || undefined,
+              utm_term: params.get("utm_term") || undefined,
+            } }).catch(() => {});
+          }).catch(() => {});
+        }
+      }
+      // Expira zpk_ref após 90 dias
+      const at = Number(localStorage.getItem("zpk_ref_at") ?? 0);
+      if (at && Date.now() - at > 90 * 24 * 60 * 60 * 1000) {
+        localStorage.removeItem("zpk_ref");
+        localStorage.removeItem("zpk_ref_at");
+      }
+    } catch {}
+  }, []);
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
