@@ -11,6 +11,7 @@ import {
   updateSubscriberLinkTarget,
   updateSubscriberLinkRotation,
   convertSubscriberLinkToSingle,
+  deleteMySubscriberLink,
 } from "@/lib/link-subscribers.functions";
 import { cancelSubscriberBilling } from "@/lib/billing.functions";
 import {
@@ -213,6 +214,25 @@ function ClientesDashboard() {
   const [pixCopied, setPixCopied] = useState(false);
   const [pixChecking, setPixChecking] = useState(false);
   const [pixQrDataUrl, setPixQrDataUrl] = useState<string | null>(null);
+  // Timer de expiração do PIX (5 min a partir da criação).
+  const [pixCreatedAt, setPixCreatedAt] = useState<number | null>(null);
+  const [pixExpiresInSec, setPixExpiresInSec] = useState<number>(5 * 60);
+  const [nowTs, setNowTs] = useState<number>(() => Date.now());
+  useEffect(() => {
+    if (!pixModal) return;
+    const id = setInterval(() => setNowTs(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [pixModal]);
+  const pixSecondsLeft = pixCreatedAt
+    ? Math.max(0, Math.ceil((pixCreatedAt + pixExpiresInSec * 1000 - nowTs) / 1000))
+    : 0;
+  const pixExpired = pixCreatedAt !== null && pixSecondsLeft === 0;
+
+  // Modal de exclusão de link
+  const deleteLinkFn = useServerFn(deleteMySubscriberLink);
+  const [deletingFor, setDeletingFor] = useState<MyLink | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deleteBusy, setDeleteBusy] = useState(false);
 
   useEffect(() => {
     if (!pixModal) { setPixQrDataUrl(null); return; }
@@ -227,7 +247,10 @@ function ClientesDashboard() {
 
   const active = useMemo(() => {
     if (!sub) return false;
-    const today = new Date().toISOString().slice(0, 10);
+    // Comparação em TZ Brasília — evita marcar "vencido" 3h antes por causa do UTC.
+    const today = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit",
+    }).format(new Date());
     return sub.status === "active" && !!sub.current_period_end && sub.current_period_end >= today;
   }, [sub]);
 
@@ -237,7 +260,11 @@ function ClientesDashboard() {
       return { daysUntilEnd: null as number | null, daysOverdue: 0, expiringSoon: false, locked: sub?.status !== "active" };
     }
     const MS = 24 * 60 * 60 * 1000;
-    const today = new Date(); today.setHours(0, 0, 0, 0);
+    // Ambos os lados em TZ Brasília (ISO YYYY-MM-DD).
+    const todayIso = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit",
+    }).format(new Date());
+    const today = new Date(todayIso + "T00:00:00");
     const end = new Date(sub.current_period_end + "T00:00:00");
     const diffDays = Math.floor((end.getTime() - today.getTime()) / MS);
     const overdue = diffDays < 0 ? -diffDays : 0;
@@ -249,36 +276,9 @@ function ClientesDashboard() {
     };
   }, [sub]);
 
-  // Abre PIX automaticamente quando bloqueado
-  const askCpf = (): string | null => {
-    const raw = window.prompt(
-      "Para gerar seu PIX, informe seu CPF (somente números):",
-      (sub?.cpf ?? "").replace(/\D+/g, ""),
-    );
-    if (raw == null) return null;
-    const digits = raw.replace(/\D+/g, "");
-    if (digits.length !== 11) {
-      toast.error("CPF inválido — informe os 11 dígitos.");
-      return null;
-    }
-    return digits;
-  };
-
+  // PIX sem CPF (política V1.0 — menos fricção pra pagar).
   const requestPix = async (): Promise<any | null> => {
-    const storedCpf = (sub?.cpf ?? "").replace(/\D+/g, "");
-    let cpf = storedCpf.length === 11 ? storedCpf : (askCpf() ?? "");
-    if (!cpf) return null;
-    try {
-      return await createPix({ data: { cpf } });
-    } catch (e: any) {
-      const msg = String(e?.message ?? "");
-      if (msg.includes("CPF_REQUIRED") || msg.toLowerCase().includes("cpf")) {
-        const retryCpf = askCpf();
-        if (!retryCpf) return null;
-        return await createPix({ data: { cpf: retryCpf } });
-      }
-      throw e;
-    }
+    return await createPix();
   };
 
   const openInvoiceAuto = async () => {
@@ -292,6 +292,9 @@ function ClientesDashboard() {
           qrcode: r.qrcode ?? null,
           amount: Number(r.amount ?? 19.9),
         });
+        setPixCreatedAt(r.createdAt ? new Date(r.createdAt).getTime() : Date.now());
+        setPixExpiresInSec(Number(r.expiresInSec) > 0 ? Number(r.expiresInSec) : 5 * 60);
+        setNowTs(Date.now());
         setPixCopied(false);
       } else if (r !== null) {
         toast.error("Não foi possível gerar o PIX agora — tente de novo em instantes.");
