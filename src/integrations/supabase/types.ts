@@ -680,6 +680,7 @@ export type Database = {
           paid_method: string | null
           paid_ref: string | null
           partner_id: string
+          payout_id: string | null
           product_code: string
           source_id: string
           source_type: string
@@ -701,6 +702,7 @@ export type Database = {
           paid_method?: string | null
           paid_ref?: string | null
           partner_id: string
+          payout_id?: string | null
           product_code?: string
           source_id: string
           source_type: string
@@ -722,6 +724,7 @@ export type Database = {
           paid_method?: string | null
           paid_ref?: string | null
           partner_id?: string
+          payout_id?: string | null
           product_code?: string
           source_id?: string
           source_type?: string
@@ -735,6 +738,13 @@ export type Database = {
             columns: ["partner_id"]
             isOneToOne: false
             referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_commissions_payout_id_fkey"
+            columns: ["payout_id"]
+            isOneToOne: false
+            referencedRelation: "partner_payouts"
             referencedColumns: ["id"]
           },
           {
