@@ -5,10 +5,7 @@ const PLAN_VALUE_BRL = 19.9;
 
 export const createAsgardPixCharge = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { cpf?: string } | undefined) => ({
-    cpf: (d?.cpf ?? "").replace(/\D+/g, ""),
-  }))
-  .handler(async ({ context, data }) => {
+  .handler(async ({ context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { createAsgardPix } = await import("./asgard.server");
 
@@ -21,23 +18,18 @@ export const createAsgardPixCharge = createServerFn({ method: "POST" })
     if (!sub) throw new Error("Assinatura não encontrada — complete seu cadastro.");
     const email = ((sub as any).email ?? "").trim();
     if (!email) throw new Error("Complete seu cadastro (email) antes de gerar o PIX.");
+    // CPF é opcional. Se o cliente já tiver salvo, aproveitamos; senão, seguimos sem.
     const storedCpf = ((sub as any).cpf ?? "").replace(/\D+/g, "");
-    const cpf = data.cpf && data.cpf.length === 11 ? data.cpf : storedCpf;
-    if (cpf.length !== 11) {
-      throw new Error("CPF_REQUIRED");
-    }
-    if (cpf !== storedCpf) {
-      await supabaseAdmin.from("link_subscribers").update({ cpf } as any).eq("id", sub.id);
-    }
+    const cpf = storedCpf.length === 11 ? storedCpf : null;
 
-    // Reuse existing pending charge if it's very recent (last 20min) to avoid duplicates
-    const twentyMinAgo = new Date(Date.now() - 20 * 60 * 1000).toISOString();
+    // Reaproveita cobrança pendente recente (últimos 5min) — casa com o timer da UI.
+    const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
     const { data: existing } = await supabaseAdmin
       .from("asgard_pix_charges")
       .select("*")
       .eq("subscriber_id", sub.id)
       .eq("status", "pending")
-      .gte("created_at", twentyMinAgo)
+      .gte("created_at", fiveMinAgo)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -48,6 +40,8 @@ export const createAsgardPixCharge = createServerFn({ method: "POST" })
         qrcode: (existing as any).qrcode,
         amount: Number((existing as any).amount),
         status: (existing as any).status,
+        createdAt: (existing as any).created_at as string,
+        expiresInSec: 5 * 60,
       };
     }
 
@@ -62,6 +56,7 @@ export const createAsgardPixCharge = createServerFn({ method: "POST" })
       idempotencyKey: idem,
     });
 
+    const createdAtIso = new Date().toISOString();
     await supabaseAdmin.from("asgard_pix_charges").insert({
       subscriber_id: sub.id,
       order_id: String(pix.order_id),
@@ -86,6 +81,8 @@ export const createAsgardPixCharge = createServerFn({ method: "POST" })
       qrcode: pix.qrcode ?? null,
       amount: PLAN_VALUE_BRL,
       status: pix.status ?? "pending",
+      createdAt: createdAtIso,
+      expiresInSec: 5 * 60,
     };
   });
 
