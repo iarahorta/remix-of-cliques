@@ -21,7 +21,7 @@ import {
   getAsgardChargeStatus,
 } from "@/lib/asgard-billing.functions";
 import {
-  Loader2, Copy, Check, ExternalLink, BarChart3, X, LogOut, Link2, AlertTriangle, Pencil, Plus, Trash2, Shuffle,
+  Loader2, Copy, Check, ExternalLink, BarChart3, X, LogOut, Link2, AlertTriangle, Pencil, Plus, Trash2, Shuffle, HelpCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import QRCode from "qrcode";
@@ -65,22 +65,54 @@ interface MyLink {
 
 type RotationMode = "round_robin" | "random" | "weighted" | "sticky";
 const ROTATION_LABELS: Record<RotationMode, string> = {
-  round_robin: "Revezar em ordem (1 clique = próximo destino)",
-  random: "Sortear aleatoriamente a cada clique",
-  weighted: "Distribuir por porcentagem (peso)",
-  sticky: "Fixar no 1º destino (só troca se você editar)",
+  round_robin: "Revezar um por um (1 → 2 → 3 → 1)",
+  random: "Sortear aleatoriamente",
+  weighted: "Distribuir por peso (%)",
+  sticky: "Sempre o 1º destino",
 };
 
 const ROTATION_HELP: Record<RotationMode, string> = {
   round_robin:
-    "A cada clique o link manda pro próximo destino da lista, em ordem. Ex: clique 1 → destino 1, clique 2 → destino 2, clique 3 → destino 1 de novo.",
+    "Com 3 números cadastrados: clique 1 vai pro 1º, clique 2 pro 2º, clique 3 pro 3º, clique 4 volta pro 1º. Ideal para dividir atendimento igualmente.",
   random:
-    "A cada clique o link sorteia um destino aleatório da lista. Ideal pra distribuir tráfego sem padrão previsível.",
+    "Cada clique sorteia um destino. Com 3 números, cada um fica com cerca de 33% de chance. Bom para testes ou distribuição natural.",
   weighted:
-    "Você define um peso pra cada destino. Quanto maior o peso, mais cliques ele recebe. Ex: peso 70 vs 30 = 70% dos cliques no primeiro.",
+    "Você define pesos para cada destino. Se colocar 70 no 1º e 30 no 2º, aproximadamente 70% dos cliques vão para o 1º e 30% para o 2º. A soma dos pesos não precisa ser 100.",
   sticky:
-    "Todos os cliques vão pro 1º destino da lista. Use se quiser trocar o destino manualmente sem gerar um link novo.",
+    "Todos os cliques caem no primeiro destino da lista. Se ele for bloqueado, basta trocar o 1º lugar aqui no painel — o link curto continua o mesmo.",
 };
+
+const ROTATION_EXAMPLES: Record<RotationMode, string> = {
+  round_robin: "Ex.: revezar 10 números de WhatsApp para não sobrecarregar um atendente.",
+  random: "Ex.: mandar leads para 5 vendedores sem ordem definida.",
+  weighted: "Ex.: 70% dos cliques para o vendedor sênior e 30% para o estagiário.",
+  sticky: "Ex.: usar um link em uma campanha e trocar o destino sem reimprimir material.",
+};
+
+function InlineTooltip({ text }: { text: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <span className="relative inline-block align-middle ml-1">
+      <button
+        type="button"
+        aria-label="Ajuda"
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setOpen(false)}
+        className="rounded-full p-0.5 text-slate-400 hover:text-amber-500 focus:outline-none"
+      >
+        <HelpCircle className="h-3.5 w-3.5" />
+      </button>
+      {open && (
+        <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 sm:w-64 rounded-lg bg-slate-900 px-3 py-2 text-xs text-white shadow-lg z-50">
+          {text}
+          <span className="absolute left-1/2 -translate-x-1/2 top-full border-4 border-transparent border-t-slate-900" />
+        </span>
+      )}
+    </span>
+  );
+}
 
 const PIX_KEY = "iarachorta@gmail.com";
 
@@ -589,7 +621,10 @@ function ClientesDashboard() {
                     </p>
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div>
-                        <label className="text-xs font-medium text-slate-700">Como o link deve revezar os destinos?</label>
+                        <label className="text-xs font-medium text-slate-700 flex items-center">
+                          Como o link deve revezar os destinos?
+                          <InlineTooltip text="Escolha a regra que decide para qual destino cada clique vai. Você pode trocar a regra a qualquer momento sem mudar o link curto." />
+                        </label>
                         <select
                           disabled={!active}
                           value={rotMode}
@@ -601,6 +636,7 @@ function ClientesDashboard() {
                           ))}
                         </select>
                         <p className="mt-1.5 text-[11px] leading-snug text-slate-500">{ROTATION_HELP[rotMode]}</p>
+                        <p className="mt-1 text-[11px] leading-snug text-amber-600 font-medium">{ROTATION_EXAMPLES[rotMode]}</p>
                       </div>
                       <div>
                         <label className="text-xs font-medium text-slate-700">Rótulo (opcional)</label>
@@ -944,7 +980,10 @@ function EditTargetModal({
           ) : (
             <>
               <div>
-                <label className="text-xs font-medium text-slate-700">Como o link deve revezar os destinos?</label>
+                <label className="text-xs font-medium text-slate-700 flex items-center">
+                  Como o link deve revezar os destinos?
+                  <InlineTooltip text="Escolha a regra que decide para qual destino cada clique vai. Você pode trocar a regra a qualquer momento sem mudar o link curto." />
+                </label>
                 <select value={rotMode} onChange={(e) => setRotMode(e.target.value as RotationMode)}
                   className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900">
                   {(Object.keys(ROTATION_LABELS) as RotationMode[]).map((m) => (
@@ -952,6 +991,7 @@ function EditTargetModal({
                   ))}
                 </select>
                 <p className="mt-1.5 text-[11px] leading-snug text-slate-500">{ROTATION_HELP[rotMode]}</p>
+                <p className="mt-1 text-[11px] leading-snug text-amber-600 font-medium">{ROTATION_EXAMPLES[rotMode]}</p>
               </div>
               <RotationRowsEditor
                 rows={rotUrls}
