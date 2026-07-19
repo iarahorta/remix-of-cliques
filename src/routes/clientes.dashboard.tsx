@@ -851,6 +851,62 @@ function ClientesDashboard() {
           onSaved={async () => { setEditingFor(null); await load(); }}
         />
       )}
+      {deletingFor && (
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onClick={() => !deleteBusy && setDeletingFor(null)}>
+          <div onClick={(e) => e.stopPropagation()} className="bg-card rounded-2xl shadow-2xl w-full max-w-md p-6 border border-red-200">
+            <div className="flex items-center gap-2 text-red-700 font-semibold">
+              <AlertTriangle className="h-5 w-5" />
+              <h3 className="text-lg">Excluir link</h3>
+            </div>
+            <p className="text-sm text-foreground/90 mt-3">
+              Você vai excluir <strong className="font-mono">www.zpclik.site/r/{deletingFor.slug}</strong>.
+              O link para de redirecionar imediatamente e some da sua lista, mas o histórico de cliques é preservado.
+            </p>
+            <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded p-2 mt-3">
+              O slug <strong>{deletingFor.slug}</strong> não poderá ser reutilizado depois — se precisar do mesmo destino, crie um link novo com outro slug.
+            </p>
+            <label className="mt-4 block text-xs font-medium text-foreground/90">
+              Digite <span className="font-mono">EXCLUIR</span> para confirmar
+            </label>
+            <input
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              autoFocus
+              placeholder="EXCLUIR"
+              className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm font-mono text-foreground"
+            />
+            <div className="mt-4 flex gap-2 justify-end">
+              <button
+                type="button"
+                disabled={deleteBusy}
+                onClick={() => setDeletingFor(null)}
+                className="text-xs px-3 py-2 rounded-md border border-border hover:bg-secondary text-foreground disabled:opacity-50"
+              >Cancelar</button>
+              <button
+                type="button"
+                disabled={deleteBusy || deleteConfirmText.trim() !== "EXCLUIR"}
+                onClick={async () => {
+                  if (!deletingFor) return;
+                  setDeleteBusy(true);
+                  try {
+                    await deleteLinkFn({ data: { linkId: deletingFor.id } });
+                    toast.success("Link excluído");
+                    setDeletingFor(null);
+                    setDeleteConfirmText("");
+                    await load();
+                  } catch (e: any) {
+                    toast.error(e?.message ?? "Falha ao excluir");
+                  } finally { setDeleteBusy(false); }
+                }}
+                className="text-xs px-3 py-2 rounded-md bg-red-700 hover:bg-red-800 text-white font-semibold disabled:opacity-50 inline-flex items-center gap-1.5"
+              >
+                {deleteBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                Excluir link
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
