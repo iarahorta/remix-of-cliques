@@ -812,12 +812,28 @@ function ClientesDashboard() {
                   toast.error(e?.message ?? "Erro ao verificar");
                 } finally { setPixChecking(false); }
               }}
-              disabled={pixChecking}
+              disabled={pixChecking || pixExpired}
               className="mt-3 w-full rounded-lg border border-border hover:bg-background text-foreground text-sm font-medium py-2 disabled:opacity-60"
             >{pixChecking ? "Verificando…" : "Já paguei — verificar agora"}</button>
-            <p className="mt-3 text-[11px] text-muted-foreground text-center">
-              Este PIX expira em alguns minutos. Se expirar, feche e gere um novo.
-            </p>
+            {pixExpired ? (
+              <div className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-800 text-center">
+                <p className="font-semibold">Este PIX expirou.</p>
+                <p className="mt-1">Feche esta janela e gere um novo PIX para pagar.</p>
+                <button
+                  onClick={async () => { setPixModal(null); setPixCreatedAt(null); await openInvoiceAuto(); }}
+                  className="mt-2 w-full rounded-md bg-red-700 hover:bg-red-800 text-white text-xs font-semibold py-2"
+                >Gerar novo PIX</button>
+              </div>
+            ) : (
+              <p className="mt-3 text-[11px] text-muted-foreground text-center">
+                Este PIX expira em{" "}
+                <strong className="font-mono">
+                  {String(Math.floor(pixSecondsLeft / 60)).padStart(2, "0")}
+                  :
+                  {String(pixSecondsLeft % 60).padStart(2, "0")}
+                </strong>
+              </p>
+            )}
           </div>
         </div>
       )}
