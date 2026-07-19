@@ -221,7 +221,7 @@ function Features() {
 }
 
 const STEPS = [
-  { n: "01", title: "Assine em 1 minuto", text: "Cadastro rápido, pagamento via Pix ou cartão pelo Asaas. Sem burocracia." },
+  { n: "01", title: "Assine em 1 minuto", text: "Cadastro rápido e pagamento via Pix. Sem burocracia, sem cartão, sem boleto." },
   { n: "02", title: "Crie seu link", text: "Cole a URL, escolha um slug (ou deixe automático) e ative rotação se quiser." },
   { n: "03", title: "Divulgue onde quiser", text: "WhatsApp, Instagram, TikTok, tráfego pago, e-mail — o link é seu." },
   { n: "04", title: "Acompanhe e otimize", text: "Veja acessos reais em tempo real, exporte CSV e ajuste a campanha." },
@@ -259,7 +259,6 @@ function Pricing() {
     "Rotação inteligente entre destinos",
     "Analytics em tempo real (sem bots)",
     "Link de WhatsApp em 1 clique",
-    "QR Code automático",
     "Exportação em CSV",
     "Edição de destino sem quebrar o slug",
     "Domínio zpclik.site com SSL",
@@ -306,7 +305,7 @@ function Pricing() {
             🔥 Oferta de lançamento por tempo limitado. Preço trava enquanto sua assinatura estiver ativa.
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Pagamento recorrente via Asaas (Pix ou cartão). Cancele quando quiser.
+            Pagamento mensal via Pix. Você recebe a cobrança no painel e paga em segundos. Cancele quando quiser.
           </p>
 
           <ul className="mt-8 space-y-3">
@@ -361,7 +360,7 @@ const FAQS = [
   },
   {
     q: "Como funciona o pagamento?",
-    a: "Recorrência mensal automática via Asaas (Pix ou cartão). Quando o pagamento cai, sua conta é liberada automaticamente por mais 30 dias.",
+    a: "Mensalidade via Pix. Todo mês você gera um Pix pelo painel (QR Code + copia e cola) e paga em segundos. Assim que o pagamento é confirmado, sua conta é liberada por mais 30 dias automaticamente. Sem cartão, sem boleto, sem débito automático.",
   },
 ];
 
