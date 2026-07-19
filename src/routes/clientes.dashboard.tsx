@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import QRCode from "qrcode";
+import logoAsset from "@/assets/zpclik-logo.png.asset.json";
 
 export const Route = createFileRoute("/clientes/dashboard")({
   ssr: false,
@@ -378,14 +379,14 @@ function ClientesDashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="bg-card border-b border-border">
+      <header className="sticky top-0 z-30 border-b border-[oklch(0.32_0.04_80/_0.25)] bg-[oklch(0.12_0.008_60/_0.85)] backdrop-blur-xl">
         <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2 font-semibold text-foreground">
-            <div className="h-8 w-8 rounded-md bg-gold-metal text-white flex items-center justify-center">
-              <Link2 className="h-4 w-4" />
-            </div>
-            <span>zpclik</span>
-          </div>
+          <Link to="/" className="flex items-center gap-2">
+            <img src={logoAsset.url} alt="zpclik" className="h-9 w-9 rounded-lg object-cover ring-1 ring-[oklch(0.5_0.1_80/_0.4)]" />
+            <span className="font-display text-lg tracking-wide">
+              <span className="text-gold-gradient">zp</span>clik
+            </span>
+          </Link>
           <div className="flex items-center gap-3">
             <span className="text-sm text-muted-foreground hidden sm:inline">{sub?.email ?? sub?.name ?? ""}</span>
             <button onClick={signOut} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
