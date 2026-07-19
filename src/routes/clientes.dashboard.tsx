@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import QRCode from "qrcode";
+import logoAsset from "@/assets/zpclik-logo.png.asset.json";
 
 export const Route = createFileRoute("/clientes/dashboard")({
   ssr: false,
@@ -100,14 +101,14 @@ function InlineTooltip({ text }: { text: string }) {
         onMouseLeave={() => setOpen(false)}
         onFocus={() => setOpen(true)}
         onBlur={() => setOpen(false)}
-        className="rounded-full p-0.5 text-slate-400 hover:text-amber-500 focus:outline-none"
+        className="rounded-full p-0.5 text-muted-foreground/70 hover:text-amber-500 focus:outline-none"
       >
         <HelpCircle className="h-3.5 w-3.5" />
       </button>
       {open && (
-        <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 sm:w-64 rounded-lg bg-slate-900 px-3 py-2 text-xs text-white shadow-lg z-50">
+        <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 sm:w-64 rounded-lg bg-secondary px-3 py-2 text-xs text-white shadow-lg z-50">
           {text}
-          <span className="absolute left-1/2 -translate-x-1/2 top-full border-4 border-transparent border-t-slate-900" />
+          <span className="absolute left-1/2 -translate-x-1/2 top-full border-4 border-transparent border-t-secondary" />
         </span>
       )}
     </span>
@@ -377,18 +378,18 @@ function ClientesDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="bg-white border-b border-slate-200">
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-30 border-b border-[oklch(0.32_0.04_80/_0.25)] bg-[oklch(0.12_0.008_60/_0.85)] backdrop-blur-xl">
         <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2 font-semibold text-slate-800">
-            <div className="h-8 w-8 rounded-md bg-[#0b3d91] text-white flex items-center justify-center">
-              <Link2 className="h-4 w-4" />
-            </div>
-            <span>zpclik</span>
-          </div>
+          <Link to="/" className="flex items-center gap-2">
+            <img src={logoAsset.url} alt="zpclik" className="h-9 w-9 rounded-lg object-cover ring-1 ring-[oklch(0.5_0.1_80/_0.4)]" />
+            <span className="font-display text-lg tracking-wide">
+              <span className="text-gold-gradient">zp</span>clik
+            </span>
+          </Link>
           <div className="flex items-center gap-3">
-            <span className="text-sm text-slate-500 hidden sm:inline">{sub?.email ?? sub?.name ?? ""}</span>
-            <button onClick={signOut} className="inline-flex items-center gap-1.5 text-sm text-slate-600 hover:text-slate-900">
+            <span className="text-sm text-muted-foreground hidden sm:inline">{sub?.email ?? sub?.name ?? ""}</span>
+            <button onClick={signOut} className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
               <LogOut className="h-4 w-4" /> Sair
             </button>
           </div>
@@ -398,7 +399,7 @@ function ClientesDashboard() {
       <main className="max-w-5xl mx-auto px-6 py-8 space-y-6">
         {err && <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{err}</div>}
         {loading ? (
-          <div className="flex items-center gap-2 text-slate-500 text-sm"><Loader2 className="h-4 w-4 animate-spin" /> Carregando…</div>
+          <div className="flex items-center gap-2 text-muted-foreground text-sm"><Loader2 className="h-4 w-4 animate-spin" /> Carregando…</div>
         ) : (
           <>
             {/* Subscription status */}
@@ -522,32 +523,32 @@ function ClientesDashboard() {
 
 
             {/* Create form */}
-            <section className="bg-white border border-slate-200 rounded-2xl p-6">
-              <h2 className="font-semibold text-slate-900">Criar novo link</h2>
+            <section className="card-premium rounded-2xl p-6">
+              <h2 className="font-semibold text-foreground">Criar novo link</h2>
               {!active && (
                 <p className="text-xs text-amber-800 mt-1">
                   Formulário desabilitado — regularize o pagamento para criar novos links.
                 </p>
               )}
 
-              <div className="mt-4 inline-flex flex-wrap rounded-lg border border-slate-200 p-1 bg-slate-50">
+              <div className="mt-4 inline-flex flex-wrap rounded-lg border border-border p-1 bg-background">
                 <button
                   type="button"
                   disabled={!active}
                   onClick={() => setMode("normal")}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-md ${mode === "normal" ? "bg-white shadow text-slate-900" : "text-slate-500"}`}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md ${mode === "normal" ? "bg-card shadow text-foreground" : "text-muted-foreground"}`}
                 >Link normal</button>
                 <button
                   type="button"
                   disabled={!active}
                   onClick={() => setMode("whatsapp")}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-md ${mode === "whatsapp" ? "bg-white shadow text-slate-900" : "text-slate-500"}`}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md ${mode === "whatsapp" ? "bg-card shadow text-foreground" : "text-muted-foreground"}`}
                 >Link de WhatsApp</button>
                 <button
                   type="button"
                   disabled={!active}
                   onClick={() => setMode("rotating")}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-md inline-flex items-center gap-1 ${mode === "rotating" ? "bg-white shadow text-slate-900" : "text-slate-500"}`}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md inline-flex items-center gap-1 ${mode === "rotating" ? "bg-card shadow text-foreground" : "text-muted-foreground"}`}
                 ><Shuffle className="h-3.5 w-3.5" /> Link rotativo</button>
               </div>
 
@@ -561,18 +562,18 @@ function ClientesDashboard() {
                       placeholder="https://sua-url-de-destino.com"
                       required
                       type="url"
-                      className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 disabled:bg-slate-100"
+                      className="rounded-lg border border-border px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/70 disabled:bg-secondary"
                     />
                     <input
                       disabled={!active}
                       value={label}
                       onChange={(e) => setLabel(e.target.value)}
                       placeholder="Rótulo (opcional)"
-                      className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 disabled:bg-slate-100"
+                      className="rounded-lg border border-border px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/70 disabled:bg-secondary"
                     />
                     <button
                       type="submit" disabled={!active || creating}
-                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#0b3d91] hover:bg-[#0a3582] text-white px-5 py-2.5 text-sm font-semibold disabled:opacity-60"
+                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-gold-metal text-[#12100a] hover:brightness-110 px-5 py-2.5 text-sm font-semibold disabled:opacity-60"
                     >
                       {creating && <Loader2 className="h-4 w-4 animate-spin" />} Criar link
                     </button>
@@ -588,14 +589,14 @@ function ClientesDashboard() {
                         placeholder="Ex: 11 91234-5678"
                         required
                         type="tel"
-                        className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 disabled:bg-slate-100"
+                        className="rounded-lg border border-border px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/70 disabled:bg-secondary"
                       />
                       <input
                         disabled={!active}
                         value={label}
                         onChange={(e) => setLabel(e.target.value)}
                         placeholder="Rótulo (opcional)"
-                        className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 disabled:bg-slate-100"
+                        className="rounded-lg border border-border px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/70 disabled:bg-secondary"
                       />
                     </div>
                     <textarea
@@ -604,11 +605,11 @@ function ClientesDashboard() {
                       onChange={(e) => setWaMsg(e.target.value)}
                       placeholder="Mensagem pré-preenchida quando abrirem o link"
                       rows={3}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 disabled:bg-slate-100"
+                      className="w-full rounded-lg border border-border px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/70 disabled:bg-secondary"
                     />
                     <button
                       type="submit" disabled={!active || creating}
-                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#0b3d91] hover:bg-[#0a3582] text-white px-5 py-2.5 text-sm font-semibold disabled:opacity-60"
+                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-gold-metal text-[#12100a] hover:brightness-110 px-5 py-2.5 text-sm font-semibold disabled:opacity-60"
                     >
                       {creating && <Loader2 className="h-4 w-4 animate-spin" />} Criar link de WhatsApp
                     </button>
@@ -616,12 +617,12 @@ function ClientesDashboard() {
                 )}
                 {mode === "rotating" && (
                   <div className="space-y-3">
-                    <p className="text-xs text-slate-600">
+                    <p className="text-xs text-muted-foreground">
                       Um único link curto que aponta pra vários destinos. A cada clique, o sistema decide pra onde mandar seguindo a regra que você escolher abaixo — ótimo pra revezar números de WhatsApp ou dividir tráfego entre páginas.
                     </p>
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div>
-                        <label className="text-xs font-medium text-slate-700 flex items-center">
+                        <label className="text-xs font-medium text-foreground/90 flex items-center">
                           Como o link deve revezar os destinos?
                           <InlineTooltip text="Escolha a regra que decide para qual destino cada clique vai. Você pode trocar a regra a qualquer momento sem mudar o link curto." />
                         </label>
@@ -629,23 +630,23 @@ function ClientesDashboard() {
                           disabled={!active}
                           value={rotMode}
                           onChange={(e) => setRotMode(e.target.value as RotationMode)}
-                          className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 disabled:bg-slate-100"
+                          className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground disabled:bg-secondary"
                         >
                           {(Object.keys(ROTATION_LABELS) as RotationMode[]).map((m) => (
                             <option key={m} value={m}>{ROTATION_LABELS[m]}</option>
                           ))}
                         </select>
-                        <p className="mt-1.5 text-[11px] leading-snug text-slate-500">{ROTATION_HELP[rotMode]}</p>
+                        <p className="mt-1.5 text-[11px] leading-snug text-muted-foreground">{ROTATION_HELP[rotMode]}</p>
                         <p className="mt-1 text-[11px] leading-snug text-amber-600 font-medium">{ROTATION_EXAMPLES[rotMode]}</p>
                       </div>
                       <div>
-                        <label className="text-xs font-medium text-slate-700">Rótulo (opcional)</label>
+                        <label className="text-xs font-medium text-foreground/90">Rótulo (opcional)</label>
                         <input
                           disabled={!active}
                           value={label}
                           onChange={(e) => setLabel(e.target.value)}
                           placeholder="Ex: Campanha janeiro"
-                          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 disabled:bg-slate-100"
+                          className="mt-1 w-full rounded-lg border border-border px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/70 disabled:bg-secondary"
                         />
                       </div>
                     </div>
@@ -657,7 +658,7 @@ function ClientesDashboard() {
                     />
                     <button
                       type="submit" disabled={!active || creating}
-                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#0b3d91] hover:bg-[#0a3582] text-white px-5 py-2.5 text-sm font-semibold disabled:opacity-60"
+                      className="inline-flex items-center justify-center gap-2 rounded-lg bg-gold-metal text-[#12100a] hover:brightness-110 px-5 py-2.5 text-sm font-semibold disabled:opacity-60"
                     >
                       {creating && <Loader2 className="h-4 w-4 animate-spin" />} Criar link rotativo
                     </button>
@@ -667,62 +668,62 @@ function ClientesDashboard() {
             </section>
 
             {/* Links list */}
-            <section className="bg-white border border-slate-200 rounded-2xl">
-              <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-                <h2 className="font-semibold text-slate-900">Meus links</h2>
-                <span className="text-xs text-slate-500">{links.length} {links.length === 1 ? "link" : "links"}</span>
+            <section className="card-premium rounded-2xl">
+              <div className="px-6 py-4 border-b border-border flex items-center justify-between">
+                <h2 className="font-semibold text-foreground">Meus links</h2>
+                <span className="text-xs text-muted-foreground">{links.length} {links.length === 1 ? "link" : "links"}</span>
               </div>
               {links.length === 0 ? (
-                <div className="p-6 text-sm text-slate-500">Nenhum link ainda.</div>
+                <div className="p-6 text-sm text-muted-foreground">Nenhum link ainda.</div>
               ) : (
-                <ul className="divide-y divide-slate-100">
+                <ul className="divide-y divide-border">
                   {links.map((l) => {
                     const short = `www.zpclik.site/r/${l.slug}`;
                     return (
                       <li key={l.id} className="px-6 py-4 flex flex-wrap items-center gap-3">
                         <div className="min-w-0 flex-1">
-                          <div className="text-sm font-medium text-slate-900 flex items-center gap-2">
+                          <div className="text-sm font-medium text-foreground flex items-center gap-2">
                             {short}
                             {l.is_rotating && (
-                              <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider font-semibold text-[#0b3d91] bg-[#0b3d91]/10 rounded px-1.5 py-0.5">
+                              <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider font-semibold text-primary bg-primary/10 rounded px-1.5 py-0.5">
                                 <Shuffle className="h-3 w-3" /> {ROTATION_LABELS[l.rotation_mode] ?? l.rotation_mode}
                               </span>
                             )}
                           </div>
                           {l.is_rotating ? (
-                            <div className="text-xs text-slate-500 mt-0.5">
-                              {l.label ? <span className="mr-2 text-slate-700">[{l.label}]</span> : null}
+                            <div className="text-xs text-muted-foreground mt-0.5">
+                              {l.label ? <span className="mr-2 text-foreground/90">[{l.label}]</span> : null}
                               → {l.short_link_urls?.length ?? 0} URLs em rotação
                             </div>
                           ) : (
-                            <div className="text-xs text-slate-500 truncate max-w-md">
-                              {l.label ? <span className="mr-2 text-slate-700">[{l.label}]</span> : null}
+                            <div className="text-xs text-muted-foreground truncate max-w-md">
+                              {l.label ? <span className="mr-2 text-foreground/90">[{l.label}]</span> : null}
                               → {l.target_url ?? "—"}
                             </div>
                           )}
                         </div>
                         <button
                           onClick={() => copyLink(l.slug)}
-                          className="inline-flex items-center gap-1 text-xs text-slate-600 hover:text-slate-900 border border-slate-200 rounded px-2 py-1"
+                          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground border border-border rounded px-2 py-1"
                         >
                           {copied === l.slug ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
                           Copiar
                         </button>
                         <a
                           href={`https://${short}`} target="_blank" rel="noreferrer"
-                          className="inline-flex items-center gap-1 text-xs text-slate-600 hover:text-slate-900 border border-slate-200 rounded px-2 py-1"
+                          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground border border-border rounded px-2 py-1"
                         >
                           <ExternalLink className="h-3.5 w-3.5" /> Abrir
                         </a>
                         <button
                           onClick={() => setEditingFor(l)}
-                          className="inline-flex items-center gap-1 text-xs text-slate-600 hover:text-slate-900 border border-slate-200 rounded px-2 py-1"
+                          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground border border-border rounded px-2 py-1"
                         >
                           <Pencil className="h-3.5 w-3.5" /> Editar
                         </button>
                         <button
                           onClick={() => setMetricsFor(l)}
-                          className="inline-flex items-center gap-1 text-xs text-white bg-[#0b3d91] hover:bg-[#0a3582] rounded px-2.5 py-1"
+                          className="inline-flex items-center gap-1 text-xs text-white bg-gold-metal hover:brightness-110 rounded px-2.5 py-1"
                         >
                           <BarChart3 className="h-3.5 w-3.5" /> Ver métricas
                         </button>
@@ -733,7 +734,7 @@ function ClientesDashboard() {
               )}
             </section>
 
-            <p className="text-xs text-slate-500 text-center">
+            <p className="text-xs text-muted-foreground text-center">
               Apenas acessos reais são contabilizados — tráfego de robôs e crawlers é filtrado automaticamente.
               {" "}<Link to="/portal" className="underline">Sobre nós</Link>
             </p>
@@ -745,13 +746,13 @@ function ClientesDashboard() {
         <MetricsModal link={metricsFor} onClose={() => setMetricsFor(null)} />
       )}
       {locked && !pixModal && !loading && (
-        <div className="fixed inset-0 z-40 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border-2 border-red-200">
+        <div className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-card rounded-2xl max-w-md w-full p-6 shadow-2xl border-2 border-red-200">
             <div className="flex items-center gap-2 text-red-700 font-semibold">
               <AlertTriangle className="h-6 w-6" />
               <h3 className="text-lg">Acesso bloqueado</h3>
             </div>
-            <p className="text-sm text-slate-700 mt-3">
+            <p className="text-sm text-foreground/90 mt-3">
               {sub?.status === "suspended"
                 ? "Sua assinatura está suspensa."
                 : `Sua assinatura está com ${daysOverdue} dias de atraso.`}
@@ -767,26 +768,26 @@ function ClientesDashboard() {
             </button>
             <button
               onClick={signOut}
-              className="mt-2 w-full text-xs text-slate-500 hover:text-slate-800 py-1.5"
+              className="mt-2 w-full text-xs text-muted-foreground hover:text-foreground py-1.5"
             >Sair</button>
           </div>
         </div>
       )}
       {pixModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setPixModal(null)}>
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-card rounded-2xl max-w-md w-full p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h3 className="text-lg font-semibold text-slate-900">Pague R$ {pixModal.amount.toFixed(2).replace(".", ",")} via PIX</h3>
-                <p className="text-xs text-slate-500 mt-1">Sua assinatura é ativada automaticamente após a confirmação.</p>
+                <h3 className="text-lg font-semibold text-foreground">Pague R$ {pixModal.amount.toFixed(2).replace(".", ",")} via PIX</h3>
+                <p className="text-xs text-muted-foreground mt-1">Sua assinatura é ativada automaticamente após a confirmação.</p>
               </div>
-              <button onClick={() => setPixModal(null)} className="text-slate-400 hover:text-slate-700 text-xl leading-none">×</button>
+              <button onClick={() => setPixModal(null)} className="text-muted-foreground/70 hover:text-foreground/90 text-xl leading-none">×</button>
             </div>
             {(() => {
               const src = getProviderQrImageSrc(pixModal.qrcode) ?? pixQrDataUrl;
               return src ? (
                 <div className="mt-4 flex justify-center">
-                  <img src={src} alt="QR Code PIX" className="w-56 h-56 rounded-lg border border-slate-200" />
+                  <img src={src} alt="QR Code PIX" className="w-56 h-56 rounded-lg border border-border" />
                 </div>
               ) : (
                 <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 text-center">
@@ -796,11 +797,11 @@ function ClientesDashboard() {
             })()}
             {pixModal.copyPaste && (
               <div className="mt-4">
-                <label className="text-xs font-medium text-slate-700">Código copia-e-cola</label>
+                <label className="text-xs font-medium text-foreground/90">Código copia-e-cola</label>
                 <textarea
                   readOnly
                   value={pixModal.copyPaste}
-                  className="mt-1 w-full h-24 rounded-lg border border-slate-200 bg-slate-50 p-2 text-xs font-mono resize-none"
+                  className="mt-1 w-full h-24 rounded-lg border border-border bg-background p-2 text-xs font-mono resize-none"
                   onFocus={(e) => e.currentTarget.select()}
                 />
                 <button
@@ -811,7 +812,7 @@ function ClientesDashboard() {
                       setTimeout(() => setPixCopied(false), 2500);
                     } catch { toast.error("Copie manualmente"); }
                   }}
-                  className="mt-2 w-full rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium py-2"
+                  className="mt-2 w-full rounded-lg bg-secondary hover:bg-secondary/80 text-white text-sm font-medium py-2"
                 >{pixCopied ? "Copiado ✓" : "Copiar código PIX"}</button>
               </div>
             )}
@@ -832,9 +833,9 @@ function ClientesDashboard() {
                 } finally { setPixChecking(false); }
               }}
               disabled={pixChecking}
-              className="mt-3 w-full rounded-lg border border-slate-300 hover:bg-slate-50 text-slate-800 text-sm font-medium py-2 disabled:opacity-60"
+              className="mt-3 w-full rounded-lg border border-border hover:bg-background text-foreground text-sm font-medium py-2 disabled:opacity-60"
             >{pixChecking ? "Verificando…" : "Já paguei — verificar agora"}</button>
-            <p className="mt-3 text-[11px] text-slate-500 text-center">
+            <p className="mt-3 text-[11px] text-muted-foreground text-center">
               Este PIX expira em alguns minutos. Se expirar, feche e gere um novo.
             </p>
           </div>
@@ -918,57 +919,57 @@ function EditTargetModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white">
-          <h3 className="font-semibold text-slate-900">Editar — www.zpclik.site/r/{link.slug}</h3>
-          <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-md text-slate-500"><X className="h-5 w-5" /></button>
+    <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="bg-card rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div className="px-6 py-4 border-b border-border flex items-center justify-between sticky top-0 bg-card">
+          <h3 className="font-semibold text-foreground">Editar — www.zpclik.site/r/{link.slug}</h3>
+          <button onClick={onClose} className="p-2 hover:bg-secondary rounded-md text-muted-foreground"><X className="h-5 w-5" /></button>
         </div>
         <form onSubmit={save} className="p-6 space-y-4">
-          <div className="inline-flex rounded-lg border border-slate-200 p-1 bg-slate-50">
+          <div className="inline-flex rounded-lg border border-border p-1 bg-background">
             <button
               type="button"
               onClick={() => setTab("single")}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md ${tab === "single" ? "bg-white shadow text-slate-900" : "text-slate-500"}`}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md ${tab === "single" ? "bg-card shadow text-foreground" : "text-muted-foreground"}`}
             >Destino único</button>
             <button
               type="button"
               onClick={() => setTab("rotating")}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md inline-flex items-center gap-1 ${tab === "rotating" ? "bg-white shadow text-slate-900" : "text-slate-500"}`}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md inline-flex items-center gap-1 ${tab === "rotating" ? "bg-card shadow text-foreground" : "text-muted-foreground"}`}
             ><Shuffle className="h-3.5 w-3.5" /> Rotativo</button>
           </div>
 
           {tab === "single" ? (
             <>
-              <div className="inline-flex rounded-lg border border-slate-200 p-1 bg-slate-50">
+              <div className="inline-flex rounded-lg border border-border p-1 bg-background">
                 <button type="button" onClick={() => setIsWa(false)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-md ${!isWa ? "bg-white shadow text-slate-900" : "text-slate-500"}`}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md ${!isWa ? "bg-card shadow text-foreground" : "text-muted-foreground"}`}
                 >URL livre</button>
                 <button type="button" onClick={() => setIsWa(true)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-md ${isWa ? "bg-white shadow text-slate-900" : "text-slate-500"}`}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md ${isWa ? "bg-card shadow text-foreground" : "text-muted-foreground"}`}
                 >WhatsApp</button>
               </div>
               {isWa ? (
                 <>
                   <div>
-                    <label className="text-xs font-medium text-slate-700">Número de WhatsApp (com DDD)</label>
+                    <label className="text-xs font-medium text-foreground/90">Número de WhatsApp (com DDD)</label>
                     <input value={phone} onChange={(e) => setPhone(e.target.value)}
                       placeholder="Ex: 11 91234-5678" type="tel" required
-                      className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400"/>
+                      className="mt-1 w-full rounded-lg border border-border px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/70"/>
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-slate-700">Mensagem</label>
+                    <label className="text-xs font-medium text-foreground/90">Mensagem</label>
                     <textarea value={msg} onChange={(e) => setMsg(e.target.value)} rows={3}
                       placeholder="Mensagem pré-preenchida (opcional)"
-                      className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400"/>
+                      className="mt-1 w-full rounded-lg border border-border px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/70"/>
                   </div>
                 </>
               ) : (
                 <div>
-                  <label className="text-xs font-medium text-slate-700">URL de destino</label>
+                  <label className="text-xs font-medium text-foreground/90">URL de destino</label>
                   <input value={url} onChange={(e) => setUrl(e.target.value)} type="url" required
                     placeholder="https://sua-url-de-destino.com"
-                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400"/>
+                    className="mt-1 w-full rounded-lg border border-border px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/70"/>
                 </div>
               )}
               {link.is_rotating && (
@@ -980,17 +981,17 @@ function EditTargetModal({
           ) : (
             <>
               <div>
-                <label className="text-xs font-medium text-slate-700 flex items-center">
+                <label className="text-xs font-medium text-foreground/90 flex items-center">
                   Como o link deve revezar os destinos?
                   <InlineTooltip text="Escolha a regra que decide para qual destino cada clique vai. Você pode trocar a regra a qualquer momento sem mudar o link curto." />
                 </label>
                 <select value={rotMode} onChange={(e) => setRotMode(e.target.value as RotationMode)}
-                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900">
+                  className="mt-1 w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm text-foreground">
                   {(Object.keys(ROTATION_LABELS) as RotationMode[]).map((m) => (
                     <option key={m} value={m}>{ROTATION_LABELS[m]}</option>
                   ))}
                 </select>
-                <p className="mt-1.5 text-[11px] leading-snug text-slate-500">{ROTATION_HELP[rotMode]}</p>
+                <p className="mt-1.5 text-[11px] leading-snug text-muted-foreground">{ROTATION_HELP[rotMode]}</p>
                 <p className="mt-1 text-[11px] leading-snug text-amber-600 font-medium">{ROTATION_EXAMPLES[rotMode]}</p>
               </div>
               <RotationRowsEditor
@@ -1003,9 +1004,9 @@ function EditTargetModal({
           )}
 
           <div className="flex justify-end gap-2 pt-2">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-slate-600 hover:text-slate-900">Cancelar</button>
+            <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground">Cancelar</button>
             <button type="submit" disabled={saving}
-              className="inline-flex items-center gap-2 rounded-lg bg-[#0b3d91] hover:bg-[#0a3582] text-white px-5 py-2 text-sm font-semibold disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-lg bg-gold-metal text-[#12100a] hover:brightness-110 px-5 py-2 text-sm font-semibold disabled:opacity-60"
             >
               {saving && <Loader2 className="h-4 w-4 animate-spin" />} Salvar
             </button>
@@ -1032,37 +1033,37 @@ function RotationRowsEditor({
   return (
     <div className="space-y-3">
       {rows.map((row, idx) => (
-        <div key={idx} className="rounded-lg border border-slate-200 bg-slate-50/50 p-3 space-y-2">
+        <div key={idx} className="rounded-lg border border-border bg-background/50 p-3 space-y-2">
           <div className="flex items-center justify-between gap-2">
-            <div className="inline-flex rounded-md border border-slate-200 p-0.5 bg-white">
+            <div className="inline-flex rounded-md border border-border p-0.5 bg-card">
               <button
                 type="button" disabled={disabled}
                 onClick={() => update(idx, { kind: "whatsapp" })}
-                className={`px-2.5 py-1 text-[11px] font-medium rounded ${row.kind === "whatsapp" ? "bg-emerald-600 text-white" : "text-slate-500"}`}
+                className={`px-2.5 py-1 text-[11px] font-medium rounded ${row.kind === "whatsapp" ? "bg-emerald-600 text-white" : "text-muted-foreground"}`}
               >WhatsApp</button>
               <button
                 type="button" disabled={disabled}
                 onClick={() => update(idx, { kind: "url" })}
-                className={`px-2.5 py-1 text-[11px] font-medium rounded ${row.kind === "url" ? "bg-[#0b3d91] text-white" : "text-slate-500"}`}
+                className={`px-2.5 py-1 text-[11px] font-medium rounded ${row.kind === "url" ? "bg-gold-metal text-white" : "text-muted-foreground"}`}
               >URL</button>
             </div>
             <div className="flex items-center gap-2">
               {showWeight && (
-                <label className="text-[11px] text-slate-500 flex items-center gap-1">
+                <label className="text-[11px] text-muted-foreground flex items-center gap-1">
                   Peso
                   <input
                     disabled={disabled}
                     value={row.weight}
                     onChange={(e) => update(idx, { weight: Number(e.target.value) || 0 })}
                     type="number" min={0} max={1000}
-                    className="w-16 rounded-md border border-slate-300 px-2 py-1 text-xs disabled:bg-slate-100"
+                    className="w-16 rounded-md border border-border px-2 py-1 text-xs disabled:bg-secondary"
                   />
                 </label>
               )}
               <button
                 type="button" disabled={disabled || rows.length <= 2}
                 onClick={() => remove(idx)}
-                className="p-1.5 rounded-md border border-slate-200 text-slate-500 hover:text-red-600 disabled:opacity-40"
+                className="p-1.5 rounded-md border border-border text-muted-foreground hover:text-red-600 disabled:opacity-40"
                 title="Remover"
               ><Trash2 className="h-3.5 w-3.5" /></button>
             </div>
@@ -1076,7 +1077,7 @@ function RotationRowsEditor({
                 onChange={(e) => update(idx, { phone: e.target.value })}
                 placeholder={`Número ${idx + 1} — ex: 11 91234-5678`}
                 type="tel"
-                className="w-full rounded-md border border-slate-300 px-2.5 py-2 text-sm text-slate-900 placeholder:text-slate-400 disabled:bg-slate-100"
+                className="w-full rounded-md border border-border px-2.5 py-2 text-sm text-foreground placeholder:text-muted-foreground/70 disabled:bg-secondary"
               />
               <textarea
                 disabled={disabled}
@@ -1085,7 +1086,7 @@ function RotationRowsEditor({
                 placeholder="Mensagem pré-preenchida (opcional)"
                 rows={2}
                 maxLength={500}
-                className="w-full rounded-md border border-slate-300 px-2.5 py-2 text-sm text-slate-900 placeholder:text-slate-400 disabled:bg-slate-100"
+                className="w-full rounded-md border border-border px-2.5 py-2 text-sm text-foreground placeholder:text-muted-foreground/70 disabled:bg-secondary"
               />
             </div>
           ) : (
@@ -1095,7 +1096,7 @@ function RotationRowsEditor({
               onChange={(e) => update(idx, { url: e.target.value })}
               placeholder={`URL de destino ${idx + 1}`}
               type="url"
-              className="w-full rounded-md border border-slate-300 px-2.5 py-2 text-sm text-slate-900 placeholder:text-slate-400 disabled:bg-slate-100"
+              className="w-full rounded-md border border-border px-2.5 py-2 text-sm text-foreground placeholder:text-muted-foreground/70 disabled:bg-secondary"
             />
           )}
         </div>
@@ -1109,7 +1110,7 @@ function RotationRowsEditor({
         <button
           type="button" disabled={disabled || rows.length >= 20}
           onClick={() => setRows((prev) => [...prev, emptyRotRow("url")])}
-          className="inline-flex items-center gap-1 text-xs font-medium text-[#0b3d91] hover:text-[#0a3582] disabled:opacity-40"
+          className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:brightness-110 disabled:opacity-40"
         ><Plus className="h-3.5 w-3.5" /> Adicionar URL</button>
       </div>
     </div>
