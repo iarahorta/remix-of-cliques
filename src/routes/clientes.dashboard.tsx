@@ -65,10 +65,21 @@ interface MyLink {
 
 type RotationMode = "round_robin" | "random" | "weighted" | "sticky";
 const ROTATION_LABELS: Record<RotationMode, string> = {
-  round_robin: "Alternado (round-robin)",
-  random: "Aleatório",
-  weighted: "Ponderado (por peso)",
-  sticky: "Sequencial fixo",
+  round_robin: "Revezar em ordem (1 clique = próximo destino)",
+  random: "Sortear aleatoriamente a cada clique",
+  weighted: "Distribuir por porcentagem (peso)",
+  sticky: "Fixar no 1º destino (só troca se você editar)",
+};
+
+const ROTATION_HELP: Record<RotationMode, string> = {
+  round_robin:
+    "A cada clique o link manda pro próximo destino da lista, em ordem. Ex: clique 1 → destino 1, clique 2 → destino 2, clique 3 → destino 1 de novo.",
+  random:
+    "A cada clique o link sorteia um destino aleatório da lista. Ideal pra distribuir tráfego sem padrão previsível.",
+  weighted:
+    "Você define um peso pra cada destino. Quanto maior o peso, mais cliques ele recebe. Ex: peso 70 vs 30 = 70% dos cliques no primeiro.",
+  sticky:
+    "Todos os cliques vão pro 1º destino da lista. Use se quiser trocar o destino manualmente sem gerar um link novo.",
 };
 
 const PIX_KEY = "iarachorta@gmail.com";
@@ -518,14 +529,14 @@ function ClientesDashboard() {
                       placeholder="https://sua-url-de-destino.com"
                       required
                       type="url"
-                      className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm disabled:bg-slate-100"
+                      className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 disabled:bg-slate-100"
                     />
                     <input
                       disabled={!active}
                       value={label}
                       onChange={(e) => setLabel(e.target.value)}
                       placeholder="Rótulo (opcional)"
-                      className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm disabled:bg-slate-100"
+                      className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 disabled:bg-slate-100"
                     />
                     <button
                       type="submit" disabled={!active || creating}
@@ -545,14 +556,14 @@ function ClientesDashboard() {
                         placeholder="Ex: 11 91234-5678"
                         required
                         type="tel"
-                        className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm disabled:bg-slate-100"
+                        className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 disabled:bg-slate-100"
                       />
                       <input
                         disabled={!active}
                         value={label}
                         onChange={(e) => setLabel(e.target.value)}
                         placeholder="Rótulo (opcional)"
-                        className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm disabled:bg-slate-100"
+                        className="rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 disabled:bg-slate-100"
                       />
                     </div>
                     <textarea
@@ -561,7 +572,7 @@ function ClientesDashboard() {
                       onChange={(e) => setWaMsg(e.target.value)}
                       placeholder="Mensagem pré-preenchida quando abrirem o link"
                       rows={3}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm disabled:bg-slate-100"
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 disabled:bg-slate-100"
                     />
                     <button
                       type="submit" disabled={!active || creating}
@@ -573,22 +584,23 @@ function ClientesDashboard() {
                 )}
                 {mode === "rotating" && (
                   <div className="space-y-3">
-                    <p className="text-xs text-slate-500">
-                      O mesmo slug curto redireciona pra URLs diferentes segundo a regra escolhida — ótimo pra dividir tráfego, testes A/B ou revezar contatos.
+                    <p className="text-xs text-slate-600">
+                      Um único link curto que aponta pra vários destinos. A cada clique, o sistema decide pra onde mandar seguindo a regra que você escolher abaixo — ótimo pra revezar números de WhatsApp ou dividir tráfego entre páginas.
                     </p>
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div>
-                        <label className="text-xs font-medium text-slate-700">Modo de rotação</label>
+                        <label className="text-xs font-medium text-slate-700">Como o link deve revezar os destinos?</label>
                         <select
                           disabled={!active}
                           value={rotMode}
                           onChange={(e) => setRotMode(e.target.value as RotationMode)}
-                          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm disabled:bg-slate-100"
+                          className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 disabled:bg-slate-100"
                         >
                           {(Object.keys(ROTATION_LABELS) as RotationMode[]).map((m) => (
                             <option key={m} value={m}>{ROTATION_LABELS[m]}</option>
                           ))}
                         </select>
+                        <p className="mt-1.5 text-[11px] leading-snug text-slate-500">{ROTATION_HELP[rotMode]}</p>
                       </div>
                       <div>
                         <label className="text-xs font-medium text-slate-700">Rótulo (opcional)</label>
@@ -597,7 +609,7 @@ function ClientesDashboard() {
                           value={label}
                           onChange={(e) => setLabel(e.target.value)}
                           placeholder="Ex: Campanha janeiro"
-                          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm disabled:bg-slate-100"
+                          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 disabled:bg-slate-100"
                         />
                       </div>
                     </div>
@@ -906,19 +918,21 @@ function EditTargetModal({
                     <label className="text-xs font-medium text-slate-700">Número de WhatsApp (com DDD)</label>
                     <input value={phone} onChange={(e) => setPhone(e.target.value)}
                       placeholder="Ex: 11 91234-5678" type="tel" required
-                      className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm"/>
+                      className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400"/>
                   </div>
                   <div>
                     <label className="text-xs font-medium text-slate-700">Mensagem</label>
                     <textarea value={msg} onChange={(e) => setMsg(e.target.value)} rows={3}
-                      className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm"/>
+                      placeholder="Mensagem pré-preenchida (opcional)"
+                      className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400"/>
                   </div>
                 </>
               ) : (
                 <div>
                   <label className="text-xs font-medium text-slate-700">URL de destino</label>
                   <input value={url} onChange={(e) => setUrl(e.target.value)} type="url" required
-                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm"/>
+                    placeholder="https://sua-url-de-destino.com"
+                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400"/>
                 </div>
               )}
               {link.is_rotating && (
@@ -930,13 +944,14 @@ function EditTargetModal({
           ) : (
             <>
               <div>
-                <label className="text-xs font-medium text-slate-700">Modo de rotação</label>
+                <label className="text-xs font-medium text-slate-700">Como o link deve revezar os destinos?</label>
                 <select value={rotMode} onChange={(e) => setRotMode(e.target.value as RotationMode)}
-                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm">
+                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900">
                   {(Object.keys(ROTATION_LABELS) as RotationMode[]).map((m) => (
                     <option key={m} value={m}>{ROTATION_LABELS[m]}</option>
                   ))}
                 </select>
+                <p className="mt-1.5 text-[11px] leading-snug text-slate-500">{ROTATION_HELP[rotMode]}</p>
               </div>
               <RotationRowsEditor
                 rows={rotUrls}
@@ -1021,7 +1036,7 @@ function RotationRowsEditor({
                 onChange={(e) => update(idx, { phone: e.target.value })}
                 placeholder={`Número ${idx + 1} — ex: 11 91234-5678`}
                 type="tel"
-                className="w-full rounded-md border border-slate-300 px-2.5 py-2 text-sm disabled:bg-slate-100"
+                className="w-full rounded-md border border-slate-300 px-2.5 py-2 text-sm text-slate-900 placeholder:text-slate-400 disabled:bg-slate-100"
               />
               <textarea
                 disabled={disabled}
@@ -1030,7 +1045,7 @@ function RotationRowsEditor({
                 placeholder="Mensagem pré-preenchida (opcional)"
                 rows={2}
                 maxLength={500}
-                className="w-full rounded-md border border-slate-300 px-2.5 py-2 text-sm disabled:bg-slate-100"
+                className="w-full rounded-md border border-slate-300 px-2.5 py-2 text-sm text-slate-900 placeholder:text-slate-400 disabled:bg-slate-100"
               />
             </div>
           ) : (
@@ -1040,7 +1055,7 @@ function RotationRowsEditor({
               onChange={(e) => update(idx, { url: e.target.value })}
               placeholder={`URL de destino ${idx + 1}`}
               type="url"
-              className="w-full rounded-md border border-slate-300 px-2.5 py-2 text-sm disabled:bg-slate-100"
+              className="w-full rounded-md border border-slate-300 px-2.5 py-2 text-sm text-slate-900 placeholder:text-slate-400 disabled:bg-slate-100"
             />
           )}
         </div>
