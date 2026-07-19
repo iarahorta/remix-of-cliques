@@ -18,7 +18,7 @@ export const Route = createFileRoute("/r/$slug")({
         }
         const row = data[0] as { target: string | null; status: string };
         const url = new URL(request.url);
-        const fallback = `${url.origin}/portal`;
+        const fallback = `${url.origin}/`;
         const target = row.target && row.target.trim() ? row.target : fallback;
 
         // Log click metadata (best-effort, non-blocking on failure)

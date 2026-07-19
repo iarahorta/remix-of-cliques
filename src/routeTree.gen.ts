@@ -10,7 +10,6 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as PortalRouteImport } from './routes/portal'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
@@ -20,25 +19,11 @@ import { Route as RSlugRouteImport } from './routes/r.$slug'
 import { Route as ClientesDashboardRouteImport } from './routes/clientes.dashboard'
 import { Route as AuthenticatedEncurtadorRouteImport } from './routes/_authenticated/encurtador'
 import { Route as AuthenticatedAssinantesRouteImport } from './routes/_authenticated/assinantes'
-import { Route as ApiPublicSubscribersRouteImport } from './routes/api/public/subscribers'
-import { Route as ApiPublicLinksRouteImport } from './routes/api/public/links'
-import { Route as AuthenticatedConfiguracoesAsaasRouteImport } from './routes/_authenticated/configuracoes.asaas'
 import { Route as ApiPublicWebhooksAsgardRouteImport } from './routes/api/public/webhooks.asgard'
-import { Route as ApiPublicWebhooksAsaasRouteImport } from './routes/api/public/webhooks.asaas'
-import { Route as ApiPublicSubscribersIdRouteImport } from './routes/api/public/subscribers.$id'
-import { Route as ApiPublicLinksSlugRouteImport } from './routes/api/public/links.$slug'
-import { Route as ApiPublicHooksAsaasSweepRouteImport } from './routes/api/public/hooks.asaas-sweep'
-import { Route as ApiPublicLinksSlugRotateRouteImport } from './routes/api/public/links.$slug.rotate'
-import { Route as ApiPublicLinksSlugClicksRouteImport } from './routes/api/public/links.$slug.clicks'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PortalRoute = PortalRouteImport.update({
-  id: '/portal',
-  path: '/portal',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -85,104 +70,35 @@ const AuthenticatedAssinantesRoute = AuthenticatedAssinantesRouteImport.update({
   path: '/assinantes',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const ApiPublicSubscribersRoute = ApiPublicSubscribersRouteImport.update({
-  id: '/api/public/subscribers',
-  path: '/api/public/subscribers',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicLinksRoute = ApiPublicLinksRouteImport.update({
-  id: '/api/public/links',
-  path: '/api/public/links',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedConfiguracoesAsaasRoute =
-  AuthenticatedConfiguracoesAsaasRouteImport.update({
-    id: '/configuracoes/asaas',
-    path: '/configuracoes/asaas',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const ApiPublicWebhooksAsgardRoute = ApiPublicWebhooksAsgardRouteImport.update({
   id: '/api/public/webhooks/asgard',
   path: '/api/public/webhooks/asgard',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicWebhooksAsaasRoute = ApiPublicWebhooksAsaasRouteImport.update({
-  id: '/api/public/webhooks/asaas',
-  path: '/api/public/webhooks/asaas',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicSubscribersIdRoute = ApiPublicSubscribersIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => ApiPublicSubscribersRoute,
-} as any)
-const ApiPublicLinksSlugRoute = ApiPublicLinksSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => ApiPublicLinksRoute,
-} as any)
-const ApiPublicHooksAsaasSweepRoute =
-  ApiPublicHooksAsaasSweepRouteImport.update({
-    id: '/api/public/hooks/asaas-sweep',
-    path: '/api/public/hooks/asaas-sweep',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicLinksSlugRotateRoute =
-  ApiPublicLinksSlugRotateRouteImport.update({
-    id: '/rotate',
-    path: '/rotate',
-    getParentRoute: () => ApiPublicLinksSlugRoute,
-  } as any)
-const ApiPublicLinksSlugClicksRoute =
-  ApiPublicLinksSlugClicksRouteImport.update({
-    id: '/clicks',
-    path: '/clicks',
-    getParentRoute: () => ApiPublicLinksSlugRoute,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/login': typeof LoginRoute
-  '/portal': typeof PortalRoute
   '/reset-password': typeof ResetPasswordRoute
   '/assinantes': typeof AuthenticatedAssinantesRoute
   '/encurtador': typeof AuthenticatedEncurtadorRoute
   '/clientes/dashboard': typeof ClientesDashboardRoute
   '/r/$slug': typeof RSlugRoute
   '/clientes/': typeof ClientesIndexRoute
-  '/configuracoes/asaas': typeof AuthenticatedConfiguracoesAsaasRoute
-  '/api/public/links': typeof ApiPublicLinksRouteWithChildren
-  '/api/public/subscribers': typeof ApiPublicSubscribersRouteWithChildren
-  '/api/public/hooks/asaas-sweep': typeof ApiPublicHooksAsaasSweepRoute
-  '/api/public/links/$slug': typeof ApiPublicLinksSlugRouteWithChildren
-  '/api/public/subscribers/$id': typeof ApiPublicSubscribersIdRoute
-  '/api/public/webhooks/asaas': typeof ApiPublicWebhooksAsaasRoute
   '/api/public/webhooks/asgard': typeof ApiPublicWebhooksAsgardRoute
-  '/api/public/links/$slug/clicks': typeof ApiPublicLinksSlugClicksRoute
-  '/api/public/links/$slug/rotate': typeof ApiPublicLinksSlugRotateRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/login': typeof LoginRoute
-  '/portal': typeof PortalRoute
   '/reset-password': typeof ResetPasswordRoute
   '/assinantes': typeof AuthenticatedAssinantesRoute
   '/encurtador': typeof AuthenticatedEncurtadorRoute
   '/clientes/dashboard': typeof ClientesDashboardRoute
   '/r/$slug': typeof RSlugRoute
   '/clientes': typeof ClientesIndexRoute
-  '/configuracoes/asaas': typeof AuthenticatedConfiguracoesAsaasRoute
-  '/api/public/links': typeof ApiPublicLinksRouteWithChildren
-  '/api/public/subscribers': typeof ApiPublicSubscribersRouteWithChildren
-  '/api/public/hooks/asaas-sweep': typeof ApiPublicHooksAsaasSweepRoute
-  '/api/public/links/$slug': typeof ApiPublicLinksSlugRouteWithChildren
-  '/api/public/subscribers/$id': typeof ApiPublicSubscribersIdRoute
-  '/api/public/webhooks/asaas': typeof ApiPublicWebhooksAsaasRoute
   '/api/public/webhooks/asgard': typeof ApiPublicWebhooksAsgardRoute
-  '/api/public/links/$slug/clicks': typeof ApiPublicLinksSlugClicksRoute
-  '/api/public/links/$slug/rotate': typeof ApiPublicLinksSlugRotateRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -190,23 +106,13 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/login': typeof LoginRoute
-  '/portal': typeof PortalRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/assinantes': typeof AuthenticatedAssinantesRoute
   '/_authenticated/encurtador': typeof AuthenticatedEncurtadorRoute
   '/clientes/dashboard': typeof ClientesDashboardRoute
   '/r/$slug': typeof RSlugRoute
   '/clientes/': typeof ClientesIndexRoute
-  '/_authenticated/configuracoes/asaas': typeof AuthenticatedConfiguracoesAsaasRoute
-  '/api/public/links': typeof ApiPublicLinksRouteWithChildren
-  '/api/public/subscribers': typeof ApiPublicSubscribersRouteWithChildren
-  '/api/public/hooks/asaas-sweep': typeof ApiPublicHooksAsaasSweepRoute
-  '/api/public/links/$slug': typeof ApiPublicLinksSlugRouteWithChildren
-  '/api/public/subscribers/$id': typeof ApiPublicSubscribersIdRoute
-  '/api/public/webhooks/asaas': typeof ApiPublicWebhooksAsaasRoute
   '/api/public/webhooks/asgard': typeof ApiPublicWebhooksAsgardRoute
-  '/api/public/links/$slug/clicks': typeof ApiPublicLinksSlugClicksRoute
-  '/api/public/links/$slug/rotate': typeof ApiPublicLinksSlugRotateRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -214,68 +120,38 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/login'
-    | '/portal'
     | '/reset-password'
     | '/assinantes'
     | '/encurtador'
     | '/clientes/dashboard'
     | '/r/$slug'
     | '/clientes/'
-    | '/configuracoes/asaas'
-    | '/api/public/links'
-    | '/api/public/subscribers'
-    | '/api/public/hooks/asaas-sweep'
-    | '/api/public/links/$slug'
-    | '/api/public/subscribers/$id'
-    | '/api/public/webhooks/asaas'
     | '/api/public/webhooks/asgard'
-    | '/api/public/links/$slug/clicks'
-    | '/api/public/links/$slug/rotate'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/login'
-    | '/portal'
     | '/reset-password'
     | '/assinantes'
     | '/encurtador'
     | '/clientes/dashboard'
     | '/r/$slug'
     | '/clientes'
-    | '/configuracoes/asaas'
-    | '/api/public/links'
-    | '/api/public/subscribers'
-    | '/api/public/hooks/asaas-sweep'
-    | '/api/public/links/$slug'
-    | '/api/public/subscribers/$id'
-    | '/api/public/webhooks/asaas'
     | '/api/public/webhooks/asgard'
-    | '/api/public/links/$slug/clicks'
-    | '/api/public/links/$slug/rotate'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
     | '/login'
-    | '/portal'
     | '/reset-password'
     | '/_authenticated/assinantes'
     | '/_authenticated/encurtador'
     | '/clientes/dashboard'
     | '/r/$slug'
     | '/clientes/'
-    | '/_authenticated/configuracoes/asaas'
-    | '/api/public/links'
-    | '/api/public/subscribers'
-    | '/api/public/hooks/asaas-sweep'
-    | '/api/public/links/$slug'
-    | '/api/public/subscribers/$id'
-    | '/api/public/webhooks/asaas'
     | '/api/public/webhooks/asgard'
-    | '/api/public/links/$slug/clicks'
-    | '/api/public/links/$slug/rotate'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -283,15 +159,10 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   LoginRoute: typeof LoginRoute
-  PortalRoute: typeof PortalRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ClientesDashboardRoute: typeof ClientesDashboardRoute
   RSlugRoute: typeof RSlugRoute
   ClientesIndexRoute: typeof ClientesIndexRoute
-  ApiPublicLinksRoute: typeof ApiPublicLinksRouteWithChildren
-  ApiPublicSubscribersRoute: typeof ApiPublicSubscribersRouteWithChildren
-  ApiPublicHooksAsaasSweepRoute: typeof ApiPublicHooksAsaasSweepRoute
-  ApiPublicWebhooksAsaasRoute: typeof ApiPublicWebhooksAsaasRoute
   ApiPublicWebhooksAsgardRoute: typeof ApiPublicWebhooksAsgardRoute
 }
 
@@ -302,13 +173,6 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/portal': {
-      id: '/portal'
-      path: '/portal'
-      fullPath: '/portal'
-      preLoaderRoute: typeof PortalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -374,27 +238,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAssinantesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/api/public/subscribers': {
-      id: '/api/public/subscribers'
-      path: '/api/public/subscribers'
-      fullPath: '/api/public/subscribers'
-      preLoaderRoute: typeof ApiPublicSubscribersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/links': {
-      id: '/api/public/links'
-      path: '/api/public/links'
-      fullPath: '/api/public/links'
-      preLoaderRoute: typeof ApiPublicLinksRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/configuracoes/asaas': {
-      id: '/_authenticated/configuracoes/asaas'
-      path: '/configuracoes/asaas'
-      fullPath: '/configuracoes/asaas'
-      preLoaderRoute: typeof AuthenticatedConfiguracoesAsaasRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/api/public/webhooks/asgard': {
       id: '/api/public/webhooks/asgard'
       path: '/api/public/webhooks/asgard'
@@ -402,116 +245,31 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicWebhooksAsgardRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/webhooks/asaas': {
-      id: '/api/public/webhooks/asaas'
-      path: '/api/public/webhooks/asaas'
-      fullPath: '/api/public/webhooks/asaas'
-      preLoaderRoute: typeof ApiPublicWebhooksAsaasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/subscribers/$id': {
-      id: '/api/public/subscribers/$id'
-      path: '/$id'
-      fullPath: '/api/public/subscribers/$id'
-      preLoaderRoute: typeof ApiPublicSubscribersIdRouteImport
-      parentRoute: typeof ApiPublicSubscribersRoute
-    }
-    '/api/public/links/$slug': {
-      id: '/api/public/links/$slug'
-      path: '/$slug'
-      fullPath: '/api/public/links/$slug'
-      preLoaderRoute: typeof ApiPublicLinksSlugRouteImport
-      parentRoute: typeof ApiPublicLinksRoute
-    }
-    '/api/public/hooks/asaas-sweep': {
-      id: '/api/public/hooks/asaas-sweep'
-      path: '/api/public/hooks/asaas-sweep'
-      fullPath: '/api/public/hooks/asaas-sweep'
-      preLoaderRoute: typeof ApiPublicHooksAsaasSweepRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/links/$slug/rotate': {
-      id: '/api/public/links/$slug/rotate'
-      path: '/rotate'
-      fullPath: '/api/public/links/$slug/rotate'
-      preLoaderRoute: typeof ApiPublicLinksSlugRotateRouteImport
-      parentRoute: typeof ApiPublicLinksSlugRoute
-    }
-    '/api/public/links/$slug/clicks': {
-      id: '/api/public/links/$slug/clicks'
-      path: '/clicks'
-      fullPath: '/api/public/links/$slug/clicks'
-      preLoaderRoute: typeof ApiPublicLinksSlugClicksRouteImport
-      parentRoute: typeof ApiPublicLinksSlugRoute
-    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAssinantesRoute: typeof AuthenticatedAssinantesRoute
   AuthenticatedEncurtadorRoute: typeof AuthenticatedEncurtadorRoute
-  AuthenticatedConfiguracoesAsaasRoute: typeof AuthenticatedConfiguracoesAsaasRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAssinantesRoute: AuthenticatedAssinantesRoute,
   AuthenticatedEncurtadorRoute: AuthenticatedEncurtadorRoute,
-  AuthenticatedConfiguracoesAsaasRoute: AuthenticatedConfiguracoesAsaasRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
-
-interface ApiPublicLinksSlugRouteChildren {
-  ApiPublicLinksSlugClicksRoute: typeof ApiPublicLinksSlugClicksRoute
-  ApiPublicLinksSlugRotateRoute: typeof ApiPublicLinksSlugRotateRoute
-}
-
-const ApiPublicLinksSlugRouteChildren: ApiPublicLinksSlugRouteChildren = {
-  ApiPublicLinksSlugClicksRoute: ApiPublicLinksSlugClicksRoute,
-  ApiPublicLinksSlugRotateRoute: ApiPublicLinksSlugRotateRoute,
-}
-
-const ApiPublicLinksSlugRouteWithChildren =
-  ApiPublicLinksSlugRoute._addFileChildren(ApiPublicLinksSlugRouteChildren)
-
-interface ApiPublicLinksRouteChildren {
-  ApiPublicLinksSlugRoute: typeof ApiPublicLinksSlugRouteWithChildren
-}
-
-const ApiPublicLinksRouteChildren: ApiPublicLinksRouteChildren = {
-  ApiPublicLinksSlugRoute: ApiPublicLinksSlugRouteWithChildren,
-}
-
-const ApiPublicLinksRouteWithChildren = ApiPublicLinksRoute._addFileChildren(
-  ApiPublicLinksRouteChildren,
-)
-
-interface ApiPublicSubscribersRouteChildren {
-  ApiPublicSubscribersIdRoute: typeof ApiPublicSubscribersIdRoute
-}
-
-const ApiPublicSubscribersRouteChildren: ApiPublicSubscribersRouteChildren = {
-  ApiPublicSubscribersIdRoute: ApiPublicSubscribersIdRoute,
-}
-
-const ApiPublicSubscribersRouteWithChildren =
-  ApiPublicSubscribersRoute._addFileChildren(ApiPublicSubscribersRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   LoginRoute: LoginRoute,
-  PortalRoute: PortalRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ClientesDashboardRoute: ClientesDashboardRoute,
   RSlugRoute: RSlugRoute,
   ClientesIndexRoute: ClientesIndexRoute,
-  ApiPublicLinksRoute: ApiPublicLinksRouteWithChildren,
-  ApiPublicSubscribersRoute: ApiPublicSubscribersRouteWithChildren,
-  ApiPublicHooksAsaasSweepRoute: ApiPublicHooksAsaasSweepRoute,
-  ApiPublicWebhooksAsaasRoute: ApiPublicWebhooksAsaasRoute,
   ApiPublicWebhooksAsgardRoute: ApiPublicWebhooksAsgardRoute,
 }
 export const routeTree = rootRouteImport

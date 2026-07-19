@@ -12,10 +12,7 @@ import {
   updateSubscriberLinkRotation,
   convertSubscriberLinkToSingle,
 } from "@/lib/link-subscribers.functions";
-import {
-  ensureSubscriberBilling,
-  cancelSubscriberBilling,
-} from "@/lib/billing.functions";
+import { cancelSubscriberBilling } from "@/lib/billing.functions";
 import {
   createAsgardPixCharge,
   getAsgardChargeStatus,
@@ -208,7 +205,6 @@ function ClientesDashboard() {
   const listLinks = useServerFn(listMySubscriberLinks);
   const createLink = useServerFn(createSubscriberLink);
   const createRotating = useServerFn(createSubscriberRotatingLink);
-  const ensureBilling = useServerFn(ensureSubscriberBilling);
   const cancelBilling = useServerFn(cancelSubscriberBilling);
   const [billingLoading, setBillingLoading] = useState(false);
   const createPix = useServerFn(createAsgardPixCharge);
@@ -736,7 +732,7 @@ function ClientesDashboard() {
 
             <p className="text-xs text-muted-foreground text-center">
               Apenas acessos reais são contabilizados — tráfego de robôs e crawlers é filtrado automaticamente.
-              {" "}<Link to="/portal" className="underline">Sobre nós</Link>
+              {" "}<a href="/" className="underline">Início</a>
             </p>
           </>
         )}

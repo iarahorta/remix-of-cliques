@@ -6,7 +6,7 @@ import { Loader2, Mail, Lock, Sparkles, User as UserIcon } from "lucide-react";
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "Entrar — cliques" },
+      { title: "Entrar — zpclik" },
       { name: "description", content: "Acesse sua conta para gerenciar seus links." },
       { name: "robots", content: "noindex,nofollow" },
     ],
