@@ -11,6 +11,7 @@ import {
   updateSubscriberLinkTarget,
   updateSubscriberLinkRotation,
   convertSubscriberLinkToSingle,
+  deleteMySubscriberLink,
 } from "@/lib/link-subscribers.functions";
 import { cancelSubscriberBilling } from "@/lib/billing.functions";
 import {
@@ -213,6 +214,25 @@ function ClientesDashboard() {
   const [pixCopied, setPixCopied] = useState(false);
   const [pixChecking, setPixChecking] = useState(false);
   const [pixQrDataUrl, setPixQrDataUrl] = useState<string | null>(null);
+  // Timer de expiração do PIX (5 min a partir da criação).
+  const [pixCreatedAt, setPixCreatedAt] = useState<number | null>(null);
+  const [pixExpiresInSec, setPixExpiresInSec] = useState<number>(5 * 60);
+  const [nowTs, setNowTs] = useState<number>(() => Date.now());
+  useEffect(() => {
+    if (!pixModal) return;
+    const id = setInterval(() => setNowTs(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [pixModal]);
+  const pixSecondsLeft = pixCreatedAt
+    ? Math.max(0, Math.ceil((pixCreatedAt + pixExpiresInSec * 1000 - nowTs) / 1000))
+    : 0;
+  const pixExpired = pixCreatedAt !== null && pixSecondsLeft === 0;
+
+  // Modal de exclusão de link
+  const deleteLinkFn = useServerFn(deleteMySubscriberLink);
+  const [deletingFor, setDeletingFor] = useState<MyLink | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deleteBusy, setDeleteBusy] = useState(false);
 
   useEffect(() => {
     if (!pixModal) { setPixQrDataUrl(null); return; }
@@ -227,7 +247,10 @@ function ClientesDashboard() {
 
   const active = useMemo(() => {
     if (!sub) return false;
-    const today = new Date().toISOString().slice(0, 10);
+    // Comparação em TZ Brasília — evita marcar "vencido" 3h antes por causa do UTC.
+    const today = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit",
+    }).format(new Date());
     return sub.status === "active" && !!sub.current_period_end && sub.current_period_end >= today;
   }, [sub]);
 
@@ -237,7 +260,11 @@ function ClientesDashboard() {
       return { daysUntilEnd: null as number | null, daysOverdue: 0, expiringSoon: false, locked: sub?.status !== "active" };
     }
     const MS = 24 * 60 * 60 * 1000;
-    const today = new Date(); today.setHours(0, 0, 0, 0);
+    // Ambos os lados em TZ Brasília (ISO YYYY-MM-DD).
+    const todayIso = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit",
+    }).format(new Date());
+    const today = new Date(todayIso + "T00:00:00");
     const end = new Date(sub.current_period_end + "T00:00:00");
     const diffDays = Math.floor((end.getTime() - today.getTime()) / MS);
     const overdue = diffDays < 0 ? -diffDays : 0;
@@ -249,36 +276,9 @@ function ClientesDashboard() {
     };
   }, [sub]);
 
-  // Abre PIX automaticamente quando bloqueado
-  const askCpf = (): string | null => {
-    const raw = window.prompt(
-      "Para gerar seu PIX, informe seu CPF (somente números):",
-      (sub?.cpf ?? "").replace(/\D+/g, ""),
-    );
-    if (raw == null) return null;
-    const digits = raw.replace(/\D+/g, "");
-    if (digits.length !== 11) {
-      toast.error("CPF inválido — informe os 11 dígitos.");
-      return null;
-    }
-    return digits;
-  };
-
+  // PIX sem CPF (política V1.0 — menos fricção pra pagar).
   const requestPix = async (): Promise<any | null> => {
-    const storedCpf = (sub?.cpf ?? "").replace(/\D+/g, "");
-    let cpf = storedCpf.length === 11 ? storedCpf : (askCpf() ?? "");
-    if (!cpf) return null;
-    try {
-      return await createPix({ data: { cpf } });
-    } catch (e: any) {
-      const msg = String(e?.message ?? "");
-      if (msg.includes("CPF_REQUIRED") || msg.toLowerCase().includes("cpf")) {
-        const retryCpf = askCpf();
-        if (!retryCpf) return null;
-        return await createPix({ data: { cpf: retryCpf } });
-      }
-      throw e;
-    }
+    return await createPix();
   };
 
   const openInvoiceAuto = async () => {
@@ -292,6 +292,9 @@ function ClientesDashboard() {
           qrcode: r.qrcode ?? null,
           amount: Number(r.amount ?? 19.9),
         });
+        setPixCreatedAt(r.createdAt ? new Date(r.createdAt).getTime() : Date.now());
+        setPixExpiresInSec(Number(r.expiresInSec) > 0 ? Number(r.expiresInSec) : 5 * 60);
+        setNowTs(Date.now());
         setPixCopied(false);
       } else if (r !== null) {
         toast.error("Não foi possível gerar o PIX agora — tente de novo em instantes.");
@@ -403,27 +406,8 @@ function ClientesDashboard() {
               const status = sub?.status ?? "pending_payment";
               const isActive = active;
               const isSuspended = status === "suspended";
-              const openInvoice = async () => {
-                setBillingLoading(true);
-                try {
-                  const r: any = await requestPix();
-                  if (r?.orderId) {
-                    setPixModal({
-                      orderId: String(r.orderId),
-                      copyPaste: r.copyPaste ?? null,
-                      qrcode: r.qrcode ?? null,
-                      amount: Number(r.amount ?? 19.9),
-                    });
-                    setPixCopied(false);
-                  } else if (r !== null) {
-                    toast.error("Não foi possível gerar o PIX agora — tente de novo em instantes.");
-                  }
-                } catch (e: any) {
-                  toast.error(e?.message ?? "Erro ao gerar cobrança");
-                } finally {
-                  setBillingLoading(false);
-                }
-              };
+              // Reaproveita o mesmo fluxo do bloqueio — configura orderId, timer 5min, etc.
+              const openInvoice = openInvoiceAuto;
               const doCancel = async () => {
                 if (!confirm("Cancelar sua assinatura? O acesso é interrompido.")) return;
                 setBillingLoading(true);
@@ -451,7 +435,7 @@ function ClientesDashboard() {
                           {expiringSoon ? "Sua assinatura vence em breve" : "Assinatura ativa"}
                         </h2>
                         <p className="text-sm text-emerald-800 mt-1">
-                          Válida até <strong>{new Date(sub!.current_period_end!).toLocaleDateString("pt-BR")}</strong>
+                          Válida até <strong>{new Date(sub!.current_period_end! + "T00:00:00").toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</strong>
                           {expiringSoon && daysUntilEnd !== null && (
                             <> — {daysUntilEnd === 0 ? "vence hoje" : daysUntilEnd === 1 ? "vence amanhã" : `faltam ${daysUntilEnd} dias`}.</>
                           )}
@@ -723,6 +707,13 @@ function ClientesDashboard() {
                         >
                           <BarChart3 className="h-3.5 w-3.5" /> Ver métricas
                         </button>
+                        <button
+                          onClick={() => { setDeletingFor(l); setDeleteConfirmText(""); }}
+                          className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-white hover:bg-red-600 border border-red-200 rounded px-2 py-1"
+                          title="Excluir link"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" /> Excluir
+                        </button>
                       </li>
                     );
                   })}
@@ -828,12 +819,28 @@ function ClientesDashboard() {
                   toast.error(e?.message ?? "Erro ao verificar");
                 } finally { setPixChecking(false); }
               }}
-              disabled={pixChecking}
+              disabled={pixChecking || pixExpired}
               className="mt-3 w-full rounded-lg border border-border hover:bg-background text-foreground text-sm font-medium py-2 disabled:opacity-60"
             >{pixChecking ? "Verificando…" : "Já paguei — verificar agora"}</button>
-            <p className="mt-3 text-[11px] text-muted-foreground text-center">
-              Este PIX expira em alguns minutos. Se expirar, feche e gere um novo.
-            </p>
+            {pixExpired ? (
+              <div className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-800 text-center">
+                <p className="font-semibold">Este PIX expirou.</p>
+                <p className="mt-1">Feche esta janela e gere um novo PIX para pagar.</p>
+                <button
+                  onClick={async () => { setPixModal(null); setPixCreatedAt(null); await openInvoiceAuto(); }}
+                  className="mt-2 w-full rounded-md bg-red-700 hover:bg-red-800 text-white text-xs font-semibold py-2"
+                >Gerar novo PIX</button>
+              </div>
+            ) : (
+              <p className="mt-3 text-[11px] text-muted-foreground text-center">
+                Este PIX expira em{" "}
+                <strong className="font-mono">
+                  {String(Math.floor(pixSecondsLeft / 60)).padStart(2, "0")}
+                  :
+                  {String(pixSecondsLeft % 60).padStart(2, "0")}
+                </strong>
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -843,6 +850,62 @@ function ClientesDashboard() {
           onClose={() => setEditingFor(null)}
           onSaved={async () => { setEditingFor(null); await load(); }}
         />
+      )}
+      {deletingFor && (
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4" onClick={() => !deleteBusy && setDeletingFor(null)}>
+          <div onClick={(e) => e.stopPropagation()} className="bg-card rounded-2xl shadow-2xl w-full max-w-md p-6 border border-red-200">
+            <div className="flex items-center gap-2 text-red-700 font-semibold">
+              <AlertTriangle className="h-5 w-5" />
+              <h3 className="text-lg">Excluir link</h3>
+            </div>
+            <p className="text-sm text-foreground/90 mt-3">
+              Você vai excluir <strong className="font-mono">www.zpclik.site/r/{deletingFor.slug}</strong>.
+              O link para de redirecionar imediatamente e some da sua lista, mas o histórico de cliques é preservado.
+            </p>
+            <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded p-2 mt-3">
+              O slug <strong>{deletingFor.slug}</strong> não poderá ser reutilizado depois — se precisar do mesmo destino, crie um link novo com outro slug.
+            </p>
+            <label className="mt-4 block text-xs font-medium text-foreground/90">
+              Digite <span className="font-mono">EXCLUIR</span> para confirmar
+            </label>
+            <input
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              autoFocus
+              placeholder="EXCLUIR"
+              className="mt-1 w-full rounded-lg border border-border px-3 py-2 text-sm font-mono text-foreground"
+            />
+            <div className="mt-4 flex gap-2 justify-end">
+              <button
+                type="button"
+                disabled={deleteBusy}
+                onClick={() => setDeletingFor(null)}
+                className="text-xs px-3 py-2 rounded-md border border-border hover:bg-secondary text-foreground disabled:opacity-50"
+              >Cancelar</button>
+              <button
+                type="button"
+                disabled={deleteBusy || deleteConfirmText.trim() !== "EXCLUIR"}
+                onClick={async () => {
+                  if (!deletingFor) return;
+                  setDeleteBusy(true);
+                  try {
+                    await deleteLinkFn({ data: { linkId: deletingFor.id } });
+                    toast.success("Link excluído");
+                    setDeletingFor(null);
+                    setDeleteConfirmText("");
+                    await load();
+                  } catch (e: any) {
+                    toast.error(e?.message ?? "Falha ao excluir");
+                  } finally { setDeleteBusy(false); }
+                }}
+                className="text-xs px-3 py-2 rounded-md bg-red-700 hover:bg-red-800 text-white font-semibold disabled:opacity-50 inline-flex items-center gap-1.5"
+              >
+                {deleteBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                Excluir link
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

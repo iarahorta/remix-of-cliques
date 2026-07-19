@@ -30,15 +30,14 @@ export async function createAsgardPix(input: {
   externalReference?: string;
   idempotencyKey?: string;
 }): Promise<AsgardPixResponse> {
+  // CPF opcional: se o cliente forneceu, mandamos; se não, deixamos o
+  // gateway aceitar sem esse campo (política V1.0 — menos fricção pra pagar).
   const cpfDigits = (input.cpf ?? "").replace(/\D+/g, "");
-  if (cpfDigits.length !== 11) {
-    throw new Error("CPF inválido — informe um CPF com 11 dígitos.");
-  }
   const body = {
     customer: {
       email: input.email,
       name: input.name ?? undefined,
-      cpf: cpfDigits,
+      ...(cpfDigits.length === 11 ? { cpf: cpfDigits } : {}),
       phone: input.phone ?? undefined,
     },
     amount: Number(input.amount.toFixed(2)),
