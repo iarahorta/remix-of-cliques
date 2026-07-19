@@ -315,6 +315,17 @@ export const getMyLinkMetrics = createServerFn({ method: "POST" })
       .limit(10000);
     if (error) throw new Error(error.message);
 
+    // Contagem transparente: quantos cliques totais (incluindo bots/prévias)
+    // caíram no link nessa janela, para o painel poder mostrar "X prévias/robôs
+    // ignorados" e o cliente confiar no número real.
+    const { count: totalRawCount, error: rawErr } = await context.supabase
+      .from("short_link_clicks")
+      .select("id", { count: "exact", head: true })
+      .eq("short_link_id", link.id)
+      .gte("created_at", since);
+    if (rawErr) throw new Error(rawErr.message);
+    const totalRaw = totalRawCount ?? 0;
+
     const rows = clicks ?? [];
     const byDay = new Map<string, number>();
     for (let i = data.days - 1; i >= 0; i--) {
@@ -403,6 +414,8 @@ export const getMyLinkMetrics = createServerFn({ method: "POST" })
 
     return {
       total: rows.length,
+      total_raw: totalRaw,
+      bots_filtered: Math.max(0, totalRaw - rows.length),
       unique_ips: uniqueIps.size,
       daily,
       hourly,

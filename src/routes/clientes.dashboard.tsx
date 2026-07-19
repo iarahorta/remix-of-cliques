@@ -1124,7 +1124,7 @@ function MetricsModal({ link, onClose }: { link: MyLink; onClose: () => void }) 
     target_url: string | null;
   };
   const [data, setData] = useState<{
-    total: number; unique_ips: number;
+    total: number; total_raw: number; bots_filtered: number; unique_ips: number;
     daily: { day: string; count: number }[];
     hourly: { hour: number; count: number }[];
     topCountries: Row[]; topRegions: Row[]; topCities: Row[];
@@ -1214,7 +1214,15 @@ function MetricsModal({ link, onClose }: { link: MyLink; onClose: () => void }) 
           ) : data ? (
             <>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <KPI label="Cliques reais" value={data.total} />
+                <KPI
+                  label="Cliques reais"
+                  value={data.total}
+                  hint={
+                    data.bots_filtered > 0
+                      ? `${data.bots_filtered} prévia(s)/robô(s) ignorado(s) · bruto: ${data.total_raw}`
+                      : "Nenhuma prévia/robô detectada no período"
+                  }
+                />
                 <KPI label="IPs únicos" value={data.unique_ips} />
                 <KPI label="Países" value={data.topCountries.length} />
                 <KPI label="Dispositivos" value={data.topDevices.length} />
@@ -1307,11 +1315,12 @@ function MetricsModal({ link, onClose }: { link: MyLink; onClose: () => void }) 
   );
 }
 
-function KPI({ label, value }: { label: string; value: number }) {
+function KPI({ label, value, hint }: { label: string; value: number; hint?: string }) {
   return (
     <div className="rounded-xl bg-gradient-to-br from-neutral-900 to-neutral-950 border border-yellow-500/20 p-4">
       <div className="text-[10px] uppercase tracking-wider text-neutral-400">{label}</div>
       <div className="mt-1 text-2xl font-bold bg-gradient-to-r from-yellow-200 to-amber-500 bg-clip-text text-transparent">{value}</div>
+      {hint ? <div className="mt-1 text-[10px] text-neutral-500 leading-snug">{hint}</div> : null}
     </div>
   );
 }

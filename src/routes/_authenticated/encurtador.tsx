@@ -228,7 +228,9 @@ function LinkRow({ link, host, selected, onToggle, onEdit, onMetrics, onChange }
             {link.target_url ?? <span className="italic">— sem destino —</span>}
           </p>
           <div className="mt-1.5 flex items-center gap-3 text-[11px] text-muted-foreground">
-            <span>{link.click_count} cliques</span>
+            <span title="Contagem bruta — inclui prévias do WhatsApp/redes sociais e robôs. Veja o modal de métricas para o número real, sem bots.">
+              {link.click_count} cliques (bruto)
+            </span>
             <span>· criado {new Date(link.created_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
             {link.last_clicked_at && <span>· último: {new Date(link.last_clicked_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}</span>}
           </div>
@@ -484,7 +486,8 @@ function EditModal({ link, onClose, onDone }: { link: ShortLink; onClose: () => 
             className="mt-1.5 w-full rounded-lg bg-input border border-border px-3 py-2 text-sm focus:outline-none" />
         </label>
         <div className="text-[11px] text-muted-foreground">
-          {link.click_count} cliques registrados {link.last_clicked_at && `· último em ${new Date(link.last_clicked_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}`}
+          {link.click_count} cliques registrados (bruto — inclui prévias/robôs)
+          {link.last_clicked_at && ` · último em ${new Date(link.last_clicked_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}`}
         </div>
         <button onClick={submit} disabled={saving}
           className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-gold-metal px-6 py-3 text-sm font-semibold disabled:opacity-50">
