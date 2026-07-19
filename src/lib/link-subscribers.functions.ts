@@ -43,10 +43,12 @@ async function requireActiveSubscription(ctx: { supabase: any; userId: string })
 
 export const createSubscriberProfile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { name: string; email: string; phone: string }) => ({
+  .inputValidator((d: { name: string; email: string; phone: string; ref_token?: string | null; visitor_id?: string | null }) => ({
     name: (d.name ?? "").trim(),
     email: (d.email ?? "").trim().toLowerCase(),
     phone: (d.phone ?? "").trim(),
+    ref_token: (d.ref_token ?? "").toString().trim() || null,
+    visitor_id: (d.visitor_id ?? "").toString().trim() || null,
   }))
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -61,6 +63,10 @@ export const createSubscriberProfile = createServerFn({ method: "POST" })
         .update({ name: data.name, email: data.email, phone: data.phone })
         .eq("id", context.userId);
       if (error) throw new Error(error.message);
+      try {
+        const { attachAttributionToSubscriber } = await import("@/lib/partner-attribution.functions");
+        await attachAttributionToSubscriber(context.userId, data.ref_token, data.visitor_id);
+      } catch (e) { console.error("[attribution] update path:", e); }
       return { ok: true, created: false };
     }
     const { error } = await supabaseAdmin.from("link_subscribers").insert({
@@ -71,6 +77,10 @@ export const createSubscriberProfile = createServerFn({ method: "POST" })
       status: "pending_payment",
     });
     if (error) throw new Error(error.message);
+    try {
+      const { attachAttributionToSubscriber } = await import("@/lib/partner-attribution.functions");
+      await attachAttributionToSubscriber(context.userId, data.ref_token, data.visitor_id);
+    } catch (e) { console.error("[attribution] insert path:", e); }
     return { ok: true, created: true };
   });
 
