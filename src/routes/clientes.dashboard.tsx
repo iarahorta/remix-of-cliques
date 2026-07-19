@@ -732,7 +732,7 @@ function ClientesDashboard() {
 
             <p className="text-xs text-muted-foreground text-center">
               Apenas acessos reais são contabilizados — tráfego de robôs e crawlers é filtrado automaticamente.
-              {" "}<Link to="/portal" className="underline">Sobre nós</Link>
+              {" "}<a href="/" className="underline">Início</a>
             </p>
           </>
         )}

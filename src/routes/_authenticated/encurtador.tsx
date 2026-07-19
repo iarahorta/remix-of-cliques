@@ -15,7 +15,7 @@ import {
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/encurtador")({
-  head: () => ({ meta: [{ title: "Encurtador — cliques" }] }),
+  head: () => ({ meta: [{ title: "Encurtador — zpclik" }] }),
   beforeLoad: async () => {
     const { data: userData } = await supabase.auth.getUser();
     if (!userData?.user) throw redirect({ to: "/login" });
@@ -277,16 +277,16 @@ function GenerateModal({ onClose, onDone }: { onClose: () => void; onDone: () =>
   const submit = async () => {
     setSaving(true);
     try {
-      const defaultTarget = typeof window !== "undefined" ? `${window.location.origin}/portal` : null;
+      const defaultTarget = typeof window !== "undefined" ? null : null;
       const r: any = await fn({ data: { count, length, label, default_target: defaultTarget } });
-      toast.success(`${r.created} slugs criados — apontando para /portal`);
+      toast.success(`${r.created} slugs criados — criados`);
       onDone(); onClose();
     } catch (e: any) { toast.error(e.message); }
     finally { setSaving(false); }
   };
   return (
     <ModalShell title="Gerar em Massa" onClose={onClose}>
-      <p className="text-sm text-muted-foreground mb-4">Cria N slugs já apontando para <code>/portal</code>. Você pode trocar o destino de cada slug a qualquer momento.</p>
+      <p className="text-sm text-muted-foreground mb-4">Cria N slugs já apontando para o destino que quiser. Você pode trocar o destino de cada slug a qualquer momento.</p>
       <div className="grid grid-cols-2 gap-3">
         <NumField label="Quantidade" value={count} onChange={setCount} min={1} max={500} />
         <NumField label="Tamanho do slug" value={length} onChange={setLength} min={4} max={12} />
