@@ -621,7 +621,10 @@ function ClientesDashboard() {
                     </p>
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div>
-                        <label className="text-xs font-medium text-slate-700">Como o link deve revezar os destinos?</label>
+                        <label className="text-xs font-medium text-slate-700 flex items-center">
+                          Como o link deve revezar os destinos?
+                          <InlineTooltip text="Escolha a regra que decide para qual destino cada clique vai. Você pode trocar a regra a qualquer momento sem mudar o link curto." />
+                        </label>
                         <select
                           disabled={!active}
                           value={rotMode}
@@ -633,6 +636,7 @@ function ClientesDashboard() {
                           ))}
                         </select>
                         <p className="mt-1.5 text-[11px] leading-snug text-slate-500">{ROTATION_HELP[rotMode]}</p>
+                        <p className="mt-1 text-[11px] leading-snug text-amber-600 font-medium">{ROTATION_EXAMPLES[rotMode]}</p>
                       </div>
                       <div>
                         <label className="text-xs font-medium text-slate-700">Rótulo (opcional)</label>
@@ -976,7 +980,10 @@ function EditTargetModal({
           ) : (
             <>
               <div>
-                <label className="text-xs font-medium text-slate-700">Como o link deve revezar os destinos?</label>
+                <label className="text-xs font-medium text-slate-700 flex items-center">
+                  Como o link deve revezar os destinos?
+                  <InlineTooltip text="Escolha a regra que decide para qual destino cada clique vai. Você pode trocar a regra a qualquer momento sem mudar o link curto." />
+                </label>
                 <select value={rotMode} onChange={(e) => setRotMode(e.target.value as RotationMode)}
                   className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900">
                   {(Object.keys(ROTATION_LABELS) as RotationMode[]).map((m) => (
@@ -984,6 +991,7 @@ function EditTargetModal({
                   ))}
                 </select>
                 <p className="mt-1.5 text-[11px] leading-snug text-slate-500">{ROTATION_HELP[rotMode]}</p>
+                <p className="mt-1 text-[11px] leading-snug text-amber-600 font-medium">{ROTATION_EXAMPLES[rotMode]}</p>
               </div>
               <RotationRowsEditor
                 rows={rotUrls}
