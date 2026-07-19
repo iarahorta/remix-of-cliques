@@ -107,7 +107,7 @@ function InlineTooltip({ text }: { text: string }) {
       {open && (
         <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 sm:w-64 rounded-lg bg-secondary px-3 py-2 text-xs text-white shadow-lg z-50">
           {text}
-          <span className="absolute left-1/2 -translate-x-1/2 top-full border-4 border-transparent border-t-slate-900" />
+          <span className="absolute left-1/2 -translate-x-1/2 top-full border-4 border-transparent border-t-secondary" />
         </span>
       )}
     </span>
@@ -675,7 +675,7 @@ function ClientesDashboard() {
               {links.length === 0 ? (
                 <div className="p-6 text-sm text-muted-foreground">Nenhum link ainda.</div>
               ) : (
-                <ul className="divide-y divide-slate-100">
+                <ul className="divide-y divide-border">
                   {links.map((l) => {
                     const short = `www.zpclik.site/r/${l.slug}`;
                     return (
@@ -684,7 +684,7 @@ function ClientesDashboard() {
                           <div className="text-sm font-medium text-foreground flex items-center gap-2">
                             {short}
                             {l.is_rotating && (
-                              <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider font-semibold text-[#0b3d91] bg-gold-metal/10 rounded px-1.5 py-0.5">
+                              <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider font-semibold text-primary bg-primary/10 rounded px-1.5 py-0.5">
                                 <Shuffle className="h-3 w-3" /> {ROTATION_LABELS[l.rotation_mode] ?? l.rotation_mode}
                               </span>
                             )}
@@ -1109,7 +1109,7 @@ function RotationRowsEditor({
         <button
           type="button" disabled={disabled || rows.length >= 20}
           onClick={() => setRows((prev) => [...prev, emptyRotRow("url")])}
-          className="inline-flex items-center gap-1 text-xs font-medium text-[#0b3d91] hover:text-[#0a3582] disabled:opacity-40"
+          className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:brightness-110 disabled:opacity-40"
         ><Plus className="h-3.5 w-3.5" /> Adicionar URL</button>
       </div>
     </div>
