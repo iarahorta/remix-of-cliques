@@ -8,10 +8,12 @@ export const Route = createFileRoute("/api/public/webhooks/asgard")({
         const sig = request.headers.get("x-webhook-signature");
         const { verifyAsgardSignature } = await import("@/lib/asgard.server");
         const secret = process.env.ASGARD_WEBHOOK_SECRET;
-        if (secret) {
-          if (!verifyAsgardSignature(raw, sig)) {
-            return new Response("Invalid signature", { status: 401 });
-          }
+        if (!secret) {
+          console.error("ASGARD_WEBHOOK_SECRET not configured — rejecting webhook");
+          return new Response("Webhook secret not configured", { status: 401 });
+        }
+        if (!verifyAsgardSignature(raw, sig)) {
+          return new Response("Invalid signature", { status: 401 });
         }
         let payload: any;
         try { payload = JSON.parse(raw); } catch { return new Response("bad json", { status: 400 }); }

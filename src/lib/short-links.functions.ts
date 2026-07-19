@@ -34,7 +34,7 @@ export const bulkGenerateSlugs = createServerFn({ method: "POST" })
   }))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    try { await assertCanManage({ supabase, userId }); } catch {}
+    await assertCanManage({ supabase, userId });
     const created: string[] = [];
     let attempts = 0;
     while (created.length < data.count && attempts < data.count * 5) {
@@ -101,7 +101,7 @@ export const bulkImportUrls = createServerFn({ method: "POST" })
   }))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    try { await assertCanManage({ supabase, userId }); } catch {}
+    await assertCanManage({ supabase, userId });
     const rows: Array<{ slug: string; url: string }> = [];
     for (const url of data.urls) {
       let attempts = 0;
