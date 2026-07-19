@@ -127,9 +127,35 @@ export const listMySubscriberLinks = createServerFn({ method: "GET" })
       .select("id,slug,target_url,label,click_count,status,created_at,last_clicked_at,is_rotating,rotation_mode,short_link_urls(url,weight,sort_order)")
       .eq("user_id", context.userId)
       .eq("is_subscriber_link", true)
+      .neq("status", "archived")
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
     return { links: data ?? [] };
+  });
+
+// Soft-delete de link do assinante — arquiva sem apagar histórico de cliques.
+// Regras: só o dono, só is_subscriber_link=true. bump_short_link_click já retorna
+// não-encontrado quando status <> 'active', então links arquivados param de redirecionar.
+export const deleteMySubscriberLink = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { linkId: string }) => ({ linkId: d.linkId }))
+  .handler(async ({ data, context }) => {
+    const { data: link, error: findErr } = await context.supabase
+      .from("short_links")
+      .select("id,user_id,is_subscriber_link,status")
+      .eq("id", data.linkId)
+      .maybeSingle();
+    if (findErr) throw new Error(findErr.message);
+    if (!link || link.user_id !== context.userId || !link.is_subscriber_link) {
+      throw new Error("Link não encontrado.");
+    }
+    const { error } = await context.supabase
+      .from("short_links")
+      .update({ status: "archived" })
+      .eq("id", data.linkId)
+      .eq("user_id", context.userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
   });
 
 type RotationUrlInput = { url: string; weight?: number | null };
