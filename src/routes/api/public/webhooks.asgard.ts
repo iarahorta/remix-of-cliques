@@ -82,6 +82,24 @@ export const Route = createFileRoute("/api/public/webhooks/asgard")({
             old_end: (subRow as any)?.current_period_end ?? null,
             new_end: newEnd,
           });
+
+          // Comissão de parceiros — idempotente. Falha aqui NÃO derruba o webhook.
+          try {
+            const grossCents = Number((charge as any).amount_cents ?? 0);
+            if (grossCents > 0) {
+              const { error: commErr } = await supabaseAdmin.rpc("record_partner_commission" as any, {
+                _subscriber_id: subscriberId,
+                _order_id: orderId,
+                _gateway: "asgard",
+                _method: "pix",
+                _gross_cents: grossCents,
+                _product_code: "zpclik_sub",
+              });
+              if (commErr) console.warn("[asgard-webhook] commission RPC failed", commErr);
+            }
+          } catch (e) {
+            console.warn("[asgard-webhook] commission block error", e);
+          }
         }
 
         return new Response("ok", { status: 200 });
