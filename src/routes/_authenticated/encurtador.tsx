@@ -486,7 +486,8 @@ function EditModal({ link, onClose, onDone }: { link: ShortLink; onClose: () => 
             className="mt-1.5 w-full rounded-lg bg-input border border-border px-3 py-2 text-sm focus:outline-none" />
         </label>
         <div className="text-[11px] text-muted-foreground">
-          {link.click_count} cliques registrados {link.last_clicked_at && `· último em ${new Date(link.last_clicked_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}`}
+          {link.click_count} cliques registrados (bruto — inclui prévias/robôs)
+          {link.last_clicked_at && ` · último em ${new Date(link.last_clicked_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}`}
         </div>
         <button onClick={submit} disabled={saving}
           className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-gold-metal px-6 py-3 text-sm font-semibold disabled:opacity-50">
