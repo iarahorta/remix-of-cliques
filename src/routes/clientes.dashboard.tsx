@@ -1315,11 +1315,12 @@ function MetricsModal({ link, onClose }: { link: MyLink; onClose: () => void }) 
   );
 }
 
-function KPI({ label, value }: { label: string; value: number }) {
+function KPI({ label, value, hint }: { label: string; value: number; hint?: string }) {
   return (
     <div className="rounded-xl bg-gradient-to-br from-neutral-900 to-neutral-950 border border-yellow-500/20 p-4">
       <div className="text-[10px] uppercase tracking-wider text-neutral-400">{label}</div>
       <div className="mt-1 text-2xl font-bold bg-gradient-to-r from-yellow-200 to-amber-500 bg-clip-text text-transparent">{value}</div>
+      {hint ? <div className="mt-1 text-[10px] text-neutral-500 leading-snug">{hint}</div> : null}
     </div>
   );
 }
