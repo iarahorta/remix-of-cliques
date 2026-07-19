@@ -46,7 +46,7 @@ export const createPartner = createServerFn({ method: "POST" })
         pix_key_type: data.pix_key_type || null,
         default_commission_bps: bps,
         notes: data.notes || null,
-      })
+      } as any)
       .select()
       .single();
     if (error) throw new Error(error.message);
