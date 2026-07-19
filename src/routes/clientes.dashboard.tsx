@@ -89,6 +89,31 @@ const ROTATION_EXAMPLES: Record<RotationMode, string> = {
   sticky: "Ex.: usar um link em uma campanha e trocar o destino sem reimprimir material.",
 };
 
+function InlineTooltip({ text }: { text: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <span className="relative inline-block align-middle ml-1">
+      <button
+        type="button"
+        aria-label="Ajuda"
+        onMouseEnter={() => setOpen(true)}
+        onMouseLeave={() => setOpen(false)}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setOpen(false)}
+        className="rounded-full p-0.5 text-slate-400 hover:text-amber-500 focus:outline-none"
+      >
+        <HelpCircle className="h-3.5 w-3.5" />
+      </button>
+      {open && (
+        <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 sm:w-64 rounded-lg bg-slate-900 px-3 py-2 text-xs text-white shadow-lg z-50">
+          {text}
+          <span className="absolute left-1/2 -translate-x-1/2 top-full border-4 border-transparent border-t-slate-900" />
+        </span>
+      )}
+    </span>
+  );
+}
+
 const PIX_KEY = "iarachorta@gmail.com";
 
 function getProviderQrImageSrc(qrcode: string | null | undefined): string | null {
