@@ -523,7 +523,7 @@ function ClientesDashboard() {
 
 
             {/* Create form */}
-            <section className="bg-card border border-border rounded-2xl p-6">
+            <section className="card-premium rounded-2xl p-6">
               <h2 className="font-semibold text-foreground">Criar novo link</h2>
               {!active && (
                 <p className="text-xs text-amber-800 mt-1">
@@ -668,7 +668,7 @@ function ClientesDashboard() {
             </section>
 
             {/* Links list */}
-            <section className="bg-card border border-border rounded-2xl">
+            <section className="card-premium rounded-2xl">
               <div className="px-6 py-4 border-b border-border flex items-center justify-between">
                 <h2 className="font-semibold text-foreground">Meus links</h2>
                 <span className="text-xs text-muted-foreground">{links.length} {links.length === 1 ? "link" : "links"}</span>
