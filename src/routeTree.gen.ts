@@ -17,6 +17,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ClientesIndexRouteImport } from './routes/clientes.index'
 import { Route as RSlugRouteImport } from './routes/r.$slug'
 import { Route as ClientesDashboardRouteImport } from './routes/clientes.dashboard'
+import { Route as AuthenticatedSaquesRouteImport } from './routes/_authenticated/saques'
 import { Route as AuthenticatedParceirosRouteImport } from './routes/_authenticated/parceiros'
 import { Route as AuthenticatedParceiroRouteImport } from './routes/_authenticated/parceiro'
 import { Route as AuthenticatedEncurtadorRouteImport } from './routes/_authenticated/encurtador'
@@ -63,6 +64,11 @@ const ClientesDashboardRoute = ClientesDashboardRouteImport.update({
   path: '/clientes/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedSaquesRoute = AuthenticatedSaquesRouteImport.update({
+  id: '/saques',
+  path: '/saques',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedParceirosRoute = AuthenticatedParceirosRouteImport.update({
   id: '/parceiros',
   path: '/parceiros',
@@ -104,6 +110,7 @@ export interface FileRoutesByFullPath {
   '/encurtador': typeof AuthenticatedEncurtadorRoute
   '/parceiro': typeof AuthenticatedParceiroRoute
   '/parceiros': typeof AuthenticatedParceirosRoute
+  '/saques': typeof AuthenticatedSaquesRoute
   '/clientes/dashboard': typeof ClientesDashboardRoute
   '/r/$slug': typeof RSlugRoute
   '/clientes/': typeof ClientesIndexRoute
@@ -119,6 +126,7 @@ export interface FileRoutesByTo {
   '/encurtador': typeof AuthenticatedEncurtadorRoute
   '/parceiro': typeof AuthenticatedParceiroRoute
   '/parceiros': typeof AuthenticatedParceirosRoute
+  '/saques': typeof AuthenticatedSaquesRoute
   '/clientes/dashboard': typeof ClientesDashboardRoute
   '/r/$slug': typeof RSlugRoute
   '/clientes': typeof ClientesIndexRoute
@@ -136,6 +144,7 @@ export interface FileRoutesById {
   '/_authenticated/encurtador': typeof AuthenticatedEncurtadorRoute
   '/_authenticated/parceiro': typeof AuthenticatedParceiroRoute
   '/_authenticated/parceiros': typeof AuthenticatedParceirosRoute
+  '/_authenticated/saques': typeof AuthenticatedSaquesRoute
   '/clientes/dashboard': typeof ClientesDashboardRoute
   '/r/$slug': typeof RSlugRoute
   '/clientes/': typeof ClientesIndexRoute
@@ -153,6 +162,7 @@ export interface FileRouteTypes {
     | '/encurtador'
     | '/parceiro'
     | '/parceiros'
+    | '/saques'
     | '/clientes/dashboard'
     | '/r/$slug'
     | '/clientes/'
@@ -168,6 +178,7 @@ export interface FileRouteTypes {
     | '/encurtador'
     | '/parceiro'
     | '/parceiros'
+    | '/saques'
     | '/clientes/dashboard'
     | '/r/$slug'
     | '/clientes'
@@ -184,6 +195,7 @@ export interface FileRouteTypes {
     | '/_authenticated/encurtador'
     | '/_authenticated/parceiro'
     | '/_authenticated/parceiros'
+    | '/_authenticated/saques'
     | '/clientes/dashboard'
     | '/r/$slug'
     | '/clientes/'
@@ -260,6 +272,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClientesDashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/saques': {
+      id: '/_authenticated/saques'
+      path: '/saques'
+      fullPath: '/saques'
+      preLoaderRoute: typeof AuthenticatedSaquesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/parceiros': {
       id: '/_authenticated/parceiros'
       path: '/parceiros'
@@ -311,6 +330,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedEncurtadorRoute: typeof AuthenticatedEncurtadorRoute
   AuthenticatedParceiroRoute: typeof AuthenticatedParceiroRoute
   AuthenticatedParceirosRoute: typeof AuthenticatedParceirosRoute
+  AuthenticatedSaquesRoute: typeof AuthenticatedSaquesRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -319,6 +339,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedEncurtadorRoute: AuthenticatedEncurtadorRoute,
   AuthenticatedParceiroRoute: AuthenticatedParceiroRoute,
   AuthenticatedParceirosRoute: AuthenticatedParceirosRoute,
+  AuthenticatedSaquesRoute: AuthenticatedSaquesRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

@@ -191,3 +191,56 @@ export const upsertGatewayFeeRule = createServerFn({ method: "POST" })
     }
     return { ok: true };
   });
+export const listPayoutsAdmin = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { status?: string; partnerId?: string } | undefined) => d ?? {})
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    let q = context.supabase
+      .from("partner_payouts")
+      .select("*, partners(name,public_token,pix_key,pix_key_type,tax_id,email)")
+      .order("created_at", { ascending: false })
+      .limit(500);
+    if (data.status) q = q.eq("status", data.status);
+    if (data.partnerId) q = q.eq("partner_id", data.partnerId);
+    const { data: rows, error } = await q;
+    if (error) throw new Error(error.message);
+    return { payouts: rows ?? [] };
+  });
+
+export const updatePayoutStatus = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { id: string; status: "paid" | "canceled"; paid_ref?: string; notes?: string }) => d)
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    if (data.status === "paid") {
+      const { error: e1 } = await supabaseAdmin
+        .from("partner_payouts")
+        .update({
+          status: "paid",
+          paid_at: new Date().toISOString(),
+          paid_ref: data.paid_ref || null,
+          notes: data.notes ?? undefined,
+        } as any)
+        .eq("id", data.id);
+      if (e1) throw new Error(e1.message);
+      const { error: e2 } = await supabaseAdmin
+        .from("partner_commissions")
+        .update({ status: "paid", paid_at: new Date().toISOString(), paid_method: "pix_manual", paid_ref: data.paid_ref || null } as any)
+        .eq("payout_id", data.id);
+      if (e2) throw new Error(e2.message);
+    } else {
+      const { error: e1 } = await supabaseAdmin
+        .from("partner_payouts")
+        .update({ status: "canceled", notes: data.notes ?? undefined } as any)
+        .eq("id", data.id);
+      if (e1) throw new Error(e1.message);
+      const { error: e2 } = await supabaseAdmin
+        .from("partner_commissions")
+        .update({ payout_id: null } as any)
+        .eq("payout_id", data.id);
+      if (e2) throw new Error(e2.message);
+    }
+    return { ok: true };
+  });

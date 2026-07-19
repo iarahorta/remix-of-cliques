@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
-import { getMyPartnerOverview, listMyPartnerCommissions } from "@/lib/partner-portal.functions";
+import { getMyPartnerOverview, listMyPartnerCommissions, listMyPayouts, requestMyPayout } from "@/lib/partner-portal.functions";
 
 export const Route = createFileRoute("/_authenticated/parceiro")({
   head: () => ({ meta: [{ title: "Portal do Parceiro — zpclik" }] }),
@@ -45,23 +45,46 @@ function csvEscape(v: unknown) {
 export default function PartnerPortalPage() {
   const runOverview = useServerFn(getMyPartnerOverview);
   const runCommissions = useServerFn(listMyPartnerCommissions);
+  const runPayouts = useServerFn(listMyPayouts);
+  const runRequestPayout = useServerFn(requestMyPayout);
   const [overview, setOverview] = useState<any>(null);
   const [rows, setRows] = useState<any[]>([]);
+  const [payouts, setPayouts] = useState<any[]>([]);
+  const [available, setAvailable] = useState(0);
+  const [pendingPayout, setPendingPayout] = useState(0);
+  const [requesting, setRequesting] = useState(false);
   const [status, setStatus] = useState<string>("");
   const [loading, setLoading] = useState(true);
 
   const reload = async () => {
     setLoading(true);
     try {
-      const [o, c] = await Promise.all([
+      const [o, c, p] = await Promise.all([
         runOverview({}),
         runCommissions({ data: { status: status || undefined } }),
+        runPayouts({}),
       ]);
       setOverview(o);
       setRows(c.commissions ?? []);
+      setPayouts(p.payouts ?? []);
+      setAvailable(p.available_cents ?? 0);
+      setPendingPayout(p.pending_cents ?? 0);
     } finally { setLoading(false); }
   };
   useEffect(() => { void reload(); }, [status]);
+
+  const handleRequestPayout = async () => {
+    if (available <= 0) return;
+    if (!confirm(`Solicitar saque de ${fmtBRL(available)}?`)) return;
+    setRequesting(true);
+    try {
+      await runRequestPayout({ data: {} });
+      await reload();
+      alert("Saque solicitado com sucesso. Você receberá via PIX após aprovação.");
+    } catch (e: any) {
+      alert(e?.message ?? "Erro ao solicitar saque.");
+    } finally { setRequesting(false); }
+  };
 
   const filtered = useMemo(() => rows, [rows]);
 
@@ -148,6 +171,65 @@ export default function PartnerPortalPage() {
         <Card label="Receita líquida" value={fmtBRL(t.net)} />
         <Card label="Comissões pendentes" value={fmtBRL(t.pending + t.approved)} tone="text-amber-300" />
         <Card label="Comissões pagas" value={fmtBRL(t.paid)} tone="text-emerald-300" />
+      </section>
+
+      <section className="mb-6 rounded-xl border border-[oklch(0.32_0.04_80/_0.25)] bg-card p-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <p className="text-[10px] uppercase tracking-widest text-[#f0c95a]">Saques</p>
+            <p className="text-lg font-semibold text-foreground mt-1">
+              Disponível para saque: <span className="text-emerald-300">{fmtBRL(available)}</span>
+            </p>
+            {pendingPayout > 0 && (
+              <p className="text-xs text-amber-300 mt-1">Aguardando pagamento: {fmtBRL(pendingPayout)}</p>
+            )}
+            <p className="text-xs text-muted-foreground mt-1">
+              PIX: {p.pix_key ? `${p.pix_key_type ?? ""} — ${p.pix_key}` : <span className="text-rose-300">chave PIX não cadastrada — fale com o admin</span>}
+            </p>
+          </div>
+          <button
+            onClick={handleRequestPayout}
+            disabled={requesting || available <= 0 || !p.pix_key}
+            className="px-4 py-2 rounded bg-gold-metal text-[#1a1408] font-semibold text-sm disabled:opacity-50"
+          >
+            {requesting ? "Solicitando…" : "Solicitar saque"}
+          </button>
+        </div>
+
+        {payouts.length > 0 && (
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full text-sm min-w-[600px]">
+              <thead className="text-muted-foreground">
+                <tr className="text-left">
+                  <th className="px-2 py-1 font-medium">Solicitado em</th>
+                  <th className="px-2 py-1 font-medium text-right">Valor</th>
+                  <th className="px-2 py-1 font-medium">Status</th>
+                  <th className="px-2 py-1 font-medium">Pago em</th>
+                  <th className="px-2 py-1 font-medium">Referência</th>
+                </tr>
+              </thead>
+              <tbody>
+                {payouts.map((po: any) => (
+                  <tr key={po.id} className="border-t border-[oklch(0.32_0.04_80/_0.15)]">
+                    <td className="px-2 py-1.5 text-foreground whitespace-nowrap">{fmtDate(po.created_at)}</td>
+                    <td className="px-2 py-1.5 text-right text-foreground">{fmtBRL(po.total_cents)}</td>
+                    <td className="px-2 py-1.5">
+                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs border ${
+                        po.status === "paid" ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
+                        : po.status === "canceled" ? "bg-zinc-500/15 text-zinc-300 border-zinc-500/30"
+                        : "bg-amber-500/15 text-amber-300 border-amber-500/30"
+                      }`}>
+                        {po.status === "paid" ? "Pago" : po.status === "canceled" ? "Cancelado" : "Solicitado"}
+                      </span>
+                    </td>
+                    <td className="px-2 py-1.5 text-foreground whitespace-nowrap">{fmtDate(po.paid_at)}</td>
+                    <td className="px-2 py-1.5 text-muted-foreground">{po.paid_ref ?? "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
 
       <div className="mb-3 flex flex-wrap gap-2 items-center justify-between">

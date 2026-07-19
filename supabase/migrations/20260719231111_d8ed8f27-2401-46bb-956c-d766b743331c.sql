@@ -1,0 +1,2 @@
+ALTER TABLE public.partner_commissions ADD COLUMN IF NOT EXISTS payout_id uuid REFERENCES public.partner_payouts(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_partner_commissions_payout_id ON public.partner_commissions(payout_id);
