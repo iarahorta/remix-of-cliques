@@ -17,6 +17,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ClientesIndexRouteImport } from './routes/clientes.index'
 import { Route as RSlugRouteImport } from './routes/r.$slug'
 import { Route as ClientesDashboardRouteImport } from './routes/clientes.dashboard'
+import { Route as AuthenticatedParceirosRouteImport } from './routes/_authenticated/parceiros'
 import { Route as AuthenticatedEncurtadorRouteImport } from './routes/_authenticated/encurtador'
 import { Route as AuthenticatedAssinantesRouteImport } from './routes/_authenticated/assinantes'
 import { Route as ApiPublicWebhooksAsgardRouteImport } from './routes/api/public/webhooks.asgard'
@@ -60,6 +61,11 @@ const ClientesDashboardRoute = ClientesDashboardRouteImport.update({
   path: '/clientes/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedParceirosRoute = AuthenticatedParceirosRouteImport.update({
+  id: '/parceiros',
+  path: '/parceiros',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedEncurtadorRoute = AuthenticatedEncurtadorRouteImport.update({
   id: '/encurtador',
   path: '/encurtador',
@@ -83,6 +89,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/assinantes': typeof AuthenticatedAssinantesRoute
   '/encurtador': typeof AuthenticatedEncurtadorRoute
+  '/parceiros': typeof AuthenticatedParceirosRoute
   '/clientes/dashboard': typeof ClientesDashboardRoute
   '/r/$slug': typeof RSlugRoute
   '/clientes/': typeof ClientesIndexRoute
@@ -95,6 +102,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/assinantes': typeof AuthenticatedAssinantesRoute
   '/encurtador': typeof AuthenticatedEncurtadorRoute
+  '/parceiros': typeof AuthenticatedParceirosRoute
   '/clientes/dashboard': typeof ClientesDashboardRoute
   '/r/$slug': typeof RSlugRoute
   '/clientes': typeof ClientesIndexRoute
@@ -109,6 +117,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/assinantes': typeof AuthenticatedAssinantesRoute
   '/_authenticated/encurtador': typeof AuthenticatedEncurtadorRoute
+  '/_authenticated/parceiros': typeof AuthenticatedParceirosRoute
   '/clientes/dashboard': typeof ClientesDashboardRoute
   '/r/$slug': typeof RSlugRoute
   '/clientes/': typeof ClientesIndexRoute
@@ -123,6 +132,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/assinantes'
     | '/encurtador'
+    | '/parceiros'
     | '/clientes/dashboard'
     | '/r/$slug'
     | '/clientes/'
@@ -135,6 +145,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/assinantes'
     | '/encurtador'
+    | '/parceiros'
     | '/clientes/dashboard'
     | '/r/$slug'
     | '/clientes'
@@ -148,6 +159,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_authenticated/assinantes'
     | '/_authenticated/encurtador'
+    | '/_authenticated/parceiros'
     | '/clientes/dashboard'
     | '/r/$slug'
     | '/clientes/'
@@ -224,6 +236,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClientesDashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/parceiros': {
+      id: '/_authenticated/parceiros'
+      path: '/parceiros'
+      fullPath: '/parceiros'
+      preLoaderRoute: typeof AuthenticatedParceirosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/encurtador': {
       id: '/_authenticated/encurtador'
       path: '/encurtador'
@@ -251,11 +270,13 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAssinantesRoute: typeof AuthenticatedAssinantesRoute
   AuthenticatedEncurtadorRoute: typeof AuthenticatedEncurtadorRoute
+  AuthenticatedParceirosRoute: typeof AuthenticatedParceirosRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAssinantesRoute: AuthenticatedAssinantesRoute,
   AuthenticatedEncurtadorRoute: AuthenticatedEncurtadorRoute,
+  AuthenticatedParceirosRoute: AuthenticatedParceirosRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
