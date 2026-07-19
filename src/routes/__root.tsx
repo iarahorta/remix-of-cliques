@@ -88,7 +88,7 @@ function RootComponent() {
     if (typeof window === "undefined") return;
     try {
       // Visitor ID persistente (90 dias)
-      let vid = localStorage.getItem("zpk_vid");
+      let vid: string = localStorage.getItem("zpk_vid") ?? "";
       if (!vid) {
         vid = (crypto as any).randomUUID?.() ?? Math.random().toString(36).slice(2) + Date.now().toString(36);
         localStorage.setItem("zpk_vid", vid);
@@ -104,10 +104,12 @@ function RootComponent() {
           // 90 dias
           document.cookie = `zpk_ref=${ref}; path=/; max-age=${60 * 60 * 24 * 90}; SameSite=Lax`;
           // Registra visita atribuída no servidor (fire-and-forget)
+          const refVal = ref;
+          const vidVal = vid;
           import("@/lib/partner-attribution.functions").then(({ trackReferralVisit }) => {
             trackReferralVisit({ data: {
-              token: ref!,
-              visitor_id: vid!,
+              token: refVal,
+              visitor_id: vidVal,
               landing_url: window.location.href,
               referer: document.referrer || undefined,
               utm_source: params.get("utm_source") || undefined,
