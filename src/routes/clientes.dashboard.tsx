@@ -435,7 +435,7 @@ function ClientesDashboard() {
                           {expiringSoon ? "Sua assinatura vence em breve" : "Assinatura ativa"}
                         </h2>
                         <p className="text-sm text-emerald-800 mt-1">
-                          Válida até <strong>{new Date(sub!.current_period_end!).toLocaleDateString("pt-BR")}</strong>
+                          Válida até <strong>{new Date(sub!.current_period_end! + "T00:00:00").toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}</strong>
                           {expiringSoon && daysUntilEnd !== null && (
                             <> — {daysUntilEnd === 0 ? "vence hoje" : daysUntilEnd === 1 ? "vence amanhã" : `faltam ${daysUntilEnd} dias`}.</>
                           )}
