@@ -62,3 +62,60 @@ export const listMyPartnerCommissions = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     return { commissions: rows ?? [] };
   });
+
+export const listMyPayouts = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const partner = await getMyPartner(context.userId);
+    if (!partner) return { payouts: [], available_cents: 0, pending_cents: 0 };
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const [{ data: payouts }, { data: approved }] = await Promise.all([
+      supabaseAdmin.from("partner_payouts").select("*").eq("partner_id", partner.id).order("created_at", { ascending: false }),
+      supabaseAdmin.from("partner_commissions")
+        .select("commission_cents,status,payout_id")
+        .eq("partner_id", partner.id)
+        .eq("status", "approved")
+        .is("payout_id", null),
+    ]);
+    const available_cents = (approved ?? []).reduce((s: number, r: any) => s + Number(r.commission_cents ?? 0), 0);
+    const pending_cents = (payouts ?? [])
+      .filter((p: any) => p.status === "requested")
+      .reduce((s: number, p: any) => s + Number(p.total_cents ?? 0), 0);
+    return { payouts: payouts ?? [], available_cents, pending_cents };
+  });
+
+export const requestMyPayout = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { notes?: string } | undefined) => d ?? {})
+  .handler(async ({ data, context }) => {
+    const partner = await getMyPartner(context.userId);
+    if (!partner) throw new Error("Você não é um parceiro cadastrado.");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: approved, error: qErr } = await supabaseAdmin
+      .from("partner_commissions")
+      .select("id,commission_cents")
+      .eq("partner_id", partner.id)
+      .eq("status", "approved")
+      .is("payout_id", null);
+    if (qErr) throw new Error(qErr.message);
+    const rows = approved ?? [];
+    const total = rows.reduce((s: number, r: any) => s + Number(r.commission_cents ?? 0), 0);
+    if (total <= 0 || rows.length === 0) throw new Error("Nenhuma comissão aprovada disponível para saque.");
+    const { data: payout, error: pErr } = await supabaseAdmin
+      .from("partner_payouts")
+      .insert({
+        partner_id: partner.id,
+        total_cents: total,
+        status: "requested",
+        notes: data.notes || null,
+      } as any)
+      .select()
+      .single();
+    if (pErr) throw new Error(pErr.message);
+    const { error: uErr } = await supabaseAdmin
+      .from("partner_commissions")
+      .update({ payout_id: payout.id } as any)
+      .in("id", rows.map((r: any) => r.id));
+    if (uErr) throw new Error(uErr.message);
+    return { payout };
+  });
