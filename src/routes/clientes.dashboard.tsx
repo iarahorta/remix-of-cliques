@@ -406,27 +406,8 @@ function ClientesDashboard() {
               const status = sub?.status ?? "pending_payment";
               const isActive = active;
               const isSuspended = status === "suspended";
-              const openInvoice = async () => {
-                setBillingLoading(true);
-                try {
-                  const r: any = await requestPix();
-                  if (r?.orderId) {
-                    setPixModal({
-                      orderId: String(r.orderId),
-                      copyPaste: r.copyPaste ?? null,
-                      qrcode: r.qrcode ?? null,
-                      amount: Number(r.amount ?? 19.9),
-                    });
-                    setPixCopied(false);
-                  } else if (r !== null) {
-                    toast.error("Não foi possível gerar o PIX agora — tente de novo em instantes.");
-                  }
-                } catch (e: any) {
-                  toast.error(e?.message ?? "Erro ao gerar cobrança");
-                } finally {
-                  setBillingLoading(false);
-                }
-              };
+              // Reaproveita o mesmo fluxo do bloqueio — configura orderId, timer 5min, etc.
+              const openInvoice = openInvoiceAuto;
               const doCancel = async () => {
                 if (!confirm("Cancelar sua assinatura? O acesso é interrompido.")) return;
                 setBillingLoading(true);
