@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -16,6 +16,18 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/encurtador")({
   head: () => ({ meta: [{ title: "Encurtador — cliques" }] }),
+  beforeLoad: async () => {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData?.user) throw redirect({ to: "/login" });
+    const { data: roles } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userData.user.id);
+    const ok = (roles ?? []).some(
+      (r: any) => r.role === "admin" || r.role === "super_admin",
+    );
+    if (!ok) throw redirect({ to: "/clientes/dashboard" });
+  },
   component: Encurtador,
 });
 
