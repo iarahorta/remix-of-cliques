@@ -19,6 +19,7 @@ import { Route as RSlugRouteImport } from './routes/r.$slug'
 import { Route as ClientesDashboardRouteImport } from './routes/clientes.dashboard'
 import { Route as AuthenticatedParceirosRouteImport } from './routes/_authenticated/parceiros'
 import { Route as AuthenticatedEncurtadorRouteImport } from './routes/_authenticated/encurtador'
+import { Route as AuthenticatedComissoesRouteImport } from './routes/_authenticated/comissoes'
 import { Route as AuthenticatedAssinantesRouteImport } from './routes/_authenticated/assinantes'
 import { Route as ApiPublicWebhooksAsgardRouteImport } from './routes/api/public/webhooks.asgard'
 
@@ -71,6 +72,11 @@ const AuthenticatedEncurtadorRoute = AuthenticatedEncurtadorRouteImport.update({
   path: '/encurtador',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedComissoesRoute = AuthenticatedComissoesRouteImport.update({
+  id: '/comissoes',
+  path: '/comissoes',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAssinantesRoute = AuthenticatedAssinantesRouteImport.update({
   id: '/assinantes',
   path: '/assinantes',
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/assinantes': typeof AuthenticatedAssinantesRoute
+  '/comissoes': typeof AuthenticatedComissoesRoute
   '/encurtador': typeof AuthenticatedEncurtadorRoute
   '/parceiros': typeof AuthenticatedParceirosRoute
   '/clientes/dashboard': typeof ClientesDashboardRoute
@@ -101,6 +108,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/assinantes': typeof AuthenticatedAssinantesRoute
+  '/comissoes': typeof AuthenticatedComissoesRoute
   '/encurtador': typeof AuthenticatedEncurtadorRoute
   '/parceiros': typeof AuthenticatedParceirosRoute
   '/clientes/dashboard': typeof ClientesDashboardRoute
@@ -116,6 +124,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/assinantes': typeof AuthenticatedAssinantesRoute
+  '/_authenticated/comissoes': typeof AuthenticatedComissoesRoute
   '/_authenticated/encurtador': typeof AuthenticatedEncurtadorRoute
   '/_authenticated/parceiros': typeof AuthenticatedParceirosRoute
   '/clientes/dashboard': typeof ClientesDashboardRoute
@@ -131,6 +140,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/assinantes'
+    | '/comissoes'
     | '/encurtador'
     | '/parceiros'
     | '/clientes/dashboard'
@@ -144,6 +154,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/assinantes'
+    | '/comissoes'
     | '/encurtador'
     | '/parceiros'
     | '/clientes/dashboard'
@@ -158,6 +169,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/reset-password'
     | '/_authenticated/assinantes'
+    | '/_authenticated/comissoes'
     | '/_authenticated/encurtador'
     | '/_authenticated/parceiros'
     | '/clientes/dashboard'
@@ -250,6 +262,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEncurtadorRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/comissoes': {
+      id: '/_authenticated/comissoes'
+      path: '/comissoes'
+      fullPath: '/comissoes'
+      preLoaderRoute: typeof AuthenticatedComissoesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/assinantes': {
       id: '/_authenticated/assinantes'
       path: '/assinantes'
@@ -269,12 +288,14 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAssinantesRoute: typeof AuthenticatedAssinantesRoute
+  AuthenticatedComissoesRoute: typeof AuthenticatedComissoesRoute
   AuthenticatedEncurtadorRoute: typeof AuthenticatedEncurtadorRoute
   AuthenticatedParceirosRoute: typeof AuthenticatedParceirosRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAssinantesRoute: AuthenticatedAssinantesRoute,
+  AuthenticatedComissoesRoute: AuthenticatedComissoesRoute,
   AuthenticatedEncurtadorRoute: AuthenticatedEncurtadorRoute,
   AuthenticatedParceirosRoute: AuthenticatedParceirosRoute,
 }
