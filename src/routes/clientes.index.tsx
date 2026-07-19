@@ -54,7 +54,9 @@ function ClientesLanding() {
         if (error) throw error;
         if (signUpData.user) {
           try {
-            await createProfile({ data: { name, email, phone } });
+            const ref_token = typeof window !== "undefined" ? localStorage.getItem("zpk_ref") : null;
+            const visitor_id = typeof window !== "undefined" ? localStorage.getItem("zpk_vid") : null;
+            await createProfile({ data: { name, email, phone, ref_token, visitor_id } });
           } catch (e: any) {
             console.error("Erro ao criar perfil do assinante:", e);
           }
