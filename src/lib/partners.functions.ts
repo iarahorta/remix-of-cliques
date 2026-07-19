@@ -38,7 +38,7 @@ export const createPartner = createServerFn({ method: "POST" })
       .from("partners")
       .insert({
         name,
-        type: data.type,
+        type: data.type as any,
         email: data.email || null,
         phone: data.phone || null,
         tax_id: data.tax_id || null,
@@ -65,13 +65,13 @@ export const updatePartner = createServerFn({ method: "POST" })
     await assertAdmin(context);
     const patch: any = {};
     if (data.name !== undefined) patch.name = data.name.trim();
-    if (data.type !== undefined) patch.type = data.type;
+    if (data.type !== undefined) patch.type = data.type as any;
     if (data.email !== undefined) patch.email = data.email || null;
     if (data.phone !== undefined) patch.phone = data.phone || null;
     if (data.tax_id !== undefined) patch.tax_id = data.tax_id || null;
     if (data.pix_key !== undefined) patch.pix_key = data.pix_key || null;
     if (data.pix_key_type !== undefined) patch.pix_key_type = data.pix_key_type || null;
-    if (data.status !== undefined) patch.status = data.status;
+    if (data.status !== undefined) patch.status = data.status as any;
     if (data.notes !== undefined) patch.notes = data.notes || null;
     if (data.default_commission_bps !== undefined) {
       patch.default_commission_bps = Math.max(0, Math.min(10000, Math.round(data.default_commission_bps)));
@@ -108,7 +108,7 @@ export const listCommissions = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false })
       .limit(500);
     if (data.partnerId) q = q.eq("partner_id", data.partnerId);
-    if (data.status) q = q.eq("status", data.status);
+    if (data.status) q = q.eq("status", data.status as any);
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
     return { commissions: rows ?? [] };
