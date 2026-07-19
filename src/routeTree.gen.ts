@@ -18,6 +18,7 @@ import { Route as ClientesIndexRouteImport } from './routes/clientes.index'
 import { Route as RSlugRouteImport } from './routes/r.$slug'
 import { Route as ClientesDashboardRouteImport } from './routes/clientes.dashboard'
 import { Route as AuthenticatedParceirosRouteImport } from './routes/_authenticated/parceiros'
+import { Route as AuthenticatedParceiroRouteImport } from './routes/_authenticated/parceiro'
 import { Route as AuthenticatedEncurtadorRouteImport } from './routes/_authenticated/encurtador'
 import { Route as AuthenticatedComissoesRouteImport } from './routes/_authenticated/comissoes'
 import { Route as AuthenticatedAssinantesRouteImport } from './routes/_authenticated/assinantes'
@@ -67,6 +68,11 @@ const AuthenticatedParceirosRoute = AuthenticatedParceirosRouteImport.update({
   path: '/parceiros',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedParceiroRoute = AuthenticatedParceiroRouteImport.update({
+  id: '/parceiro',
+  path: '/parceiro',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedEncurtadorRoute = AuthenticatedEncurtadorRouteImport.update({
   id: '/encurtador',
   path: '/encurtador',
@@ -96,6 +102,7 @@ export interface FileRoutesByFullPath {
   '/assinantes': typeof AuthenticatedAssinantesRoute
   '/comissoes': typeof AuthenticatedComissoesRoute
   '/encurtador': typeof AuthenticatedEncurtadorRoute
+  '/parceiro': typeof AuthenticatedParceiroRoute
   '/parceiros': typeof AuthenticatedParceirosRoute
   '/clientes/dashboard': typeof ClientesDashboardRoute
   '/r/$slug': typeof RSlugRoute
@@ -110,6 +117,7 @@ export interface FileRoutesByTo {
   '/assinantes': typeof AuthenticatedAssinantesRoute
   '/comissoes': typeof AuthenticatedComissoesRoute
   '/encurtador': typeof AuthenticatedEncurtadorRoute
+  '/parceiro': typeof AuthenticatedParceiroRoute
   '/parceiros': typeof AuthenticatedParceirosRoute
   '/clientes/dashboard': typeof ClientesDashboardRoute
   '/r/$slug': typeof RSlugRoute
@@ -126,6 +134,7 @@ export interface FileRoutesById {
   '/_authenticated/assinantes': typeof AuthenticatedAssinantesRoute
   '/_authenticated/comissoes': typeof AuthenticatedComissoesRoute
   '/_authenticated/encurtador': typeof AuthenticatedEncurtadorRoute
+  '/_authenticated/parceiro': typeof AuthenticatedParceiroRoute
   '/_authenticated/parceiros': typeof AuthenticatedParceirosRoute
   '/clientes/dashboard': typeof ClientesDashboardRoute
   '/r/$slug': typeof RSlugRoute
@@ -142,6 +151,7 @@ export interface FileRouteTypes {
     | '/assinantes'
     | '/comissoes'
     | '/encurtador'
+    | '/parceiro'
     | '/parceiros'
     | '/clientes/dashboard'
     | '/r/$slug'
@@ -156,6 +166,7 @@ export interface FileRouteTypes {
     | '/assinantes'
     | '/comissoes'
     | '/encurtador'
+    | '/parceiro'
     | '/parceiros'
     | '/clientes/dashboard'
     | '/r/$slug'
@@ -171,6 +182,7 @@ export interface FileRouteTypes {
     | '/_authenticated/assinantes'
     | '/_authenticated/comissoes'
     | '/_authenticated/encurtador'
+    | '/_authenticated/parceiro'
     | '/_authenticated/parceiros'
     | '/clientes/dashboard'
     | '/r/$slug'
@@ -255,6 +267,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedParceirosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/parceiro': {
+      id: '/_authenticated/parceiro'
+      path: '/parceiro'
+      fullPath: '/parceiro'
+      preLoaderRoute: typeof AuthenticatedParceiroRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/encurtador': {
       id: '/_authenticated/encurtador'
       path: '/encurtador'
@@ -290,6 +309,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAssinantesRoute: typeof AuthenticatedAssinantesRoute
   AuthenticatedComissoesRoute: typeof AuthenticatedComissoesRoute
   AuthenticatedEncurtadorRoute: typeof AuthenticatedEncurtadorRoute
+  AuthenticatedParceiroRoute: typeof AuthenticatedParceiroRoute
   AuthenticatedParceirosRoute: typeof AuthenticatedParceirosRoute
 }
 
@@ -297,6 +317,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAssinantesRoute: AuthenticatedAssinantesRoute,
   AuthenticatedComissoesRoute: AuthenticatedComissoesRoute,
   AuthenticatedEncurtadorRoute: AuthenticatedEncurtadorRoute,
+  AuthenticatedParceiroRoute: AuthenticatedParceiroRoute,
   AuthenticatedParceirosRoute: AuthenticatedParceirosRoute,
 }
 
@@ -317,13 +338,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
