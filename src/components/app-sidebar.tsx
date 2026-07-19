@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useState } from "react";
-import { Link2, LogOut, Menu, Users, Handshake, Coins, BarChart3 } from "lucide-react";
+import { Link2, LogOut, Menu, Users, Handshake, Coins, BarChart3, Wallet } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -11,6 +11,7 @@ const navItems = [
   { title: "Assinantes", url: "/assinantes", icon: Users },
   { title: "Parceiros", url: "/parceiros", icon: Handshake },
   { title: "Comissões", url: "/comissoes", icon: Coins },
+  { title: "Saques", url: "/saques", icon: Wallet },
   { title: "Portal do Parceiro", url: "/parceiro", icon: BarChart3 },
 ] as const;
 
