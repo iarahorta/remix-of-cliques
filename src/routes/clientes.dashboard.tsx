@@ -1124,7 +1124,7 @@ function MetricsModal({ link, onClose }: { link: MyLink; onClose: () => void }) 
     target_url: string | null;
   };
   const [data, setData] = useState<{
-    total: number; unique_ips: number;
+    total: number; total_raw: number; bots_filtered: number; unique_ips: number;
     daily: { day: string; count: number }[];
     hourly: { hour: number; count: number }[];
     topCountries: Row[]; topRegions: Row[]; topCities: Row[];
@@ -1214,7 +1214,15 @@ function MetricsModal({ link, onClose }: { link: MyLink; onClose: () => void }) 
           ) : data ? (
             <>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <KPI label="Cliques reais" value={data.total} />
+                <KPI
+                  label="Cliques reais"
+                  value={data.total}
+                  hint={
+                    data.bots_filtered > 0
+                      ? `${data.bots_filtered} prévia(s)/robô(s) ignorado(s) · bruto: ${data.total_raw}`
+                      : "Nenhuma prévia/robô detectada no período"
+                  }
+                />
                 <KPI label="IPs únicos" value={data.unique_ips} />
                 <KPI label="Países" value={data.topCountries.length} />
                 <KPI label="Dispositivos" value={data.topDevices.length} />
