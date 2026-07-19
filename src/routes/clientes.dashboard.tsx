@@ -918,19 +918,21 @@ function EditTargetModal({
                     <label className="text-xs font-medium text-slate-700">Número de WhatsApp (com DDD)</label>
                     <input value={phone} onChange={(e) => setPhone(e.target.value)}
                       placeholder="Ex: 11 91234-5678" type="tel" required
-                      className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm"/>
+                      className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400"/>
                   </div>
                   <div>
                     <label className="text-xs font-medium text-slate-700">Mensagem</label>
                     <textarea value={msg} onChange={(e) => setMsg(e.target.value)} rows={3}
-                      className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm"/>
+                      placeholder="Mensagem pré-preenchida (opcional)"
+                      className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400"/>
                   </div>
                 </>
               ) : (
                 <div>
                   <label className="text-xs font-medium text-slate-700">URL de destino</label>
                   <input value={url} onChange={(e) => setUrl(e.target.value)} type="url" required
-                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm"/>
+                    placeholder="https://sua-url-de-destino.com"
+                    className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400"/>
                 </div>
               )}
               {link.is_rotating && (
@@ -942,13 +944,14 @@ function EditTargetModal({
           ) : (
             <>
               <div>
-                <label className="text-xs font-medium text-slate-700">Modo de rotação</label>
+                <label className="text-xs font-medium text-slate-700">Como o link deve revezar os destinos?</label>
                 <select value={rotMode} onChange={(e) => setRotMode(e.target.value as RotationMode)}
-                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm">
+                  className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900">
                   {(Object.keys(ROTATION_LABELS) as RotationMode[]).map((m) => (
                     <option key={m} value={m}>{ROTATION_LABELS[m]}</option>
                   ))}
                 </select>
+                <p className="mt-1.5 text-[11px] leading-snug text-slate-500">{ROTATION_HELP[rotMode]}</p>
               </div>
               <RotationRowsEditor
                 rows={rotUrls}
