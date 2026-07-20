@@ -449,7 +449,34 @@ function ClientesDashboard() {
                   : "bg-amber-50 border-amber-200";
               return (
                 <section className={`rounded-2xl border p-6 ${boxCls}`}>
-                  {isActive ? (
+                  {trialing ? (
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <h2 className="font-semibold text-sky-900 flex items-center gap-2">
+                          🎁 Teste grátis ativo
+                          {daysUntilEnd !== null && (
+                            <span className="text-xs font-normal text-sky-800">
+                              {daysUntilEnd === 0 ? "expira hoje" : daysUntilEnd === 1 ? "expira amanhã" : `${daysUntilEnd} dias restantes`}
+                            </span>
+                          )}
+                        </h2>
+                        <p className="text-sm text-sky-900 mt-1">
+                          Você pode criar <strong>1 link normal</strong>, <strong>1 link de WhatsApp</strong> e <strong>1 link rotativo</strong> (com até 5 destinos) enquanto testa.
+                        </p>
+                        <p className="text-xs text-sky-800/80 mt-1">
+                          Usados: {trialUsage.normal}/1 normal · {trialUsage.whatsapp}/1 WhatsApp · {trialUsage.rotating}/1 rotativo
+                        </p>
+                        <button
+                          onClick={openInvoice}
+                          disabled={billingLoading}
+                          className="mt-3 inline-flex items-center gap-2 rounded-lg bg-sky-700 hover:bg-sky-800 disabled:opacity-60 text-white text-sm font-medium px-4 py-2"
+                        >
+                          {billingLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
+                          Assinar agora — R$ 19,90/mês
+                        </button>
+                      </div>
+                    </div>
+                  ) : isActive ? (
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
                         <h2 className="font-semibold text-emerald-900">
