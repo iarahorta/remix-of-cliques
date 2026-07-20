@@ -23,6 +23,7 @@ import { Route as AuthenticatedParceiroRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedEncurtadorRouteImport } from './routes/_authenticated/encurtador'
 import { Route as AuthenticatedComissoesRouteImport } from './routes/_authenticated/comissoes'
 import { Route as AuthenticatedAssinantesRouteImport } from './routes/_authenticated/assinantes'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as ApiPublicWebhooksAsgardRouteImport } from './routes/api/public/webhooks.asgard'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -94,6 +95,12 @@ const AuthenticatedAssinantesRoute = AuthenticatedAssinantesRouteImport.update({
   path: '/assinantes',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const LovableEmailTransactionalPreviewRoute =
+  LovableEmailTransactionalPreviewRouteImport.update({
+    id: '/lovable/email/transactional/preview',
+    path: '/lovable/email/transactional/preview',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicWebhooksAsgardRoute = ApiPublicWebhooksAsgardRouteImport.update({
   id: '/api/public/webhooks/asgard',
   path: '/api/public/webhooks/asgard',
@@ -115,6 +122,7 @@ export interface FileRoutesByFullPath {
   '/r/$slug': typeof RSlugRoute
   '/clientes/': typeof ClientesIndexRoute
   '/api/public/webhooks/asgard': typeof ApiPublicWebhooksAsgardRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -131,6 +139,7 @@ export interface FileRoutesByTo {
   '/r/$slug': typeof RSlugRoute
   '/clientes': typeof ClientesIndexRoute
   '/api/public/webhooks/asgard': typeof ApiPublicWebhooksAsgardRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -149,6 +158,7 @@ export interface FileRoutesById {
   '/r/$slug': typeof RSlugRoute
   '/clientes/': typeof ClientesIndexRoute
   '/api/public/webhooks/asgard': typeof ApiPublicWebhooksAsgardRoute
+  '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -167,6 +177,7 @@ export interface FileRouteTypes {
     | '/r/$slug'
     | '/clientes/'
     | '/api/public/webhooks/asgard'
+    | '/lovable/email/transactional/preview'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -183,6 +194,7 @@ export interface FileRouteTypes {
     | '/r/$slug'
     | '/clientes'
     | '/api/public/webhooks/asgard'
+    | '/lovable/email/transactional/preview'
   id:
     | '__root__'
     | '/'
@@ -200,6 +212,7 @@ export interface FileRouteTypes {
     | '/r/$slug'
     | '/clientes/'
     | '/api/public/webhooks/asgard'
+    | '/lovable/email/transactional/preview'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -212,6 +225,7 @@ export interface RootRouteChildren {
   RSlugRoute: typeof RSlugRoute
   ClientesIndexRoute: typeof ClientesIndexRoute
   ApiPublicWebhooksAsgardRoute: typeof ApiPublicWebhooksAsgardRoute
+  LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -314,6 +328,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAssinantesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/webhooks/asgard': {
       id: '/api/public/webhooks/asgard'
       path: '/api/public/webhooks/asgard'
@@ -355,6 +376,7 @@ const rootRouteChildren: RootRouteChildren = {
   RSlugRoute: RSlugRoute,
   ClientesIndexRoute: ClientesIndexRoute,
   ApiPublicWebhooksAsgardRoute: ApiPublicWebhooksAsgardRoute,
+  LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
