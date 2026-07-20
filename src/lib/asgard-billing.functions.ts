@@ -32,6 +32,10 @@ export const createAsgardPixCharge = createServerFn({ method: "POST" })
       .limit(1)
       .maybeSingle();
     if (existing && (existing as any).copy_paste) {
+      const isManualPix =
+        String((existing as any).transaction_id ?? "") === "manual_pix" ||
+        String((existing as any).order_id ?? "").startsWith("manual-") ||
+        String((existing as any).copy_paste ?? "") === MANUAL_PIX_KEY;
       return {
         orderId: (existing as any).order_id,
         copyPaste: (existing as any).copy_paste,
@@ -39,7 +43,8 @@ export const createAsgardPixCharge = createServerFn({ method: "POST" })
         amount: Number((existing as any).amount),
         status: (existing as any).status,
         createdAt: (existing as any).created_at as string,
-        expiresInSec: 5 * 60,
+        expiresInSec: isManualPix ? 30 * 60 : 5 * 60,
+        manual: isManualPix,
       };
     }
 
