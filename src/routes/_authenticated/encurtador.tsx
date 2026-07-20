@@ -5,6 +5,10 @@ import {
   Link2, Plus, Trash2, Copy, Check, ExternalLink, Loader2, Search,
   Globe, Wand2, Upload, RefreshCw, Pencil, X, BarChart3, Download,
 } from "lucide-react";
+import {
+  ResponsiveContainer, AreaChart, Area, BarChart, Bar,
+  XAxis, YAxis, Tooltip, CartesianGrid,
+} from "recharts";
 import { PageShell } from "@/components/page-shell";
 import { supabase } from "@/integrations/supabase/client";
 import {
