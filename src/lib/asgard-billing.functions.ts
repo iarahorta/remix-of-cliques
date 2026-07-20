@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const PLAN_VALUE_BRL = 19.9;
+const MANUAL_PIX_KEY = "iarachorta@gmail.com";
 
 export const createAsgardPixCharge = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -31,6 +32,10 @@ export const createAsgardPixCharge = createServerFn({ method: "POST" })
       .limit(1)
       .maybeSingle();
     if (existing && (existing as any).copy_paste) {
+      const isManualPix =
+        String((existing as any).transaction_id ?? "") === "manual_pix" ||
+        String((existing as any).order_id ?? "").startsWith("manual-") ||
+        String((existing as any).copy_paste ?? "") === MANUAL_PIX_KEY;
       return {
         orderId: (existing as any).order_id,
         copyPaste: (existing as any).copy_paste,
@@ -38,7 +43,8 @@ export const createAsgardPixCharge = createServerFn({ method: "POST" })
         amount: Number((existing as any).amount),
         status: (existing as any).status,
         createdAt: (existing as any).created_at as string,
-        expiresInSec: 5 * 60,
+        expiresInSec: isManualPix ? 30 * 60 : 5 * 60,
+        manual: isManualPix,
       };
     }
 
@@ -56,6 +62,39 @@ export const createAsgardPixCharge = createServerFn({ method: "POST" })
     } catch (err: any) {
       console.error("[asgard] createAsgardPix falhou", err);
       const raw = String(err?.message ?? err ?? "erro desconhecido");
+      if (/cpf|documento|document/i.test(raw)) {
+        const createdAtIso = new Date().toISOString();
+        const manualOrderId = `manual-${sub.id}-${Date.now()}`;
+
+        await supabaseAdmin.from("asgard_pix_charges").insert({
+          subscriber_id: sub.id,
+          order_id: manualOrderId,
+          transaction_id: "manual_pix",
+          status: "pending",
+          amount: PLAN_VALUE_BRL,
+          copy_paste: MANUAL_PIX_KEY,
+          qrcode: null,
+        } as any);
+
+        await supabaseAdmin
+          .from("link_subscribers")
+          .update({
+            asgard_last_order_id: manualOrderId,
+            asgard_last_charge_status: "pending",
+          } as any)
+          .eq("id", sub.id);
+
+        return {
+          orderId: manualOrderId,
+          copyPaste: MANUAL_PIX_KEY,
+          qrcode: null,
+          amount: PLAN_VALUE_BRL,
+          status: "pending",
+          createdAt: createdAtIso,
+          expiresInSec: 30 * 60,
+          manual: true,
+        };
+      }
       // Erros comuns: 401/403 (chaves), 400 (payload inválido), 5xx.
       if (/401|403|unauthor/i.test(raw)) {
         throw new Error("Gateway de pagamento recusou as credenciais. Contate o suporte.");

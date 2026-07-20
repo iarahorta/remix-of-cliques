@@ -113,6 +113,7 @@ function InlineTooltip({ text }: { text: string }) {
 }
 
 const PIX_KEY = "iarachorta@gmail.com";
+const SUPPORT_WHATSAPP_URL = "https://wa.me/5531975225821?text=Oi%2C%20paguei%20a%20assinatura%20do%20zpclik%20e%20quero%20enviar%20o%20comprovante.";
 
 function getProviderQrImageSrc(qrcode: string | null | undefined): string | null {
   const value = (qrcode ?? "").trim();
@@ -128,7 +129,7 @@ function getProviderQrImageSrc(qrcode: string | null | undefined): string | null
 
 function getPixPayloadForQr(copyPaste: string | null | undefined, qrcode: string | null | undefined): string | null {
   const copy = (copyPaste ?? "").trim();
-  if (copy) return copy;
+  if (copy.startsWith("000201") || copy.toLowerCase().includes("br.gov.bcb.pix")) return copy;
   const qr = (qrcode ?? "").trim();
   if (qr.startsWith("000201") || qr.toLowerCase().includes("br.gov.bcb.pix")) return qr;
   return null;
@@ -209,7 +210,7 @@ function ClientesDashboard() {
   const [billingLoading, setBillingLoading] = useState(false);
   const createPix = useServerFn(createAsgardPixCharge);
   const checkPix = useServerFn(getAsgardChargeStatus);
-  const [pixModal, setPixModal] = useState<{ orderId: string; copyPaste: string | null; qrcode: string | null; amount: number } | null>(null);
+  const [pixModal, setPixModal] = useState<{ orderId: string; copyPaste: string | null; qrcode: string | null; amount: number; manual?: boolean } | null>(null);
   const [pixCopied, setPixCopied] = useState(false);
   const [pixChecking, setPixChecking] = useState(false);
   const [pixQrDataUrl, setPixQrDataUrl] = useState<string | null>(null);
@@ -313,6 +314,7 @@ function ClientesDashboard() {
           copyPaste: r.copyPaste ?? null,
           qrcode: r.qrcode ?? null,
           amount: Number(r.amount ?? 19.9),
+          manual: Boolean(r.manual),
         });
         setPixCreatedAt(r.createdAt ? new Date(r.createdAt).getTime() : Date.now());
         setPixExpiresInSec(Number(r.expiresInSec) > 0 ? Number(r.expiresInSec) : 5 * 60);
@@ -821,7 +823,11 @@ function ClientesDashboard() {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h3 className="text-lg font-semibold text-foreground">Pague R$ {pixModal.amount.toFixed(2).replace(".", ",")} via PIX</h3>
-                <p className="text-xs text-muted-foreground mt-1">Sua assinatura é ativada automaticamente após a confirmação.</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {pixModal.manual
+                    ? "Use a chave PIX abaixo e envie o comprovante no WhatsApp para liberar sua assinatura."
+                    : "Sua assinatura é ativada automaticamente após a confirmação."}
+                </p>
               </div>
               <button onClick={() => setPixModal(null)} className="text-muted-foreground/70 hover:text-foreground/90 text-xl leading-none">×</button>
             </div>
@@ -833,13 +839,15 @@ function ClientesDashboard() {
                 </div>
               ) : (
                 <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 text-center">
-                  QR Code carregando. Se não aparecer, use o código copia-e-cola abaixo.
+                  {pixModal.manual
+                    ? "Abra seu banco, escolha PIX por chave e cole a chave abaixo."
+                    : "QR Code carregando. Se não aparecer, use o código copia-e-cola abaixo."}
                 </div>
               );
             })()}
             {pixModal.copyPaste && (
               <div className="mt-4">
-                <label className="text-xs font-medium text-foreground/90">Código copia-e-cola</label>
+                <label className="text-xs font-medium text-foreground/90">{pixModal.manual ? "Chave PIX" : "Código copia-e-cola"}</label>
                 <textarea
                   readOnly
                   value={pixModal.copyPaste}
@@ -855,10 +863,17 @@ function ClientesDashboard() {
                     } catch { toast.error("Copie manualmente"); }
                   }}
                   className="mt-2 w-full rounded-lg bg-secondary hover:bg-secondary/80 text-white text-sm font-medium py-2"
-                >{pixCopied ? "Copiado ✓" : "Copiar código PIX"}</button>
+                >{pixCopied ? "Copiado ✓" : pixModal.manual ? "Copiar chave PIX" : "Copiar código PIX"}</button>
               </div>
             )}
-            <button
+            {pixModal.manual ? (
+              <a
+                href={SUPPORT_WHATSAPP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 block w-full rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-medium py-2 text-center"
+              >Enviar comprovante no WhatsApp</a>
+            ) : <button
               onClick={async () => {
                 setPixChecking(true);
                 try {
@@ -876,7 +891,7 @@ function ClientesDashboard() {
               }}
               disabled={pixChecking || pixExpired}
               className="mt-3 w-full rounded-lg border border-border hover:bg-background text-foreground text-sm font-medium py-2 disabled:opacity-60"
-            >{pixChecking ? "Verificando…" : "Já paguei — verificar agora"}</button>
+            >{pixChecking ? "Verificando…" : "Já paguei — verificar agora"}</button>}
             {pixExpired ? (
               <div className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-800 text-center">
                 <p className="font-semibold">Este PIX expirou.</p>
