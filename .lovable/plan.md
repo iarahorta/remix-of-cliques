@@ -13,7 +13,7 @@ Como o usuário diz que **nada** acontece (nem toast, nem loading), suspeitas pr
 
 1. **`<Toaster />` do sonner não está montado** nesta rota (o toast é chamado mas não aparece) — e algum erro ocorre silenciosamente antes de `setBillingLoading(true)` fazer efeito visível.
 2. **A chamada da server fn está falhando antes do handler** (ex.: middleware de auth rejeitando por algum motivo, ou erro no client bundle) e o `catch` só pega `Error` — se vier um `Response`/redirect cru, o `e?.message` vira `undefined` e o toast aparece vazio (parece "nada").
-3. **AsgardPay retorna erro 4xx** (ex.: `cpf` exigido, `amount` mínimo, credenciais em modo produção vs sandbox) e a mensagem chega, mas o Toaster não existe no DOM.
+3. **AsgardPay retorna erro 4xx** (ex.: `amount` mínimo, payload divergente, credenciais em modo produção vs sandbox) e a mensagem chega, mas o Toaster não existe no DOM.
 
 Sem network/console capturados nesta sessão, preciso instrumentar para confirmar.
 
@@ -31,7 +31,7 @@ Sem network/console capturados nesta sessão, preciso instrumentar para confirma
 
 ### 4. Verificar payload aceito pela Asgard
 - Após confirmar via logs qual erro a API retorna, ajustar:
-  - Se for `cpf obrigatório` → abrir modal pedindo CPF antes de gerar o PIX (já temos coluna `cpf` em `link_subscribers`).
+  - Se o gateway rejeitar ausência de documento → não pedir CPF no checkout; trocar o formato do payload ou revisar provedor/configuração.
   - Se for `amount` / `currency` / campo faltando → ajustar o body em `asgard.server.ts`.
   - Se for credencial (401/403) → informar a Iara para revisar chaves na Asgard.
 
@@ -54,4 +54,4 @@ Somente arquivos:
 
 ## Próximo passo depois deste plano
 
-Após ver os logs reais (turno seguinte), aplicar o fix definitivo (provavelmente exigir CPF antes do PIX, ou ajustar payload da Asgard).
+Após ver os logs reais (turno seguinte), aplicar o fix definitivo sem pedir CPF no checkout — ajustar payload/provedor se necessário.
