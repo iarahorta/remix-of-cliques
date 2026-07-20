@@ -133,7 +133,7 @@ export const getMySubscription = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase
       .from("link_subscribers")
-      .select("id,name,email,phone,cpf,status,current_period_end,last_payment_at,plan_price_cents,payment_method,created_at")
+      .select("id,name,email,phone,status,current_period_end,last_payment_at,plan_price_cents,payment_method,created_at")
       .eq("id", context.userId)
       .maybeSingle();
     if (error) throw new Error(error.message);

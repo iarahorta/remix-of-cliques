@@ -25,19 +25,14 @@ export async function createAsgardPix(input: {
   amount: number;
   email: string;
   name?: string | null;
-  cpf?: string | null;
   phone?: string | null;
   externalReference?: string;
   idempotencyKey?: string;
 }): Promise<AsgardPixResponse> {
-  // CPF opcional: se o cliente forneceu, mandamos; se não, deixamos o
-  // gateway aceitar sem esse campo (política V1.0 — menos fricção pra pagar).
-  const cpfDigits = (input.cpf ?? "").replace(/\D+/g, "");
   const body = {
     customer: {
       email: input.email,
       name: input.name ?? undefined,
-      ...(cpfDigits.length === 11 ? { cpf: cpfDigits } : {}),
       phone: input.phone ?? undefined,
     },
     amount: Number(input.amount.toFixed(2)),

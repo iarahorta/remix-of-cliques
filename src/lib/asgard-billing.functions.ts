@@ -18,9 +18,6 @@ export const createAsgardPixCharge = createServerFn({ method: "POST" })
     if (!sub) throw new Error("Assinatura não encontrada — complete seu cadastro.");
     const email = ((sub as any).email ?? "").trim();
     if (!email) throw new Error("Complete seu cadastro (email) antes de gerar o PIX.");
-    // CPF é opcional. Se o cliente já tiver salvo, aproveitamos; senão, seguimos sem.
-    const storedCpf = ((sub as any).cpf ?? "").replace(/\D+/g, "");
-    const cpf = storedCpf.length === 11 ? storedCpf : null;
 
     // Reaproveita cobrança pendente recente (últimos 5min) — casa com o timer da UI.
     const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
@@ -52,7 +49,6 @@ export const createAsgardPixCharge = createServerFn({ method: "POST" })
         amount: PLAN_VALUE_BRL,
         email,
         name: (sub as any).name ?? undefined,
-        cpf,
         phone: (sub as any).phone ?? undefined,
         externalReference: sub.id,
         idempotencyKey: idem,
@@ -64,10 +60,7 @@ export const createAsgardPixCharge = createServerFn({ method: "POST" })
       if (/401|403|unauthor/i.test(raw)) {
         throw new Error("Gateway de pagamento recusou as credenciais. Contate o suporte.");
       }
-      if (/cpf/i.test(raw)) {
-        throw new Error("O gateway exige CPF. Atualize seu cadastro com o CPF e tente de novo.");
-      }
-      throw new Error(`Não foi possível gerar o PIX agora. (${raw.slice(0, 140)})`);
+      throw new Error("Não foi possível gerar o PIX agora. Tente novamente em instantes ou chame o suporte.");
     }
 
     const createdAtIso = new Date().toISOString();
