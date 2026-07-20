@@ -576,6 +576,12 @@ interface ClickRow {
   target_url: string | null;
 }
 
+function formatLocal(c: { city: string | null; region: string | null; region_code: string | null; country: string | null }): string {
+  const uf = (c.region_code && c.region_code.length <= 3) ? c.region_code.toUpperCase() : (c.region ?? "");
+  if (c.city && uf) return `${c.city}/${uf}`;
+  return [c.city, c.region, c.country].filter(Boolean).join(", ");
+}
+
 function MetricsModal({ link, onClose }: { link: ShortLink; onClose: () => void }) {
   const [clicks, setClicks] = useState<ClickRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
