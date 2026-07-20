@@ -54,6 +54,7 @@ export const Route = createFileRoute("/r/$slug")({
                   ip,
                   country: h.get("cf-ipcountry") || null,
                   region: h.get("cf-region") || null,
+                  region_code: h.get("cf-region-code") || null,
                   city: h.get("cf-ipcity") || null,
                   user_agent: h.get("user-agent") || null,
                   referer: h.get("referer") || null,
