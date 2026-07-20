@@ -1303,6 +1303,24 @@ export type Database = {
         }
         Returns: string
       }
+      record_short_link_visit: {
+        Args: {
+          _city?: string
+          _country?: string
+          _ip?: string
+          _referer?: string
+          _region?: string
+          _region_code?: string
+          _slug: string
+          _user_agent?: string
+        }
+        Returns: {
+          click_id: string
+          is_bot: boolean
+          status: string
+          target: string
+        }[]
+      }
       resolve_commission_bps: {
         Args: { _partner_id: string; _product_code: string }
         Returns: number
