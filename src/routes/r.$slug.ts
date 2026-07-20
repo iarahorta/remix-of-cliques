@@ -32,9 +32,11 @@ export const Route = createFileRoute("/r/$slug")({
         const fallback = `${url.origin}/`;
         const target = row.target && row.target.trim() ? row.target : fallback;
 
-        // Log click metadata in background — do NOT await, so the redirect
-        // response goes out immediately. On workerd, we hand the promise to
-        // waitUntil when available so the isolate finishes the insert.
+        // Log click metadata BEFORE responding. Background/waitUntil is
+        // unreliable in this runtime (isolate ends before the insert
+        // completes), which caused ~80% of clicks to bump the counter but
+        // never land in short_link_clicks. One insert is fast enough to
+        // await inline.
         const linkId = linkRes.data?.id;
         if (linkId) {
           const h = request.headers;
@@ -43,9 +45,9 @@ export const Route = createFileRoute("/r/$slug")({
             h.get("x-real-ip") ||
             (h.get("x-forwarded-for") || "").split(",")[0].trim() ||
             null;
-          // Cloudflare geo lives on request.cf (not headers). Only
-          // cf-ipcountry is exposed as a header — city/region come from
-          // the cf object on the incoming Worker request.
+          // Cloudflare geo: on the platform we run, request.cf isn't
+          // forwarded to the TanStack handler, so rely on the standard
+          // CF-* headers that Cloudflare always injects at the edge.
           const cf =
             ((request as any).cf as
               | {
@@ -55,38 +57,25 @@ export const Route = createFileRoute("/r/$slug")({
                   country?: string;
                 }
               | undefined) || undefined;
-          const logPromise = (async () => {
-            try {
-              const { error: e } = await supabaseAdmin
-                .from("short_link_clicks")
-                .insert({
-                  short_link_id: linkId,
-                  slug,
-                  target_url: target,
-                  ip,
-                  country: h.get("cf-ipcountry") || cf?.country || null,
-                  region: h.get("cf-region") || cf?.region || null,
-                  region_code:
-                    h.get("cf-region-code") || cf?.regionCode || null,
-                  city: h.get("cf-ipcity") || cf?.city || null,
-                  user_agent: h.get("user-agent") || null,
-                  referer: h.get("referer") || null,
-                });
-              if (e) console.error("click log failed", e);
-            } catch (e) {
-              console.error("click log failed", e);
-            }
-          })();
-
-          const ctx = (globalThis as any).__cloudflareCtx ??
-            (globalThis as any).cloudflareContext ??
-            (globalThis as any).ctx;
-          if (ctx && typeof ctx.waitUntil === "function") {
-            ctx.waitUntil(logPromise);
-          } else {
-            // Fallback: just leave the promise dangling; workerd typically
-            // keeps the isolate alive long enough to complete it.
-            void logPromise;
+          try {
+            const { error: e } = await supabaseAdmin
+              .from("short_link_clicks")
+              .insert({
+                short_link_id: linkId,
+                slug,
+                target_url: target,
+                ip,
+                country: h.get("cf-ipcountry") || cf?.country || null,
+                region: h.get("cf-region") || cf?.region || null,
+                region_code:
+                  h.get("cf-region-code") || cf?.regionCode || null,
+                city: h.get("cf-ipcity") || cf?.city || null,
+                user_agent: h.get("user-agent") || null,
+                referer: h.get("referer") || null,
+              });
+            if (e) console.error("click log failed", e);
+          } catch (e) {
+            console.error("click log failed", e);
           }
         }
 
