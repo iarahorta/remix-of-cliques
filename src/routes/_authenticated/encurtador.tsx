@@ -642,7 +642,7 @@ function MetricsModal({ link, onClose }: { link: ShortLink; onClose: () => void 
       if (c.ip) uniqueIps.add(c.ip);
     }
     return {
-      total: filtered.length,
+      total: real.length,
       rawTotal: filtered.length,
       bots: filtered.length - real.length,
       uniqueIps: uniqueIps.size,
