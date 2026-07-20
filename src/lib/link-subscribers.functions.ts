@@ -1,6 +1,15 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+function brDateKey(date: Date): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}
+
 function genSlug(len = 6) {
   const chars = "abcdefghijkmnpqrstuvwxyz23456789";
   let s = "";
@@ -413,7 +422,7 @@ export const getMyLinkMetrics = createServerFn({ method: "POST" })
     const byDay = new Map<string, number>();
     for (let i = data.days - 1; i >= 0; i--) {
       const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
-      const key = d.toISOString().slice(0, 10);
+      const key = brDateKey(d);
       byDay.set(key, 0);
     }
     const byCountry = new Map<string, number>();
@@ -427,6 +436,11 @@ export const getMyLinkMetrics = createServerFn({ method: "POST" })
     const byTarget = new Map<string, number>();
     const uniqueIps = new Set<string>();
     for (let h = 0; h < 24; h++) byHour.set(h, 0);
+    const brHourFormatter = new Intl.DateTimeFormat("pt-BR", {
+      timeZone: "America/Sao_Paulo",
+      hour: "2-digit",
+      hour12: false,
+    });
 
     const inc = (m: Map<string, number>, k: string | null | undefined) => {
       if (!k) return;
@@ -457,8 +471,10 @@ export const getMyLinkMetrics = createServerFn({ method: "POST" })
 
     for (const c of rows) {
       const iso = c.created_at as string;
-      byDay.set(iso.slice(0, 10), (byDay.get(iso.slice(0, 10)) ?? 0) + 1);
-      const h = new Date(iso).getUTCHours();
+      const d = new Date(iso);
+      const dayKey = brDateKey(d);
+      byDay.set(dayKey, (byDay.get(dayKey) ?? 0) + 1);
+      const h = Number(brHourFormatter.format(d).replace(/\D/g, "")) % 24;
       byHour.set(h, (byHour.get(h) ?? 0) + 1);
       inc(byCountry, c.country);
       inc(byCity, c.city);

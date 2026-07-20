@@ -1,5 +1,23 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+function firstHeader(headers: Headers, names: string[]): string | null {
+  for (const name of names) {
+    const value = headers.get(name);
+    if (value && value.trim()) return value.trim();
+  }
+  return null;
+}
+
+function cleanGeo(value: string | null | undefined): string | null {
+  const raw = (value ?? "").trim();
+  if (!raw) return null;
+  try {
+    return decodeURIComponent(raw.replace(/\+/g, " "));
+  } catch {
+    return raw;
+  }
+}
+
 export const Route = createFileRoute("/r/$slug")({
   server: {
     handlers: {
@@ -11,73 +29,42 @@ export const Route = createFileRoute("/r/$slug")({
           "@/integrations/supabase/client.server"
         );
 
-        // Run the click-bump RPC and the id lookup in parallel — the RPC
-        // returns the redirect target, the lookup gives us the FK for the
-        // click log (fire-and-forget below).
-        const [rpcRes, linkRes] = await Promise.all([
-          supabaseAdmin.rpc("bump_short_link_click", { _slug: slug }),
-          supabaseAdmin
-            .from("short_links")
-            .select("id")
-            .eq("slug", slug)
-            .maybeSingle(),
-        ]);
+        const h = request.headers;
+        const cf =
+          ((request as any).cf as
+            | {
+                city?: string;
+                region?: string;
+                regionCode?: string;
+                country?: string;
+              }
+            | undefined) || undefined;
 
-        const { data, error } = rpcRes;
+        const { data, error } = await supabaseAdmin.rpc(
+          "record_short_link_visit" as any,
+          {
+            _slug: slug,
+            _ip: firstHeader(h, ["cf-connecting-ip", "x-real-ip"]) ||
+              (h.get("x-forwarded-for") || "").split(",")[0].trim() ||
+              null,
+            _country: cleanGeo(firstHeader(h, ["cf-ipcountry", "x-vercel-ip-country"]) || cf?.country),
+            _region: cleanGeo(firstHeader(h, ["cf-region", "x-vercel-ip-country-region"]) || cf?.region),
+            _region_code: cleanGeo(firstHeader(h, ["cf-region-code", "x-vercel-ip-country-region"]) || cf?.regionCode),
+            _city: cleanGeo(firstHeader(h, ["cf-ipcity", "x-vercel-ip-city"]) || cf?.city),
+            _user_agent: h.get("user-agent") || null,
+            _referer: h.get("referer") || null,
+          },
+        );
         if (error || !data || !data[0]) {
           return new Response("Link não encontrado", { status: 404 });
         }
         const row = data[0] as { target: string | null; status: string };
+        if (!row.target || row.status !== "active") {
+          return new Response("Link não encontrado", { status: 404 });
+        }
         const url = new URL(request.url);
         const fallback = `${url.origin}/`;
         const target = row.target && row.target.trim() ? row.target : fallback;
-
-        // Log click metadata BEFORE responding. Background/waitUntil is
-        // unreliable in this runtime (isolate ends before the insert
-        // completes), which caused ~80% of clicks to bump the counter but
-        // never land in short_link_clicks. One insert is fast enough to
-        // await inline.
-        const linkId = linkRes.data?.id;
-        if (linkId) {
-          const h = request.headers;
-          const ip =
-            h.get("cf-connecting-ip") ||
-            h.get("x-real-ip") ||
-            (h.get("x-forwarded-for") || "").split(",")[0].trim() ||
-            null;
-          // Cloudflare geo: on the platform we run, request.cf isn't
-          // forwarded to the TanStack handler, so rely on the standard
-          // CF-* headers that Cloudflare always injects at the edge.
-          const cf =
-            ((request as any).cf as
-              | {
-                  city?: string;
-                  region?: string;
-                  regionCode?: string;
-                  country?: string;
-                }
-              | undefined) || undefined;
-          try {
-            const { error: e } = await supabaseAdmin
-              .from("short_link_clicks")
-              .insert({
-                short_link_id: linkId,
-                slug,
-                target_url: target,
-                ip,
-                country: h.get("cf-ipcountry") || cf?.country || null,
-                region: h.get("cf-region") || cf?.region || null,
-                region_code:
-                  h.get("cf-region-code") || cf?.regionCode || null,
-                city: h.get("cf-ipcity") || cf?.city || null,
-                user_agent: h.get("user-agent") || null,
-                referer: h.get("referer") || null,
-              });
-            if (e) console.error("click log failed", e);
-          } catch (e) {
-            console.error("click log failed", e);
-          }
-        }
 
         return new Response(null, {
           status: 302,

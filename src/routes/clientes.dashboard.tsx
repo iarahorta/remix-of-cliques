@@ -1382,7 +1382,7 @@ function MetricsModal({ link, onClose }: { link: MyLink; onClose: () => void }) 
               </div>
 
               <div>
-                <h4 className="text-sm font-semibold text-yellow-300 mb-3">Cliques por hora (UTC)</h4>
+                <h4 className="text-sm font-semibold text-yellow-300 mb-3">Cliques por hora (Brasília)</h4>
                 <div className="flex items-end gap-1 h-24 bg-neutral-900/60 border border-yellow-500/10 rounded-xl p-3">
                   {data.hourly.map((h) => (
                     <div key={h.hour} title={`${h.hour}h: ${h.count}`} className="flex-1 flex flex-col justify-end">
@@ -1417,7 +1417,7 @@ function MetricsModal({ link, onClose }: { link: MyLink; onClose: () => void }) 
                   <table className="w-full text-xs">
                     <thead className="bg-neutral-900 text-yellow-300/80 uppercase tracking-wider">
                       <tr>
-                        <th className="text-left px-3 py-2">Data (UTC)</th>
+                        <th className="text-left px-3 py-2">Data (Brasília)</th>
                         <th className="text-left px-3 py-2">IP</th>
                         <th className="text-left px-3 py-2">Local</th>
                         <th className="text-left px-3 py-2">Dispositivo</th>
@@ -1429,7 +1429,7 @@ function MetricsModal({ link, onClose }: { link: MyLink; onClose: () => void }) 
                     <tbody>
                       {filtered.slice(0, 500).map((c) => (
                         <tr key={c.id} className="border-t border-neutral-800 hover:bg-neutral-900/60">
-                          <td className="px-3 py-1.5 text-neutral-300 whitespace-nowrap">{new Date(c.created_at).toLocaleString("pt-BR")}</td>
+                          <td className="px-3 py-1.5 text-neutral-300 whitespace-nowrap">{new Date(c.created_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}</td>
                           <td className="px-3 py-1.5 font-mono text-neutral-400">{c.ip ?? "—"}</td>
                           <td className="px-3 py-1.5 text-neutral-300">{fmtLocal(c) || "—"}</td>
                           <td className="px-3 py-1.5 text-neutral-300">{c.device}</td>
