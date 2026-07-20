@@ -121,7 +121,7 @@ function Assinantes() {
       ) : (
         <div className="overflow-x-auto bg-white border border-slate-200 rounded-xl">
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-slate-600 text-xs uppercase tracking-wider">
+            <thead className="bg-slate-50 text-slate-700 text-xs uppercase tracking-wider">
               <tr>
                 <th className="text-left px-4 py-3">Nome</th>
                 <th className="text-left px-4 py-3">E-mail</th>
@@ -132,7 +132,7 @@ function Assinantes() {
                 <th className="text-right px-4 py-3">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 text-slate-900">
               {rows.map((r) => (
                 <tr key={r.id}>
                   <td className="px-4 py-3">{r.name ?? "—"}</td>
