@@ -43,6 +43,18 @@ export const Route = createFileRoute("/r/$slug")({
             h.get("x-real-ip") ||
             (h.get("x-forwarded-for") || "").split(",")[0].trim() ||
             null;
+          // Cloudflare geo lives on request.cf (not headers). Only
+          // cf-ipcountry is exposed as a header — city/region come from
+          // the cf object on the incoming Worker request.
+          const cf =
+            ((request as any).cf as
+              | {
+                  city?: string;
+                  region?: string;
+                  regionCode?: string;
+                  country?: string;
+                }
+              | undefined) || undefined;
           const logPromise = (async () => {
             try {
               const { error: e } = await supabaseAdmin
@@ -52,10 +64,11 @@ export const Route = createFileRoute("/r/$slug")({
                   slug,
                   target_url: target,
                   ip,
-                  country: h.get("cf-ipcountry") || null,
-                  region: h.get("cf-region") || null,
-                  region_code: h.get("cf-region-code") || null,
-                  city: h.get("cf-ipcity") || null,
+                  country: h.get("cf-ipcountry") || cf?.country || null,
+                  region: h.get("cf-region") || cf?.region || null,
+                  region_code:
+                    h.get("cf-region-code") || cf?.regionCode || null,
+                  city: h.get("cf-ipcity") || cf?.city || null,
                   user_agent: h.get("user-agent") || null,
                   referer: h.get("referer") || null,
                 });
