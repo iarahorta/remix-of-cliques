@@ -591,6 +591,7 @@ function MetricsModal({ link, onClose }: { link: ShortLink; onClose: () => void 
   const [clicks, setClicks] = useState<ClickRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState("");
+  const [period, setPeriod] = useState<"today" | "7d" | "30d" | "all">("30d");
 
   useEffect(() => {
     (async () => {
@@ -605,58 +606,122 @@ function MetricsModal({ link, onClose }: { link: ShortLink; onClose: () => void 
     })();
   }, [link.id]);
 
-  const parseUA = (ua: string | null) => {
+  const parseOS = (ua: string | null) => {
     if (!ua) return "—";
-    if (/WhatsApp/i.test(ua)) return "WhatsApp";
-    if (/Instagram/i.test(ua)) return "Instagram";
-    if (/FBAN|FBAV|Facebook/i.test(ua)) return "Facebook";
-    if (/iPhone|iPad/i.test(ua)) return "iOS";
+    if (/iPhone|iPad|iOS/i.test(ua)) return "iOS";
     if (/Android/i.test(ua)) return "Android";
     if (/Windows/i.test(ua)) return "Windows";
     if (/Mac OS/i.test(ua)) return "macOS";
     if (/Linux/i.test(ua)) return "Linux";
     return "Outro";
   };
+  const parseBrowser = (ua: string | null) => {
+    if (!ua) return "—";
+    if (/Edg\//i.test(ua)) return "Edge";
+    if (/OPR\/|Opera/i.test(ua)) return "Opera";
+    if (/Chrome/i.test(ua) && !/Chromium/i.test(ua)) return "Chrome";
+    if (/Firefox/i.test(ua)) return "Firefox";
+    if (/Safari/i.test(ua)) return "Safari";
+    if (/WhatsApp/i.test(ua)) return "WhatsApp";
+    if (/Instagram/i.test(ua)) return "Instagram";
+    if (/FBAN|FBAV|Facebook/i.test(ua)) return "Facebook";
+    return "Outro";
+  };
+  const parseDevice = (ua: string | null) => {
+    if (!ua) return "Desconhecido";
+    if (/Mobile|Android|iPhone|iPod/i.test(ua) && !/iPad|Tablet/i.test(ua)) return "Mobile";
+    if (/iPad|Tablet/i.test(ua)) return "Tablet";
+    return "Desktop";
+  };
+  const parseReferrer = (r: string | null) => {
+    if (!r) return "Direto";
+    try { return new URL(r).hostname.replace(/^www\./, ""); } catch { return r; }
+  };
+
+  const periodFiltered = useMemo(() => {
+    if (!clicks) return [];
+    if (period === "all") return clicks;
+    const now = Date.now();
+    const ms = period === "today" ? 24 * 3600 * 1000 : period === "7d" ? 7 * 86400 * 1000 : 30 * 86400 * 1000;
+    return clicks.filter(c => now - new Date(c.created_at).getTime() <= ms);
+  }, [clicks, period]);
 
   const filtered = useMemo(() => {
-    if (!clicks) return [];
     const q = filter.trim().toLowerCase();
-    if (!q) return clicks;
-    return clicks.filter(c => {
+    if (!q) return periodFiltered;
+    return periodFiltered.filter(c => {
       const hay = [
         c.ip, c.country, c.region, c.region_code, c.city, c.referer, c.target_url,
-        parseUA(c.user_agent),
+        parseOS(c.user_agent), parseBrowser(c.user_agent), parseDevice(c.user_agent),
         new Date(c.created_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }),
       ].filter(Boolean).join(" ").toLowerCase();
       return hay.includes(q);
     });
-  }, [clicks, filter]);
+  }, [periodFiltered, filter]);
 
   const stats = useMemo(() => {
     if (!clicks) return null;
-    const byCountry = new Map<string, number>();
-    const byDay = new Map<string, number>();
-    const uniqueIps = new Set<string>();
     const real = filtered.filter((c) => !c.is_bot);
+    const inc = (m: Map<string, number>, k: string) => m.set(k, (m.get(k) ?? 0) + 1);
+    const byCountry = new Map<string, number>();
+    const byCity = new Map<string, number>();
+    const byRegion = new Map<string, number>();
+    const byReferrer = new Map<string, number>();
+    const byDevice = new Map<string, number>();
+    const byBrowser = new Map<string, number>();
+    const byOS = new Map<string, number>();
+    const byTarget = new Map<string, number>();
+    const byDay = new Map<string, number>();
+    const byHour = new Map<string, number>();
+    const uniqueIps = new Set<string>();
     for (const c of real) {
-      const k = c.country || "—";
-      byCountry.set(k, (byCountry.get(k) ?? 0) + 1);
+      inc(byCountry, c.country || "—");
+      if (c.city) inc(byCity, c.city);
+      if (c.region) inc(byRegion, c.region);
+      inc(byReferrer, parseReferrer(c.referer));
+      inc(byDevice, parseDevice(c.user_agent));
+      inc(byBrowser, parseBrowser(c.user_agent));
+      inc(byOS, parseOS(c.user_agent));
+      if (c.target_url) inc(byTarget, c.target_url);
       const d = new Date(c.created_at).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
-      byDay.set(d, (byDay.get(d) ?? 0) + 1);
+      inc(byDay, d);
+      const h = new Date(c.created_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", hour12: false }).slice(0, 2);
+      inc(byHour, h);
       if (c.ip) uniqueIps.add(c.ip);
     }
+    const sortDesc = (m: Map<string, number>) =>
+      [...m.entries()].sort((a, b) => b[1] - a[1]);
+    // Chart series
+    const daySeries = [...byDay.entries()]
+      .map(([label, value]) => ({ label, value, ts: parseBrDate(label) }))
+      .sort((a, b) => a.ts - b.ts)
+      .map(({ label, value }) => ({ label, value }));
+    const hourSeries = Array.from({ length: 24 }, (_, i) => {
+      const key = String(i).padStart(2, "0");
+      return { label: `${key}h`, value: byHour.get(key) ?? 0 };
+    });
     return {
       total: real.length,
       rawTotal: filtered.length,
       bots: filtered.length - real.length,
       uniqueIps: uniqueIps.size,
-      countries: [...byCountry.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6),
-      days: [...byDay.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6),
+      countriesCount: byCountry.size,
+      devicesCount: byDevice.size,
+      topCountries: sortDesc(byCountry).slice(0, 8),
+      topCities: sortDesc(byCity).slice(0, 8),
+      topRegions: sortDesc(byRegion).slice(0, 8),
+      topReferrers: sortDesc(byReferrer).slice(0, 8),
+      topDevices: sortDesc(byDevice).slice(0, 8),
+      topBrowsers: sortDesc(byBrowser).slice(0, 8),
+      topOS: sortDesc(byOS).slice(0, 8),
+      topTargets: sortDesc(byTarget).slice(0, 8),
+      daySeries,
+      hourSeries,
     };
   }, [clicks, filtered]);
 
   const exportCsv = () => {
-    const headers = ["data_iso", "data_br", "ip", "pais", "regiao", "uf", "cidade", "local", "dispositivo", "user_agent", "origem", "destino"];
+    const headers = ["data_iso", "data_br", "ip", "pais", "regiao", "uf", "cidade", "local", "dispositivo", "navegador", "sistema", "user_agent", "origem", "destino"];
     const esc = (v: unknown) => {
       const s = v == null ? "" : String(v);
       return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
@@ -672,7 +737,9 @@ function MetricsModal({ link, onClose }: { link: ShortLink; onClose: () => void 
         c.region_code ?? "",
         c.city ?? "",
         formatLocal(c),
-        parseUA(c.user_agent),
+        parseDevice(c.user_agent),
+        parseBrowser(c.user_agent),
+        parseOS(c.user_agent),
         c.user_agent ?? "",
         c.referer ?? "",
         c.target_url ?? "",
@@ -691,115 +758,243 @@ function MetricsModal({ link, onClose }: { link: ShortLink; onClose: () => void 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="card-premium p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3 className="font-display text-xl">Métricas · /r/{link.slug}</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">Cliques reais com IP, localização e dispositivo — prévias e robôs separados</p>
+    <div
+      className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-sm overflow-y-auto"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-6xl my-4 rounded-2xl border border-[#27272A] bg-[#09090B] shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-5 sm:p-6 border-b border-[#1F1F22]">
+          <div className="min-w-0">
+            <h3 className="font-display text-lg sm:text-2xl tracking-tight text-white">
+              Analytics Premium — <span className="text-[#F5C026]">/r/{link.slug}</span>
+            </h3>
+            <p className="text-xs sm:text-sm text-zinc-400 mt-1">
+              Acessos reais · bots filtrados · dados completos por clique
+            </p>
           </div>
-          <button onClick={onClose} className="p-1 rounded hover:bg-secondary"><X className="h-4 w-4" /></button>
+          <div className="flex items-center gap-2 shrink-0">
+            <select
+              value={period}
+              onChange={(e) => setPeriod(e.target.value as typeof period)}
+              className="rounded-lg bg-[#141416] border border-[#27272A] text-zinc-200 text-sm px-3 py-2 focus:outline-none focus:border-[#F5C026]"
+            >
+              <option value="today">Hoje</option>
+              <option value="7d">7 dias</option>
+              <option value="30d">30 dias</option>
+              <option value="all">Tudo</option>
+            </select>
+            <button
+              type="button"
+              onClick={exportCsv}
+              disabled={!stats || filtered.length === 0}
+              className="inline-flex items-center gap-2 rounded-lg bg-[#F5C026] hover:bg-[#FFC700] text-black text-sm font-semibold px-3 py-2 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <Download className="h-4 w-4" />
+              Exportar CSV
+            </button>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-[#141416]"
+              aria-label="Fechar"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
-        {error && <p className="text-sm text-destructive">{error}</p>}
-        {!clicks && !error && (
-          <div className="py-10 flex justify-center"><Loader2 className="h-6 w-6 animate-spin text-[oklch(0.75_0.13_75)]" /></div>
-        )}
-
-        {stats && (
-          <>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-              <StatCard label="Cliques reais" value={stats.total.toString()} />
-              <StatCard label="IPs únicos" value={stats.uniqueIps.toString()} />
-              <StatCard label="Países" value={stats.countries.length.toString()} />
-              <StatCard label="Prévias/robôs" value={stats.bots.toString()} />
+        {/* Body */}
+        <div className="p-5 sm:p-6 space-y-6">
+          {error && <p className="text-sm text-red-400">{error}</p>}
+          {!clicks && !error && (
+            <div className="py-16 flex justify-center">
+              <Loader2 className="h-6 w-6 animate-spin text-[#F5C026]" />
             </div>
+          )}
 
-            <div className="flex flex-col sm:flex-row gap-2 mb-3">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          {stats && (
+            <>
+              {/* KPI grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <KpiCard
+                  label="Cliques reais"
+                  value={stats.total}
+                  hint={`${stats.bots} prévia(s)/robô(s) ignorado(s) · bruto: ${stats.rawTotal}`}
+                />
+                <KpiCard label="IPs únicos" value={stats.uniqueIps} />
+                <KpiCard label="Países" value={stats.countriesCount} />
+                <KpiCard label="Dispositivos" value={stats.devicesCount} />
+              </div>
+
+              {/* Charts */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <ChartCard title="Cliques por dia">
+                  {stats.daySeries.length === 0 ? (
+                    <EmptyChart />
+                  ) : (
+                    <ResponsiveContainer width="100%" height={220}>
+                      <AreaChart data={stats.daySeries} margin={{ top: 10, right: 10, bottom: 0, left: -20 }}>
+                        <defs>
+                          <linearGradient id="goldFill" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#F5C026" stopOpacity={0.55} />
+                            <stop offset="100%" stopColor="#F5C026" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid stroke="#1F1F22" strokeDasharray="3 3" />
+                        <XAxis dataKey="label" stroke="#71717A" tick={{ fill: "#A1A1AA", fontSize: 11 }} tickLine={false} axisLine={{ stroke: "#27272A" }} />
+                        <YAxis stroke="#71717A" tick={{ fill: "#A1A1AA", fontSize: 11 }} tickLine={false} axisLine={{ stroke: "#27272A" }} allowDecimals={false} />
+                        <Tooltip contentStyle={{ background: "#141416", border: "1px solid #27272A", borderRadius: 8, color: "#fafafa" }} labelStyle={{ color: "#F5C026" }} />
+                        <Area type="monotone" dataKey="value" stroke="#F5C026" strokeWidth={2} fill="url(#goldFill)" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  )}
+                </ChartCard>
+
+                <ChartCard title="Cliques por hora (Brasília)">
+                  {stats.total === 0 ? (
+                    <EmptyChart />
+                  ) : (
+                    <ResponsiveContainer width="100%" height={220}>
+                      <BarChart data={stats.hourSeries} margin={{ top: 10, right: 10, bottom: 0, left: -20 }}>
+                        <CartesianGrid stroke="#1F1F22" strokeDasharray="3 3" />
+                        <XAxis dataKey="label" stroke="#71717A" tick={{ fill: "#A1A1AA", fontSize: 10 }} tickLine={false} axisLine={{ stroke: "#27272A" }} interval={2} />
+                        <YAxis stroke="#71717A" tick={{ fill: "#A1A1AA", fontSize: 11 }} tickLine={false} axisLine={{ stroke: "#27272A" }} allowDecimals={false} />
+                        <Tooltip cursor={{ fill: "rgba(245,192,38,0.08)" }} contentStyle={{ background: "#141416", border: "1px solid #27272A", borderRadius: 8, color: "#fafafa" }} labelStyle={{ color: "#F5C026" }} />
+                        <Bar dataKey="value" fill="#F5C026" radius={[3, 3, 0, 0]} maxBarSize={14} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  )}
+                </ChartCard>
+              </div>
+
+              {/* Filter */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500" />
                 <input
                   type="text"
                   value={filter}
-                  onChange={e => setFilter(e.target.value)}
+                  onChange={(e) => setFilter(e.target.value)}
                   placeholder="Filtrar por IP, país, cidade, origem, destino, dispositivo…"
-                  className="w-full rounded-lg bg-input border border-border pl-9 pr-3 py-2 text-sm focus:outline-none"
+                  className="w-full rounded-lg bg-[#141416] border border-[#27272A] text-zinc-100 placeholder:text-zinc-500 pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-[#F5C026]"
                 />
               </div>
-              <button
-                type="button"
-                onClick={exportCsv}
-                disabled={filtered.length === 0}
-                className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-secondary/50 hover:bg-secondary px-3 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Download className="h-4 w-4" />
-                Exportar CSV ({filtered.length})
-              </button>
-            </div>
 
-            {stats.countries.length > 0 && (
-              <div className="grid md:grid-cols-2 gap-4 mb-5">
-                <div className="rounded-lg border border-border p-3">
-                  <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Top países</div>
-                  <ul className="space-y-1 text-sm">
-                    {stats.countries.map(([c, n]) => (
-                      <li key={c} className="flex justify-between"><span className="font-mono">{c}</span><span className="text-muted-foreground">{n}</span></li>
-                    ))}
-                  </ul>
+              {/* Breakdown grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <BreakdownCard title="Top países" rows={stats.topCountries} />
+                <BreakdownCard title="Top cidades" rows={stats.topCities} />
+                <BreakdownCard title="Top regiões" rows={stats.topRegions} />
+                <BreakdownCard title="Top referrers" rows={stats.topReferrers} />
+                <BreakdownCard title="Dispositivos" rows={stats.topDevices} />
+                <BreakdownCard title="Navegadores" rows={stats.topBrowsers} />
+                <BreakdownCard title="Sistemas" rows={stats.topOS} />
+                <BreakdownCard title="Destinos" rows={stats.topTargets} mono />
+              </div>
+
+              {/* Recent table */}
+              <div className="rounded-xl border border-[#27272A] bg-[#141416] overflow-hidden">
+                <div className="px-4 py-3 border-b border-[#1F1F22] text-[11px] uppercase tracking-widest text-[#F5C026] font-semibold">
+                  Últimos cliques ({filtered.length})
                 </div>
-                <div className="rounded-lg border border-border p-3">
-                  <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">Top dias</div>
-                  <ul className="space-y-1 text-sm">
-                    {stats.days.map(([d, n]) => (
-                      <li key={d} className="flex justify-between"><span className="font-mono">{d}</span><span className="text-muted-foreground">{n}</span></li>
-                    ))}
-                  </ul>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead className="bg-[#0D0D0D] text-zinc-400">
+                      <tr>
+                        <th className="text-left px-3 py-2 font-medium">Data (BR)</th>
+                        <th className="text-left px-3 py-2 font-medium">IP</th>
+                        <th className="text-left px-3 py-2 font-medium">Local</th>
+                        <th className="text-left px-3 py-2 font-medium">Dispositivo</th>
+                        <th className="text-left px-3 py-2 font-medium">Origem</th>
+                        <th className="text-left px-3 py-2 font-medium">Destino</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-zinc-200">
+                      {filtered.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="px-3 py-8 text-center text-zinc-500">
+                            {clicks!.length === 0 ? "Nenhum clique ainda." : "Nenhum clique corresponde ao filtro."}
+                          </td>
+                        </tr>
+                      ) : filtered.slice(0, 100).map((c) => (
+                        <tr key={c.id} className="border-t border-[#1F1F22]">
+                          <td className="px-3 py-2 font-mono whitespace-nowrap">
+                            {new Date(c.created_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                          </td>
+                          <td className="px-3 py-2 font-mono">{c.ip ?? "—"}</td>
+                          <td className="px-3 py-2">
+                            {formatLocal(c) || "—"}
+                            {c.is_bot ? <span className="ml-2 text-[10px] text-[#F5C026]">robô/prévia</span> : null}
+                          </td>
+                          <td className="px-3 py-2">{parseDevice(c.user_agent)} · {parseBrowser(c.user_agent)}</td>
+                          <td className="px-3 py-2 max-w-[160px] truncate" title={c.referer ?? ""}>{parseReferrer(c.referer)}</td>
+                          <td className="px-3 py-2 max-w-[220px] truncate" title={c.target_url ?? ""}>{c.target_url ?? "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
-            )}
-
-            <div className="overflow-x-auto rounded-lg border border-border">
-              <table className="w-full text-xs">
-                <thead className="bg-secondary/50 text-muted-foreground">
-                  <tr>
-                    <th className="text-left px-3 py-2 font-medium">Data (BR)</th>
-                    <th className="text-left px-3 py-2 font-medium">IP</th>
-                    <th className="text-left px-3 py-2 font-medium">Local</th>
-                    <th className="text-left px-3 py-2 font-medium">Dispositivo</th>
-                    <th className="text-left px-3 py-2 font-medium">Origem</th>
-                    <th className="text-left px-3 py-2 font-medium">Destino</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.length === 0 ? (
-                    <tr><td colSpan={6} className="px-3 py-6 text-center text-muted-foreground">{clicks!.length === 0 ? "Nenhum clique ainda." : "Nenhum clique corresponde ao filtro."}</td></tr>
-                  ) : filtered.map(c => (
-                    <tr key={c.id} className="border-t border-border">
-                      <td className="px-3 py-2 font-mono whitespace-nowrap">
-                        {new Date(c.created_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" })}
-                      </td>
-                      <td className="px-3 py-2 font-mono">{c.ip ?? "—"}</td>
-                      <td className="px-3 py-2">{formatLocal(c) || "—"}{c.is_bot ? <span className="ml-2 text-[10px] text-amber-500">robô/prévia</span> : null}</td>
-                      <td className="px-3 py-2">{parseUA(c.user_agent)}</td>
-                      <td className="px-3 py-2 max-w-[160px] truncate" title={c.referer ?? ""}>{c.referer ?? "—"}</td>
-                      <td className="px-3 py-2 max-w-[200px] truncate" title={c.target_url ?? ""}>{c.target_url ?? "—"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </>
-        )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
 }
 
-function StatCard({ label, value }: { label: string; value: string }) {
+function parseBrDate(br: string): number {
+  // "DD/MM/YYYY" -> timestamp
+  const [d, m, y] = br.split("/").map(Number);
+  if (!d || !m || !y) return 0;
+  return new Date(y, m - 1, d).getTime();
+}
+
+function KpiCard({ label, value, hint }: { label: string; value: number | string; hint?: string }) {
   return (
-    <div className="rounded-lg border border-border p-3 bg-secondary/30">
-      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
-      <div className="text-2xl font-display mt-1">{value}</div>
+    <div className="rounded-xl border border-[#27272A] bg-[#141416] p-4">
+      <div className="text-[10px] uppercase tracking-widest text-zinc-500 font-semibold">{label}</div>
+      <div className="text-3xl sm:text-4xl font-display font-bold text-[#F5C026] mt-1 tabular-nums">{value}</div>
+      {hint && <div className="text-[11px] text-zinc-500 mt-2 leading-snug">{hint}</div>}
+    </div>
+  );
+}
+
+function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-xl border border-[#27272A] bg-[#141416] p-4">
+      <div className="text-[11px] uppercase tracking-widest text-[#F5C026] font-semibold mb-3">{title}</div>
+      {children}
+    </div>
+  );
+}
+
+function EmptyChart() {
+  return (
+    <div className="h-[220px] flex items-center justify-center text-xs text-zinc-500">
+      Sem dados no período selecionado.
+    </div>
+  );
+}
+
+function BreakdownCard({ title, rows, mono = false }: { title: string; rows: [string, number][]; mono?: boolean }) {
+  return (
+    <div className="rounded-xl border border-[#27272A] bg-[#141416] p-4">
+      <div className="text-[11px] uppercase tracking-widest text-[#F5C026] font-semibold mb-3">{title}</div>
+      {rows.length === 0 ? (
+        <div className="text-xs text-zinc-500 py-4 text-center">Sem dados.</div>
+      ) : (
+        <ul className="space-y-1.5 text-sm">
+          {rows.map(([k, n]) => (
+            <li key={k} className="flex items-center justify-between gap-2">
+              <span className={`text-zinc-300 truncate ${mono ? "font-mono text-xs" : ""}`} title={k}>{k}</span>
+              <span className="text-[#F5C026] font-semibold tabular-nums shrink-0">{n}</span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
