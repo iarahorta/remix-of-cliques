@@ -442,7 +442,9 @@ function ClientesDashboard() {
                   setBillingLoading(false);
                 }
               };
-              const boxCls = isActive
+              const boxCls = trialing
+                ? "bg-sky-50 border-sky-200"
+                : isActive
                 ? "bg-emerald-50 border-emerald-200"
                 : isSuspended
                   ? "bg-red-50 border-red-200"
