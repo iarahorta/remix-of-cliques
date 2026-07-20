@@ -1236,6 +1236,11 @@ function MetricsModal({ link, onClose }: { link: MyLink; onClose: () => void }) 
     user_agent: string | null; device: string; browser: string; os: string;
     target_url: string | null;
   };
+  const fmtLocal = (c: { city: string | null; region: string | null; region_code: string | null; country: string | null }): string => {
+    const uf = (c.region_code && c.region_code.length <= 3) ? c.region_code.toUpperCase() : (c.region ?? "");
+    if (c.city && uf) return `${c.city}/${uf}`;
+    return [c.city, c.region, c.country].filter(Boolean).join(", ");
+  };
   const [data, setData] = useState<{
     total: number; total_raw: number; bots_filtered: number; unique_ips: number;
     daily: { day: string; count: number }[];
