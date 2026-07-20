@@ -608,3 +608,62 @@ export const suspendSubscriberAdmin = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+export const giftSubscriberDaysAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { subscriberId: string; days: number; reason?: string | null }) => {
+    const subscriberId = String(d.subscriberId || "").trim();
+    if (!subscriberId) throw new Error("subscriberId obrigatório");
+    const days = Math.floor(Number(d.days));
+    if (!Number.isFinite(days) || days <= 0 || days > 3650) {
+      throw new Error("Quantidade de dias inválida");
+    }
+    const reason = (d.reason ?? "").toString().trim().slice(0, 500) || null;
+    return { subscriberId, days, reason };
+  })
+  .handler(async ({ data, context }) => {
+    await assertStaff({ supabase: context.supabase, userId: context.userId });
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: sub, error: readErr } = await supabaseAdmin
+      .from("link_subscribers")
+      .select("id,current_period_end")
+      .eq("id", data.subscriberId)
+      .maybeSingle();
+    if (readErr) throw new Error(readErr.message);
+    if (!sub) throw new Error("Assinante não encontrado");
+
+    const todayBR = brDateKey(new Date()); // YYYY-MM-DD em Brasília
+    const previousEnd = (sub as any).current_period_end as string | null;
+    // Base: nunca reduz — usa a MAIOR entre hoje (BRT) e o vencimento atual.
+    const baseIso = previousEnd && previousEnd > todayBR ? previousEnd : todayBR;
+    // Soma dias em UTC-safe para evitar drift de fuso.
+    const [y, m, d] = baseIso.split("-").map((n) => parseInt(n, 10));
+    const baseDate = new Date(Date.UTC(y, m - 1, d));
+    baseDate.setUTCDate(baseDate.getUTCDate() + data.days);
+    const newEnd = baseDate.toISOString().slice(0, 10);
+
+    const { error: updErr } = await supabaseAdmin
+      .from("link_subscribers")
+      .update({
+        status: "active",
+        current_period_end: newEnd,
+        payment_method: "gift",
+      })
+      .eq("id", data.subscriberId);
+    if (updErr) throw new Error(updErr.message);
+
+    const { error: insErr } = await (supabaseAdmin as any)
+      .from("subscriber_gifts")
+      .insert({
+        subscriber_id: data.subscriberId,
+        granted_by_user_id: context.userId,
+        days_granted: data.days,
+        previous_end_date: previousEnd,
+        new_end_date: newEnd,
+        reason: data.reason,
+      });
+    if (insErr) throw new Error(insErr.message);
+
+    return { ok: true, newEndDate: newEnd, previousEndDate: previousEnd };
+  });

@@ -1,12 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { Loader2, CheckCircle2, XCircle, Gift } from "lucide-react";
 import { PageShell } from "@/components/page-shell";
 import {
   listSubscribersAdmin,
   markSubscriberPaidAdmin,
   suspendSubscriberAdmin,
+  giftSubscriberDaysAdmin,
 } from "@/lib/link-subscribers.functions";
 import { toast } from "sonner";
 
@@ -48,10 +49,12 @@ function Assinantes() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const [giftTarget, setGiftTarget] = useState<Subscriber | null>(null);
 
   const listFn = useServerFn(listSubscribersAdmin);
   const markPaid = useServerFn(markSubscriberPaidAdmin);
   const suspend = useServerFn(suspendSubscriberAdmin);
+  const giftFn = useServerFn(giftSubscriberDaysAdmin);
 
   const load = async () => {
     setLoading(true);
@@ -87,6 +90,20 @@ function Assinantes() {
       await load();
     } catch (e: any) {
       toast.error(e?.message ?? "Falhou");
+    } finally { setBusy(null); }
+  };
+
+  const submitGift = async (days: number, reason: string) => {
+    if (!giftTarget) return;
+    setBusy(giftTarget.id);
+    try {
+      const res: any = await giftFn({ data: { subscriberId: giftTarget.id, days, reason: reason || null } });
+      const nd = res?.newEndDate ? new Date(res.newEndDate + "T12:00:00").toLocaleDateString("pt-BR") : "";
+      toast.success(`🎁 Presente aplicado — novo vencimento ${nd}`);
+      setGiftTarget(null);
+      await load();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Falhou ao presentear");
     } finally { setBusy(null); }
   };
 
@@ -135,6 +152,13 @@ function Assinantes() {
                       </button>
                       <button
                         disabled={busy === r.id}
+                        onClick={() => setGiftTarget(r)}
+                        className="inline-flex items-center gap-1 rounded-md bg-amber-500 hover:bg-amber-600 text-white text-xs px-2.5 py-1.5 disabled:opacity-60"
+                      >
+                        <Gift className="h-3.5 w-3.5" /> Presentear
+                      </button>
+                      <button
+                        disabled={busy === r.id}
                         onClick={() => handleSuspend(r.id)}
                         className="inline-flex items-center gap-1 rounded-md bg-red-600 hover:bg-red-700 text-white text-xs px-2.5 py-1.5 disabled:opacity-60"
                       >
@@ -148,6 +172,108 @@ function Assinantes() {
           </table>
         </div>
       )}
+      {giftTarget && (
+        <GiftModal
+          subscriber={giftTarget}
+          busy={busy === giftTarget.id}
+          onClose={() => setGiftTarget(null)}
+          onConfirm={submitGift}
+        />
+      )}
     </PageShell>
+  );
+}
+
+function GiftModal({
+  subscriber,
+  busy,
+  onClose,
+  onConfirm,
+}: {
+  subscriber: Subscriber;
+  busy: boolean;
+  onClose: () => void;
+  onConfirm: (days: number, reason: string) => void;
+}) {
+  const [qty, setQty] = useState<number>(7);
+  const [unit, setUnit] = useState<"days" | "months">("days");
+  const [reason, setReason] = useState("");
+  const days = unit === "months" ? qty * 30 : qty;
+  const canSubmit = qty > 0 && qty <= (unit === "months" ? 120 : 3650) && !busy;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+      <div className="w-full max-w-md rounded-xl bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="border-b border-slate-200 px-5 py-3 flex items-center gap-2">
+          <Gift className="h-4 w-4 text-amber-600" />
+          <h3 className="font-semibold text-slate-800">Presentear assinante</h3>
+        </div>
+        <div className="p-5 space-y-4">
+          <div className="text-sm text-slate-600">
+            <div><strong>{subscriber.name ?? subscriber.email ?? subscriber.id}</strong></div>
+            <div className="text-xs text-slate-500">
+              Vencimento atual: {subscriber.current_period_end
+                ? new Date(subscriber.current_period_end + "T12:00:00").toLocaleDateString("pt-BR")
+                : "—"}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-medium text-slate-700">Quantidade</label>
+              <input
+                type="number"
+                min={1}
+                value={qty}
+                onChange={(e) => setQty(Math.max(1, parseInt(e.target.value || "1", 10)))}
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-slate-700">Unidade</label>
+              <select
+                value={unit}
+                onChange={(e) => setUnit(e.target.value as "days" | "months")}
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900"
+              >
+                <option value="days">Dias</option>
+                <option value="months">Meses (30 dias)</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="text-xs font-medium text-slate-700">Motivo (opcional)</label>
+            <input
+              type="text"
+              value={reason}
+              maxLength={500}
+              placeholder="Ex.: Brinde lançamento, compensação de suporte"
+              onChange={(e) => setReason(e.target.value)}
+              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900"
+            />
+          </div>
+          <div className="rounded-md bg-amber-50 border border-amber-200 text-xs text-amber-800 px-3 py-2">
+            Serão adicionados <strong>{days} dia{days === 1 ? "" : "s"}</strong> ao vencimento.
+            A conta é ativada e o novo vencimento nunca reduz o atual.
+          </div>
+        </div>
+        <div className="border-t border-slate-200 px-5 py-3 flex items-center justify-end gap-2">
+          <button
+            onClick={onClose}
+            disabled={busy}
+            className="rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100 disabled:opacity-60"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={() => onConfirm(days, reason)}
+            disabled={!canSubmit}
+            className="inline-flex items-center gap-1 rounded-md bg-amber-500 hover:bg-amber-600 text-white text-sm px-3 py-1.5 disabled:opacity-60"
+          >
+            {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Gift className="h-3.5 w-3.5" />}
+            Confirmar presente
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

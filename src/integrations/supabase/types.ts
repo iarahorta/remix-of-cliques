@@ -1148,6 +1148,47 @@ export type Database = {
         }
         Relationships: []
       }
+      subscriber_gifts: {
+        Row: {
+          created_at: string
+          days_granted: number
+          granted_by_user_id: string
+          id: string
+          new_end_date: string
+          previous_end_date: string | null
+          reason: string | null
+          subscriber_id: string
+        }
+        Insert: {
+          created_at?: string
+          days_granted: number
+          granted_by_user_id: string
+          id?: string
+          new_end_date: string
+          previous_end_date?: string | null
+          reason?: string | null
+          subscriber_id: string
+        }
+        Update: {
+          created_at?: string
+          days_granted?: number
+          granted_by_user_id?: string
+          id?: string
+          new_end_date?: string
+          previous_end_date?: string | null
+          reason?: string | null
+          subscriber_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriber_gifts_subscriber_id_fkey"
+            columns: ["subscriber_id"]
+            isOneToOne: false
+            referencedRelation: "link_subscribers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       used_slugs: {
         Row: {
           first_used_at: string
