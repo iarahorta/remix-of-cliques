@@ -150,7 +150,9 @@ export const createSubscriberLink = createServerFn({ method: "POST" })
     if (!/^https?:\/\//i.test(data.target_url)) {
       throw new Error("URL inválida — deve começar com http:// ou https://");
     }
-    await requireActiveSubscription({ supabase: context.supabase, userId: context.userId });
+    const sub = await requireActiveSubscription({ supabase: context.supabase, userId: context.userId });
+    const kind = data.target_url.toLowerCase().startsWith("https://wa.me/") ? "whatsapp" : "normal";
+    await enforceTrialLimits({ supabase: context.supabase, userId: context.userId }, sub, kind);
     let slug = "";
     let inserted = false;
     for (let i = 0; i < 8 && !inserted; i++) {
@@ -244,7 +246,8 @@ export const createSubscriberRotatingLink = createServerFn({ method: "POST" })
     const allowedModes: RotationMode[] = ["round_robin", "random", "weighted", "sticky"];
     if (!allowedModes.includes(data.rotation_mode)) throw new Error("Modo de rotação inválido.");
     const urls = normalizeRotationUrls(data.urls);
-    await requireActiveSubscription({ supabase: context.supabase, userId: context.userId });
+    const sub = await requireActiveSubscription({ supabase: context.supabase, userId: context.userId });
+    await enforceTrialLimits({ supabase: context.supabase, userId: context.userId }, sub, "rotating", urls.length);
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     let slug = "";
