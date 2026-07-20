@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { useAuth } from "@/hooks/use-auth";
 import {
   Link2,
   BarChart3,
@@ -28,6 +29,12 @@ function GoldStar() {
 }
 
 function Nav() {
+  const { session, isStaff, loading } = useAuth();
+  const isLoggedIn = !!session && !loading;
+  const primaryTo = isStaff ? "/assinantes" : "/clientes";
+  const primaryLabel = isLoggedIn ? (isStaff ? "Painel Admin" : "Meu Painel") : "Começar";
+  const secondaryLabel = isLoggedIn ? (isStaff ? "Admin" : "Painel") : "Entrar";
+  const secondaryTo = isLoggedIn ? primaryTo : "/login";
   return (
     <header className="sticky top-0 z-40 border-b border-[oklch(0.32_0.04_80/_0.25)] bg-[oklch(0.12_0.008_60/_0.85)] backdrop-blur-xl">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
@@ -45,16 +52,16 @@ function Nav() {
         </nav>
         <div className="flex items-center gap-2">
           <Link
-            to="/clientes"
+            to={secondaryTo}
             className="hidden rounded-lg px-3 py-2 text-sm text-muted-foreground hover:text-foreground md:inline-block"
           >
-            Entrar
+            {secondaryLabel}
           </Link>
           <Link
-            to="/clientes"
+            to={primaryTo}
             className="rounded-lg bg-gold-metal px-4 py-2 text-sm font-bold transition-transform hover:scale-[1.03]"
           >
-            Começar
+            {primaryLabel}
           </Link>
         </div>
       </div>
