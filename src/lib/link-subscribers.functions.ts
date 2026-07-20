@@ -35,10 +35,45 @@ async function requireActiveSubscription(ctx: { supabase: any; userId: string })
   if (error) throw new Error(error.message);
   if (!data) throw new Error("Assinatura não encontrada — complete seu cadastro.");
   const today = new Date().toISOString().slice(0, 10);
-  if (data.status !== "active" || !data.current_period_end || data.current_period_end < today) {
+  const okStatus = data.status === "active" || data.status === "trialing";
+  if (!okStatus || !data.current_period_end || data.current_period_end < today) {
+    if (data.status === "trialing") {
+      throw new Error("Seu teste grátis acabou — assine por R$ 19,90 pra continuar.");
+    }
     throw new Error("Assinatura inativa ou vencida — regularize o pagamento pra criar novos links.");
   }
   return data;
+}
+
+// Limites do teste grátis de 1 dia: 1 link normal + 1 link de WhatsApp + 1 rotativo (até 5 URLs).
+async function enforceTrialLimits(
+  ctx: { supabase: any; userId: string },
+  sub: { status: string },
+  kind: "normal" | "whatsapp" | "rotating",
+  rotatingUrlsCount?: number,
+) {
+  if (sub.status !== "trialing") return;
+  if (kind === "rotating" && (rotatingUrlsCount ?? 0) > 5) {
+    throw new Error("No teste grátis o link rotativo aceita no máximo 5 destinos. Assine por R$ 19,90 pra liberar até 20.");
+  }
+  const { data: existing, error } = await ctx.supabase
+    .from("short_links")
+    .select("id,is_rotating,target_url")
+    .eq("user_id", ctx.userId)
+    .eq("is_subscriber_link", true)
+    .neq("status", "archived");
+  if (error) throw new Error(error.message);
+  let normal = 0, wa = 0, rot = 0;
+  for (const l of existing ?? []) {
+    if (l.is_rotating) rot++;
+    else if ((l.target_url ?? "").startsWith("https://wa.me/")) wa++;
+    else normal++;
+  }
+  const counts = { normal, whatsapp: wa, rotating: rot } as const;
+  if (counts[kind] >= 1) {
+    const label = kind === "normal" ? "link normal" : kind === "whatsapp" ? "link de WhatsApp" : "link rotativo";
+    throw new Error(`Teste grátis: você já criou 1 ${label}. Assine por R$ 19,90 pra criar mais.`);
+  }
 }
 
 export const createSubscriberProfile = createServerFn({ method: "POST" })
@@ -74,7 +109,16 @@ export const createSubscriberProfile = createServerFn({ method: "POST" })
       name: data.name,
       email: data.email,
       phone: data.phone,
-      status: "pending_payment",
+      status: "trialing",
+      current_period_end: (() => {
+        // Teste grátis de 1 dia — expira amanhã (fuso Brasília).
+        const brazilToday = new Intl.DateTimeFormat("en-CA", {
+          timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit",
+        }).format(new Date());
+        const d = new Date(brazilToday + "T12:00:00Z");
+        d.setUTCDate(d.getUTCDate() + 1);
+        return d.toISOString().slice(0, 10);
+      })(),
     });
     if (error) throw new Error(error.message);
     try {
