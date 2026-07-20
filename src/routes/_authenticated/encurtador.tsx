@@ -569,6 +569,7 @@ interface ClickRow {
   ip: string | null;
   country: string | null;
   region: string | null;
+  region_code: string | null;
   city: string | null;
   user_agent: string | null;
   referer: string | null;
@@ -584,7 +585,7 @@ function MetricsModal({ link, onClose }: { link: ShortLink; onClose: () => void 
     (async () => {
       const { data, error } = await supabase
         .from("short_link_clicks")
-        .select("id,created_at,ip,country,region,city,user_agent,referer,target_url")
+        .select("id,created_at,ip,country,region,region_code,city,user_agent,referer,target_url")
         .eq("short_link_id", link.id)
         .order("created_at", { ascending: false })
         .limit(500);
@@ -612,7 +613,7 @@ function MetricsModal({ link, onClose }: { link: ShortLink; onClose: () => void 
     if (!q) return clicks;
     return clicks.filter(c => {
       const hay = [
-        c.ip, c.country, c.region, c.city, c.referer, c.target_url,
+        c.ip, c.country, c.region, c.region_code, c.city, c.referer, c.target_url,
         parseUA(c.user_agent),
         new Date(c.created_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" }),
       ].filter(Boolean).join(" ").toLowerCase();
@@ -641,7 +642,7 @@ function MetricsModal({ link, onClose }: { link: ShortLink; onClose: () => void 
   }, [clicks, filtered]);
 
   const exportCsv = () => {
-    const headers = ["data_iso", "data_br", "ip", "pais", "regiao", "cidade", "dispositivo", "user_agent", "origem", "destino"];
+    const headers = ["data_iso", "data_br", "ip", "pais", "regiao", "uf", "cidade", "local", "dispositivo", "user_agent", "origem", "destino"];
     const esc = (v: unknown) => {
       const s = v == null ? "" : String(v);
       return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
@@ -654,7 +655,9 @@ function MetricsModal({ link, onClose }: { link: ShortLink; onClose: () => void 
         c.ip ?? "",
         c.country ?? "",
         c.region ?? "",
+        c.region_code ?? "",
         c.city ?? "",
+        formatLocal(c),
         parseUA(c.user_agent),
         c.user_agent ?? "",
         c.referer ?? "",
@@ -762,7 +765,7 @@ function MetricsModal({ link, onClose }: { link: ShortLink; onClose: () => void 
                         {new Date(c.created_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" })}
                       </td>
                       <td className="px-3 py-2 font-mono">{c.ip ?? "—"}</td>
-                      <td className="px-3 py-2">{[c.city, c.region, c.country].filter(Boolean).join(", ") || "—"}</td>
+                      <td className="px-3 py-2">{formatLocal(c) || "—"}</td>
                       <td className="px-3 py-2">{parseUA(c.user_agent)}</td>
                       <td className="px-3 py-2 max-w-[160px] truncate" title={c.referer ?? ""}>{c.referer ?? "—"}</td>
                       <td className="px-3 py-2 max-w-[200px] truncate" title={c.target_url ?? ""}>{c.target_url ?? "—"}</td>
