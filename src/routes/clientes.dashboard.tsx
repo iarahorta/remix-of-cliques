@@ -251,8 +251,29 @@ function ClientesDashboard() {
     const today = new Intl.DateTimeFormat("en-CA", {
       timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit",
     }).format(new Date());
-    return sub.status === "active" && !!sub.current_period_end && sub.current_period_end >= today;
+    const okStatus = sub.status === "active" || sub.status === "trialing";
+    return okStatus && !!sub.current_period_end && sub.current_period_end >= today;
   }, [sub]);
+
+  // Teste grátis: usuário em `trialing` com período ainda vigente.
+  const trialing = useMemo(() => {
+    if (!sub || sub.status !== "trialing" || !sub.current_period_end) return false;
+    const today = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit",
+    }).format(new Date());
+    return sub.current_period_end >= today;
+  }, [sub]);
+
+  // Contagem de links por tipo — usado pra exibir limites do teste grátis.
+  const trialUsage = useMemo(() => {
+    let normal = 0, wa = 0, rot = 0;
+    for (const l of links) {
+      if (l.is_rotating) rot++;
+      else if ((l.target_url ?? "").startsWith("https://wa.me/")) wa++;
+      else normal++;
+    }
+    return { normal, whatsapp: wa, rotating: rot };
+  }, [links]);
 
   // Alertas de vencimento / bloqueio por atraso
   const { daysUntilEnd, daysOverdue, expiringSoon, locked } = useMemo(() => {
