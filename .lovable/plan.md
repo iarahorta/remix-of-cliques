@@ -1,58 +1,42 @@
-# Plano — Avisos por e-mail de vencimento
+# Régua de avisos por e-mail + cron diário
 
-Idioma dos e-mails: 100% PT-BR. Timezone Brasília em todas as datas exibidas.
+Após publicar, ativo a régua completa de lembretes por e-mail. Nada muda no fluxo HS (intocado) e nenhum cliente com assinatura em dia recebe e-mail.
 
-## 1. Infra de e-mail (Lovable Emails)
+## Régua final
 
-- Configurar domínio de envio (subdomínio dedicado, ex.: `notify.zpclik.site`) via dialog de setup — DNS via NS delegation. Aguardar verificação (pode levar até 72h, mas envio já pode ser scaffoldado antes).
-- Scaffold de app emails (templates transacionais + helper `sendTemplateEmail`).
-- Nenhuma fila / cron table criada — a Lovable cuida de entrega, retries, suppression e unsubscribe.
+| Gatilho | Template | Quando dispara |
+|---|---|---|
+| Trial acabando | `trial-expiring` (hoursLeft≈6) | Trial iniciado entre 18h e 24h atrás |
+| Assinatura vencendo em 3 dias | `subscription-expiring` (daysLeft=3) | `current_period_end` = hoje + 3 dias (BRT) |
+| Assinatura vencendo em 24h | `subscription-expiring` (daysLeft=1) | `current_period_end` = amanhã (BRT) |
+| Conta bloqueada | `subscription-blocked` (daysOverdue=3) | `current_period_end` = hoje − 3 dias (BRT) |
 
-## 2. Templates (React Email, PT-BR, tema preto/dourado do zpclik)
+Idempotência por `${template}-${subscriber_id}-${current_period_end}` — mesmo se o cron rodar 2×, o cliente recebe 1× só.
 
-Todos com logo, saudação pelo nome, CTA "Renovar agora" apontando pro dashboard, rodapé com suporte.
+## Como o cron funciona
 
-1. `trial-ending` — "Seu teste grátis termina em breve" (disparado quando falta ≤ 6h pro fim do trial de 24h).
-2. `subscription-expiring-1d` — "Sua assinatura vence amanhã" (1 dia antes do `current_period_end`).
-3. `subscription-blocked-soon` — "Última chance: acesso será bloqueado hoje" (3 dias após vencer, ou seja no dia do corte).
+- Roda **1×/dia às 09:00 BRT (12:00 UTC)** via `pg_cron` + `pg_net`.
+- Chama `POST /api/public/hooks/send-expiry-reminders` autenticado com `apikey` (Supabase anon).
+- O endpoint varre `link_subscribers`, seleciona só quem se encaixa em cada condição do dia, e dispara o template correspondente pra cada um.
+- Quem está em dia **não recebe nada**.
+- Suprimidos (bounce/reclamação/unsubscribe) são bloqueados pela Lovable automaticamente.
 
-## 3. Trigger — cron diário
+## Arquivos
 
-- Migração `pg_cron` + `pg_net` que roda 1×/dia às **09:00 BRT** (12:00 UTC).
-- Chama endpoint público `POST /api/public/hooks/send-expiry-reminders` autenticado com `apikey` (Supabase anon).
-- Endpoint faz 3 queries em `link_subscribers`:
-  - trial: `status='trialing'` e `trial_started_at` entre 18h e 24h atrás → envia `trial-ending`.
-  - 1 dia antes: `status='active'` e `current_period_end = amanhã (BRT)` → envia `subscription-expiring-1d`.
-  - 3 dias após: `status IN ('active','suspended')` e `current_period_end = hoje - 3 dias (BRT)` → envia `subscription-blocked-soon`.
-- Idempotência: `idempotencyKey = ${template}-${subscriber_id}-${current_period_end}` — a Lovable deduplica reenvios se o cron rodar 2×.
-- Suprimidos (bounce/complaint/unsubscribe) são bloqueados server-side pela Lovable — nada extra a fazer.
+Novos:
+- `src/routes/api/public/hooks/send-expiry-reminders.ts` — endpoint do cron, com as 4 queries e envios via `sendTemplateEmail`.
+- `src/lib/expiry-reminders.functions.ts` — server function admin-only para disparar teste manual pra `iarachorta@gmail.com`.
 
-## 4. Teste manual
+Migração (via `supabase--insert`, não migration — contém URL/anon key do projeto):
+- Habilita `pg_cron` e `pg_net` se necessário.
+- `cron.schedule('send-expiry-reminders', '0 12 * * *', ...)` chamando o endpoint.
 
-- Após scaffold, disparo um envio de teste de cada um dos 3 templates pro `iarachorta@gmail.com` via server function one-off, pra você validar visual e copy.
-- Verifico logs de entrega em Cloud → Emails.
+Sem tocar em: `short_links`, `r.$slug.ts`, RLS existentes, fluxo HS.
 
-## 5. Detalhes técnicos
+## Teste
 
-- Novos arquivos:
-  - `src/lib/email-templates/trial-ending.tsx`
-  - `src/lib/email-templates/subscription-expiring-1d.tsx`
-  - `src/lib/email-templates/subscription-blocked-soon.tsx`
-  - `src/routes/api/public/hooks/send-expiry-reminders.ts`
-  - `src/lib/expiry-reminders.functions.ts` (função de teste manual — admin only)
-- Migração:
-  - `pg_cron` + `pg_net` (se ainda não habilitados).
-  - Job diário `send-expiry-reminders` às 12:00 UTC.
-- Sem alteração no fluxo HS. Sem tocar em `short_links`, `r.$slug.ts`, políticas RLS existentes.
+Após publicar e o cron estar agendado, disparo teste manual pra `iarachorta@gmail.com` com os 3 templates (`trial-expiring`, `subscription-expiring` daysLeft=1 e 3, `subscription-blocked`) pra você validar visual/copy antes de qualquer cliente real receber.
 
-## 6. Fora de escopo (podemos fazer depois se quiser)
+## Dependência: DNS
 
-- Aviso de pagamento confirmado (recibo).
-- Aviso de bloqueio efetivo (dia 4+).
-- JÁ PODE FAZER 
-
-## Pergunta técnica que resolvo sozinho durante o build
-
-- Domínio de envio: uso `avisos.zpclik.site` como subdomínio delegado. 
-
-Ao aprovar, começo pelo scaffold + setup do domínio, depois templates, depois cron e teste final pra `iarachorta@gmail.com`.
+O envio efetivo só acontece após `avisos.zpclik.site` verificar (monitoro em Cloud → Emails). Todo o resto (endpoint, cron, templates) já fica pronto e roda idempotente — assim que o DNS verificar, os e-mails começam a sair no próximo ciclo das 09:00 BRT sem eu precisar mexer em nada.
