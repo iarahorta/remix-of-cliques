@@ -30,6 +30,35 @@ export const Route = createFileRoute("/r/$slug")({
         );
 
         const h = request.headers;
+        const ua = h.get("user-agent") || "";
+        const isCrawler = /(facebookexternalhit|Facebot|WhatsApp|Twitterbot|LinkedInBot|Slackbot|TelegramBot|Discordbot|Pinterest|SkypeUriPreview|redditbot|Applebot|Googlebot|bingbot|embedly|vkShare|W3C_Validator|Iframely)/i.test(ua);
+        if (isCrawler) {
+          const url = new URL(request.url);
+          const origin = url.origin;
+          const title = "zpclik — Encurtador de Links Premium";
+          const description = "Rotação inteligente, analytics reais e link de WhatsApp em segundos. R$ 19,90/mês.";
+          const image = "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/e41a3f2b-6133-4a3f-beb8-65b284f9ca3e/id-preview-0215fae2--9c2f61df-dff7-4c0e-8f62-456fff6d20db.lovable.app-1782495129187.png";
+          const html = `<!doctype html><html lang="pt-BR"><head>
+<meta charset="utf-8">
+<title>${title}</title>
+<meta name="description" content="${description}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="zpclik">
+<meta property="og:title" content="${title}">
+<meta property="og:description" content="${description}">
+<meta property="og:image" content="${image}">
+<meta property="og:url" content="${origin}/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${title}">
+<meta name="twitter:description" content="${description}">
+<meta name="twitter:image" content="${image}">
+</head><body></body></html>`;
+          return new Response(html, {
+            status: 200,
+            headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=300" },
+          });
+        }
+
         const cf =
           ((request as any).cf as
             | {
@@ -51,7 +80,7 @@ export const Route = createFileRoute("/r/$slug")({
             _region: cleanGeo(firstHeader(h, ["cf-region", "x-vercel-ip-country-region"]) || cf?.region),
             _region_code: cleanGeo(firstHeader(h, ["cf-region-code", "x-vercel-ip-country-region"]) || cf?.regionCode),
             _city: cleanGeo(firstHeader(h, ["cf-ipcity", "x-vercel-ip-city"]) || cf?.city),
-            _user_agent: h.get("user-agent") || null,
+            _user_agent: ua || null,
             _referer: h.get("referer") || null,
           },
         );
