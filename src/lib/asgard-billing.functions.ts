@@ -56,7 +56,7 @@ export const createAsgardPixCharge = createServerFn({ method: "POST" })
     } catch (err: any) {
       console.error("[asgard] createAsgardPix falhou", err);
       const raw = String(err?.message ?? err ?? "erro desconhecido");
-      // Erros comuns: 401/403 (chaves), 400 (payload inválido/cpf exigido), 5xx.
+      // Erros comuns: 401/403 (chaves), 400 (payload inválido), 5xx.
       if (/401|403|unauthor/i.test(raw)) {
         throw new Error("Gateway de pagamento recusou as credenciais. Contate o suporte.");
       }
