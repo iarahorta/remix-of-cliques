@@ -1231,7 +1231,7 @@ function MetricsModal({ link, onClose }: { link: MyLink; onClose: () => void }) 
   type Row = { name: string; count: number };
   type Click = {
     id: string; created_at: string; ip: string | null;
-    country: string | null; region: string | null; city: string | null;
+    country: string | null; region: string | null; region_code: string | null; city: string | null;
     referer: string | null; referer_host: string;
     user_agent: string | null; device: string; browser: string; os: string;
     target_url: string | null;
@@ -1268,16 +1268,16 @@ function MetricsModal({ link, onClose }: { link: MyLink; onClose: () => void }) 
   const filtered = data?.clicks.filter((c) => {
     if (!q.trim()) return true;
     const s = q.toLowerCase();
-    return [c.ip, c.country, c.region, c.city, c.device, c.browser, c.os, c.referer_host, c.target_url, c.user_agent]
+    return [c.ip, c.country, c.region, c.region_code, c.city, c.device, c.browser, c.os, c.referer_host, c.target_url, c.user_agent]
       .some((v) => (v ?? "").toLowerCase().includes(s));
   }) ?? [];
 
   const exportCSV = () => {
     if (!data) return;
-    const headers = ["data_utc","ip","pais","regiao","cidade","dispositivo","navegador","so","referer","destino","user_agent"];
+    const headers = ["data_utc","ip","pais","regiao","uf","cidade","local","dispositivo","navegador","so","referer","destino","user_agent"];
     const esc = (v: any) => `"${String(v ?? "").replace(/"/g, '""')}"`;
     const lines = filtered.map((c) => [
-      c.created_at, c.ip, c.country, c.region, c.city, c.device, c.browser, c.os, c.referer_host, c.target_url, c.user_agent
+      c.created_at, c.ip, c.country, c.region, c.region_code, c.city, fmtLocal(c), c.device, c.browser, c.os, c.referer_host, c.target_url, c.user_agent
     ].map(esc).join(","));
     const csv = "\uFEFF" + headers.join(",") + "\n" + lines.join("\n");
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
@@ -1406,7 +1406,7 @@ function MetricsModal({ link, onClose }: { link: MyLink; onClose: () => void }) 
                         <tr key={c.id} className="border-t border-neutral-800 hover:bg-neutral-900/60">
                           <td className="px-3 py-1.5 text-neutral-300 whitespace-nowrap">{new Date(c.created_at).toLocaleString("pt-BR")}</td>
                           <td className="px-3 py-1.5 font-mono text-neutral-400">{c.ip ?? "—"}</td>
-                          <td className="px-3 py-1.5 text-neutral-300">{[c.city, c.region, c.country].filter(Boolean).join(", ") || "—"}</td>
+                          <td className="px-3 py-1.5 text-neutral-300">{fmtLocal(c) || "—"}</td>
                           <td className="px-3 py-1.5 text-neutral-300">{c.device}</td>
                           <td className="px-3 py-1.5 text-neutral-400">{c.browser} · {c.os}</td>
                           <td className="px-3 py-1.5 text-neutral-400">{c.referer_host}</td>
