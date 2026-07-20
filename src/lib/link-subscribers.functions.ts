@@ -390,7 +390,7 @@ export const getMyLinkMetrics = createServerFn({ method: "POST" })
     const since = new Date(Date.now() - data.days * 24 * 60 * 60 * 1000).toISOString();
     const { data: clicks, error } = await context.supabase
       .from("short_link_clicks")
-      .select("id,created_at,country,region,city,ip,user_agent,referer,target_url,is_bot")
+      .select("id,created_at,country,region,region_code,city,ip,user_agent,referer,target_url,is_bot")
       .eq("short_link_id", link.id)
       .eq("is_bot", false)
       .gte("created_at", since)
@@ -484,6 +484,7 @@ export const getMyLinkMetrics = createServerFn({ method: "POST" })
         ip: c.ip ?? null,
         country: c.country ?? null,
         region: c.region ?? null,
+        region_code: c.region_code ?? null,
         city: c.city ?? null,
         referer: c.referer ?? null,
         referer_host: parseRef(c.referer),

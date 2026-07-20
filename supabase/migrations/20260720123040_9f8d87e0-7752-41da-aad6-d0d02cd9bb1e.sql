@@ -1,0 +1,1 @@
+ALTER TABLE public.short_link_clicks ADD COLUMN IF NOT EXISTS region_code text;

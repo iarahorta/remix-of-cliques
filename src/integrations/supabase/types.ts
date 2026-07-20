@@ -1010,6 +1010,7 @@ export type Database = {
           is_bot: boolean
           referer: string | null
           region: string | null
+          region_code: string | null
           short_link_id: string
           slug: string
           target_url: string | null
@@ -1024,6 +1025,7 @@ export type Database = {
           is_bot?: boolean
           referer?: string | null
           region?: string | null
+          region_code?: string | null
           short_link_id: string
           slug: string
           target_url?: string | null
@@ -1038,6 +1040,7 @@ export type Database = {
           is_bot?: boolean
           referer?: string | null
           region?: string | null
+          region_code?: string | null
           short_link_id?: string
           slug?: string
           target_url?: string | null
