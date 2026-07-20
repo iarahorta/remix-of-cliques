@@ -43,23 +43,26 @@ export const Route = createFileRoute("/r/$slug")({
             h.get("x-real-ip") ||
             (h.get("x-forwarded-for") || "").split(",")[0].trim() ||
             null;
-          const logPromise = supabaseAdmin
-            .from("short_link_clicks")
-            .insert({
-              short_link_id: linkId,
-              slug,
-              target_url: target,
-              ip,
-              country: h.get("cf-ipcountry") || null,
-              region: h.get("cf-region") || null,
-              city: h.get("cf-ipcity") || null,
-              user_agent: h.get("user-agent") || null,
-              referer: h.get("referer") || null,
-            })
-            .then(({ error: e }) => {
+          const logPromise = (async () => {
+            try {
+              const { error: e } = await supabaseAdmin
+                .from("short_link_clicks")
+                .insert({
+                  short_link_id: linkId,
+                  slug,
+                  target_url: target,
+                  ip,
+                  country: h.get("cf-ipcountry") || null,
+                  region: h.get("cf-region") || null,
+                  city: h.get("cf-ipcity") || null,
+                  user_agent: h.get("user-agent") || null,
+                  referer: h.get("referer") || null,
+                });
               if (e) console.error("click log failed", e);
-            })
-            .catch((e) => console.error("click log failed", e));
+            } catch (e) {
+              console.error("click log failed", e);
+            }
+          })();
 
           const ctx = (globalThis as any).__cloudflareCtx ??
             (globalThis as any).cloudflareContext ??
