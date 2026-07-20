@@ -574,6 +574,7 @@ interface ClickRow {
   user_agent: string | null;
   referer: string | null;
   target_url: string | null;
+  is_bot: boolean;
 }
 
 function formatLocal(c: { city: string | null; region: string | null; region_code: string | null; country: string | null }): string {
@@ -591,7 +592,7 @@ function MetricsModal({ link, onClose }: { link: ShortLink; onClose: () => void 
     (async () => {
       const { data, error } = await supabase
         .from("short_link_clicks")
-        .select("id,created_at,ip,country,region,region_code,city,user_agent,referer,target_url")
+        .select("id,created_at,ip,country,region,region_code,city,user_agent,referer,target_url,is_bot")
         .eq("short_link_id", link.id)
         .order("created_at", { ascending: false })
         .limit(500);
@@ -632,7 +633,8 @@ function MetricsModal({ link, onClose }: { link: ShortLink; onClose: () => void 
     const byCountry = new Map<string, number>();
     const byDay = new Map<string, number>();
     const uniqueIps = new Set<string>();
-    for (const c of filtered) {
+    const real = filtered.filter((c) => !c.is_bot);
+    for (const c of real) {
       const k = c.country || "—";
       byCountry.set(k, (byCountry.get(k) ?? 0) + 1);
       const d = new Date(c.created_at).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
@@ -641,6 +643,8 @@ function MetricsModal({ link, onClose }: { link: ShortLink; onClose: () => void 
     }
     return {
       total: filtered.length,
+      rawTotal: filtered.length,
+      bots: filtered.length - real.length,
       uniqueIps: uniqueIps.size,
       countries: [...byCountry.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6),
       days: [...byDay.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6),
@@ -688,7 +692,7 @@ function MetricsModal({ link, onClose }: { link: ShortLink; onClose: () => void 
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="font-display text-xl">Métricas · /r/{link.slug}</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">Últimos 500 cliques com IP, localização e dispositivo</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Cliques reais com IP, localização e dispositivo — prévias e robôs separados</p>
           </div>
           <button onClick={onClose} className="p-1 rounded hover:bg-secondary"><X className="h-4 w-4" /></button>
         </div>
@@ -701,10 +705,10 @@ function MetricsModal({ link, onClose }: { link: ShortLink; onClose: () => void 
         {stats && (
           <>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-              <StatCard label="Cliques" value={stats.total.toString()} />
+              <StatCard label="Cliques reais" value={stats.total.toString()} />
               <StatCard label="IPs únicos" value={stats.uniqueIps.toString()} />
               <StatCard label="Países" value={stats.countries.length.toString()} />
-              <StatCard label="Dias ativos" value={stats.days.length.toString()} />
+              <StatCard label="Prévias/robôs" value={stats.bots.toString()} />
             </div>
 
             <div className="flex flex-col sm:flex-row gap-2 mb-3">
@@ -771,7 +775,7 @@ function MetricsModal({ link, onClose }: { link: ShortLink; onClose: () => void 
                         {new Date(c.created_at).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" })}
                       </td>
                       <td className="px-3 py-2 font-mono">{c.ip ?? "—"}</td>
-                      <td className="px-3 py-2">{formatLocal(c) || "—"}</td>
+                      <td className="px-3 py-2">{formatLocal(c) || "—"}{c.is_bot ? <span className="ml-2 text-[10px] text-amber-500">robô/prévia</span> : null}</td>
                       <td className="px-3 py-2">{parseUA(c.user_agent)}</td>
                       <td className="px-3 py-2 max-w-[160px] truncate" title={c.referer ?? ""}>{c.referer ?? "—"}</td>
                       <td className="px-3 py-2 max-w-[200px] truncate" title={c.target_url ?? ""}>{c.target_url ?? "—"}</td>
