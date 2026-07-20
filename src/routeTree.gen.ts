@@ -25,6 +25,7 @@ import { Route as AuthenticatedComissoesRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAssinantesRouteImport } from './routes/_authenticated/assinantes'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as ApiPublicWebhooksAsgardRouteImport } from './routes/api/public/webhooks.asgard'
+import { Route as ApiPublicHooksSendExpiryRemindersRouteImport } from './routes/api/public/hooks/send-expiry-reminders'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -106,6 +107,12 @@ const ApiPublicWebhooksAsgardRoute = ApiPublicWebhooksAsgardRouteImport.update({
   path: '/api/public/webhooks/asgard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksSendExpiryRemindersRoute =
+  ApiPublicHooksSendExpiryRemindersRouteImport.update({
+    id: '/api/public/hooks/send-expiry-reminders',
+    path: '/api/public/hooks/send-expiry-reminders',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -121,6 +128,7 @@ export interface FileRoutesByFullPath {
   '/clientes/dashboard': typeof ClientesDashboardRoute
   '/r/$slug': typeof RSlugRoute
   '/clientes/': typeof ClientesIndexRoute
+  '/api/public/hooks/send-expiry-reminders': typeof ApiPublicHooksSendExpiryRemindersRoute
   '/api/public/webhooks/asgard': typeof ApiPublicWebhooksAsgardRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
@@ -138,6 +146,7 @@ export interface FileRoutesByTo {
   '/clientes/dashboard': typeof ClientesDashboardRoute
   '/r/$slug': typeof RSlugRoute
   '/clientes': typeof ClientesIndexRoute
+  '/api/public/hooks/send-expiry-reminders': typeof ApiPublicHooksSendExpiryRemindersRoute
   '/api/public/webhooks/asgard': typeof ApiPublicWebhooksAsgardRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
@@ -157,6 +166,7 @@ export interface FileRoutesById {
   '/clientes/dashboard': typeof ClientesDashboardRoute
   '/r/$slug': typeof RSlugRoute
   '/clientes/': typeof ClientesIndexRoute
+  '/api/public/hooks/send-expiry-reminders': typeof ApiPublicHooksSendExpiryRemindersRoute
   '/api/public/webhooks/asgard': typeof ApiPublicWebhooksAsgardRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
 }
@@ -176,6 +186,7 @@ export interface FileRouteTypes {
     | '/clientes/dashboard'
     | '/r/$slug'
     | '/clientes/'
+    | '/api/public/hooks/send-expiry-reminders'
     | '/api/public/webhooks/asgard'
     | '/lovable/email/transactional/preview'
   fileRoutesByTo: FileRoutesByTo
@@ -193,6 +204,7 @@ export interface FileRouteTypes {
     | '/clientes/dashboard'
     | '/r/$slug'
     | '/clientes'
+    | '/api/public/hooks/send-expiry-reminders'
     | '/api/public/webhooks/asgard'
     | '/lovable/email/transactional/preview'
   id:
@@ -211,6 +223,7 @@ export interface FileRouteTypes {
     | '/clientes/dashboard'
     | '/r/$slug'
     | '/clientes/'
+    | '/api/public/hooks/send-expiry-reminders'
     | '/api/public/webhooks/asgard'
     | '/lovable/email/transactional/preview'
   fileRoutesById: FileRoutesById
@@ -224,6 +237,7 @@ export interface RootRouteChildren {
   ClientesDashboardRoute: typeof ClientesDashboardRoute
   RSlugRoute: typeof RSlugRoute
   ClientesIndexRoute: typeof ClientesIndexRoute
+  ApiPublicHooksSendExpiryRemindersRoute: typeof ApiPublicHooksSendExpiryRemindersRoute
   ApiPublicWebhooksAsgardRoute: typeof ApiPublicWebhooksAsgardRoute
   LovableEmailTransactionalPreviewRoute: typeof LovableEmailTransactionalPreviewRoute
 }
@@ -342,6 +356,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicWebhooksAsgardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/send-expiry-reminders': {
+      id: '/api/public/hooks/send-expiry-reminders'
+      path: '/api/public/hooks/send-expiry-reminders'
+      fullPath: '/api/public/hooks/send-expiry-reminders'
+      preLoaderRoute: typeof ApiPublicHooksSendExpiryRemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -375,6 +396,8 @@ const rootRouteChildren: RootRouteChildren = {
   ClientesDashboardRoute: ClientesDashboardRoute,
   RSlugRoute: RSlugRoute,
   ClientesIndexRoute: ClientesIndexRoute,
+  ApiPublicHooksSendExpiryRemindersRoute:
+    ApiPublicHooksSendExpiryRemindersRoute,
   ApiPublicWebhooksAsgardRoute: ApiPublicWebhooksAsgardRoute,
   LovableEmailTransactionalPreviewRoute: LovableEmailTransactionalPreviewRoute,
 }
