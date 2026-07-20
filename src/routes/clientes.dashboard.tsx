@@ -251,8 +251,29 @@ function ClientesDashboard() {
     const today = new Intl.DateTimeFormat("en-CA", {
       timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit",
     }).format(new Date());
-    return sub.status === "active" && !!sub.current_period_end && sub.current_period_end >= today;
+    const okStatus = sub.status === "active" || sub.status === "trialing";
+    return okStatus && !!sub.current_period_end && sub.current_period_end >= today;
   }, [sub]);
+
+  // Teste grátis: usuário em `trialing` com período ainda vigente.
+  const trialing = useMemo(() => {
+    if (!sub || sub.status !== "trialing" || !sub.current_period_end) return false;
+    const today = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit",
+    }).format(new Date());
+    return sub.current_period_end >= today;
+  }, [sub]);
+
+  // Contagem de links por tipo — usado pra exibir limites do teste grátis.
+  const trialUsage = useMemo(() => {
+    let normal = 0, wa = 0, rot = 0;
+    for (const l of links) {
+      if (l.is_rotating) rot++;
+      else if ((l.target_url ?? "").startsWith("https://wa.me/")) wa++;
+      else normal++;
+    }
+    return { normal, whatsapp: wa, rotating: rot };
+  }, [links]);
 
   // Alertas de vencimento / bloqueio por atraso
   const { daysUntilEnd, daysOverdue, expiringSoon, locked } = useMemo(() => {
@@ -421,14 +442,43 @@ function ClientesDashboard() {
                   setBillingLoading(false);
                 }
               };
-              const boxCls = isActive
+              const boxCls = trialing
+                ? "bg-sky-50 border-sky-200"
+                : isActive
                 ? "bg-emerald-50 border-emerald-200"
                 : isSuspended
                   ? "bg-red-50 border-red-200"
                   : "bg-amber-50 border-amber-200";
               return (
                 <section className={`rounded-2xl border p-6 ${boxCls}`}>
-                  {isActive ? (
+                  {trialing ? (
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <h2 className="font-semibold text-sky-900 flex items-center gap-2">
+                          🎁 Teste grátis ativo
+                          {daysUntilEnd !== null && (
+                            <span className="text-xs font-normal text-sky-800">
+                              {daysUntilEnd === 0 ? "expira hoje" : daysUntilEnd === 1 ? "expira amanhã" : `${daysUntilEnd} dias restantes`}
+                            </span>
+                          )}
+                        </h2>
+                        <p className="text-sm text-sky-900 mt-1">
+                          Você pode criar <strong>1 link normal</strong>, <strong>1 link de WhatsApp</strong> e <strong>1 link rotativo</strong> (com até 5 destinos) enquanto testa.
+                        </p>
+                        <p className="text-xs text-sky-800/80 mt-1">
+                          Usados: {trialUsage.normal}/1 normal · {trialUsage.whatsapp}/1 WhatsApp · {trialUsage.rotating}/1 rotativo
+                        </p>
+                        <button
+                          onClick={openInvoice}
+                          disabled={billingLoading}
+                          className="mt-3 inline-flex items-center gap-2 rounded-lg bg-sky-700 hover:bg-sky-800 disabled:opacity-60 text-white text-sm font-medium px-4 py-2"
+                        >
+                          {billingLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
+                          Assinar agora — R$ 19,90/mês
+                        </button>
+                      </div>
+                    </div>
+                  ) : isActive ? (
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
                         <h2 className="font-semibold text-emerald-900">
