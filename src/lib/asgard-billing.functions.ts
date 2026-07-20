@@ -46,15 +46,29 @@ export const createAsgardPixCharge = createServerFn({ method: "POST" })
     }
 
     const idem = `sub-${sub.id}-${Date.now()}`;
-    const pix = await createAsgardPix({
-      amount: PLAN_VALUE_BRL,
-      email,
-      name: (sub as any).name ?? undefined,
-      cpf,
-      phone: (sub as any).phone ?? undefined,
-      externalReference: sub.id,
-      idempotencyKey: idem,
-    });
+    let pix;
+    try {
+      pix = await createAsgardPix({
+        amount: PLAN_VALUE_BRL,
+        email,
+        name: (sub as any).name ?? undefined,
+        cpf,
+        phone: (sub as any).phone ?? undefined,
+        externalReference: sub.id,
+        idempotencyKey: idem,
+      });
+    } catch (err: any) {
+      console.error("[asgard] createAsgardPix falhou", err);
+      const raw = String(err?.message ?? err ?? "erro desconhecido");
+      // Erros comuns: 401/403 (chaves), 400 (payload inválido/cpf exigido), 5xx.
+      if (/401|403|unauthor/i.test(raw)) {
+        throw new Error("Gateway de pagamento recusou as credenciais. Contate o suporte.");
+      }
+      if (/cpf/i.test(raw)) {
+        throw new Error("O gateway exige CPF. Atualize seu cadastro com o CPF e tente de novo.");
+      }
+      throw new Error(`Não foi possível gerar o PIX agora. (${raw.slice(0, 140)})`);
+    }
 
     const createdAtIso = new Date().toISOString();
     await supabaseAdmin.from("asgard_pix_charges").insert({
