@@ -8,15 +8,18 @@ export const sendExpiryRemindersTest = createServerFn({ method: 'POST' })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { to: string }) => input)
   .handler(async ({ data, context }) => {
-    const { data: isAdmin } = await context.supabase.rpc('has_role', {
-      _user_id: context.userId,
-      _role: 'admin',
-    })
+    const { data: roles } = await context.supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', context.userId)
+    const isAdmin = (roles ?? []).some(
+      (r) => r.role === 'admin' || r.role === 'super_admin',
+    )
     if (!isAdmin) throw new Error('Forbidden')
 
     const stamp = Date.now()
     const to = data.to
-    const results: Record<string, unknown> = {}
+    const results: Record<string, { sent: boolean; reason?: string }> = {}
 
     results.trial = await sendTemplateEmail('trial-expiring', to, {
       templateData: { name: 'Iara', hoursLeft: 6 },
