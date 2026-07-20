@@ -1,42 +1,57 @@
-# Régua de avisos por e-mail + cron diário
+## Problema
 
-Após publicar, ativo a régua completa de lembretes por e-mail. Nada muda no fluxo HS (intocado) e nenhum cliente com assinatura em dia recebe e-mail.
+No painel `/clientes/dashboard`, no bloco "🎁 Teste grátis ativo", o botão **"Assinar agora — R$ 19,90/mês"** não responde ao clique — sem loading, sem modal PIX, sem toast de erro. Ou seja, o fluxo de conversão de trial → assinatura paga está morto.
 
-## Régua final
+## Diagnóstico (não confirmado ainda)
 
-| Gatilho | Template | Quando dispara |
-|---|---|---|
-| Trial acabando | `trial-expiring` (hoursLeft≈6) | Trial iniciado entre 18h e 24h atrás |
-| Assinatura vencendo em 3 dias | `subscription-expiring` (daysLeft=3) | `current_period_end` = hoje + 3 dias (BRT) |
-| Assinatura vencendo em 24h | `subscription-expiring` (daysLeft=1) | `current_period_end` = amanhã (BRT) |
-| Conta bloqueada | `subscription-blocked` (daysOverdue=3) | `current_period_end` = hoje − 3 dias (BRT) |
+O código está aparentemente correto:
+- `onClick={openInvoice}` → `openInvoiceAuto` → `createPix()` (server fn `createAsgardPixCharge`).
+- `useServerFn` está registrado, `attachSupabaseAuth` está no `functionMiddleware`, os segredos `ASGARD_PUBLIC_KEY` / `ASGARD_SECRET_KEY` existem.
+- Todos os erros dentro de `openInvoiceAuto` são capturados em `try/catch` e mostrados via `toast.error(...)`.
 
-Idempotência por `${template}-${subscriber_id}-${current_period_end}` — mesmo se o cron rodar 2×, o cliente recebe 1× só.
+Como o usuário diz que **nada** acontece (nem toast, nem loading), suspeitas prováveis, em ordem:
 
-## Como o cron funciona
+1. **`<Toaster />` do sonner não está montado** nesta rota (o toast é chamado mas não aparece) — e algum erro ocorre silenciosamente antes de `setBillingLoading(true)` fazer efeito visível.
+2. **A chamada da server fn está falhando antes do handler** (ex.: middleware de auth rejeitando por algum motivo, ou erro no client bundle) e o `catch` só pega `Error` — se vier um `Response`/redirect cru, o `e?.message` vira `undefined` e o toast aparece vazio (parece "nada").
+3. **AsgardPay retorna erro 4xx** (ex.: `cpf` exigido, `amount` mínimo, credenciais em modo produção vs sandbox) e a mensagem chega, mas o Toaster não existe no DOM.
 
-- Roda **1×/dia às 09:00 BRT (12:00 UTC)** via `pg_cron` + `pg_net`.
-- Chama `POST /api/public/hooks/send-expiry-reminders` autenticado com `apikey` (Supabase anon).
-- O endpoint varre `link_subscribers`, seleciona só quem se encaixa em cada condição do dia, e dispara o template correspondente pra cada um.
-- Quem está em dia **não recebe nada**.
-- Suprimidos (bounce/reclamação/unsubscribe) são bloqueados pela Lovable automaticamente.
+Sem network/console capturados nesta sessão, preciso instrumentar para confirmar.
 
-## Arquivos
+## Plano de correção
 
-Novos:
-- `src/routes/api/public/hooks/send-expiry-reminders.ts` — endpoint do cron, com as 4 queries e envios via `sendTemplateEmail`.
-- `src/lib/expiry-reminders.functions.ts` — server function admin-only para disparar teste manual pra `iarachorta@gmail.com`.
+### 1. Garantir feedback visual ao usuário
+- Confirmar que `<Toaster />` do `sonner` está montado no `__root.tsx` (ou adicionar se estiver faltando na rota `/clientes/dashboard`).
+- No `catch` do `openInvoiceAuto`, garantir mensagem de fallback quando `e?.message` for vazio: `toast.error(String(e?.message ?? e ?? "Falha ao gerar cobrança"))`.
 
-Migração (via `supabase--insert`, não migration — contém URL/anon key do projeto):
-- Habilita `pg_cron` e `pg_net` se necessário.
-- `cron.schedule('send-expiry-reminders', '0 12 * * *', ...)` chamando o endpoint.
+### 2. Instrumentar diagnóstico temporário
+- Adicionar `console.log("[assinar] click", { billingLoading })` e `console.log("[assinar] pix resp", r)` em `openInvoiceAuto` para o próximo turno já trazer sinais reais nos logs do preview.
 
-Sem tocar em: `short_links`, `r.$slug.ts`, RLS existentes, fluxo HS.
+### 3. Endurecer o `createAsgardPixCharge`
+- No handler, envolver `createAsgardPix(...)` num `try/catch` que faz `console.error("[asgard] falhou", err)` no server e re-lança `Error` com `message` limpo em PT-BR (ex.: `"Não foi possível criar a cobrança (Asgard: XXX). Tente de novo."`), para o toast do cliente sempre ter conteúdo legível.
 
-## Teste
+### 4. Verificar payload aceito pela Asgard
+- Após confirmar via logs qual erro a API retorna, ajustar:
+  - Se for `cpf obrigatório` → abrir modal pedindo CPF antes de gerar o PIX (já temos coluna `cpf` em `link_subscribers`).
+  - Se for `amount` / `currency` / campo faltando → ajustar o body em `asgard.server.ts`.
+  - Se for credencial (401/403) → informar a Iara para revisar chaves na Asgard.
 
-Após publicar e o cron estar agendado, disparo teste manual pra `iarachorta@gmail.com` com os 3 templates (`trial-expiring`, `subscription-expiring` daysLeft=1 e 3, `subscription-blocked`) pra você validar visual/copy antes de qualquer cliente real receber.
+### 5. Publicar após confirmar fluxo funcionando ponta a ponta
+- Testar com a conta `iarachorta@gmail.com` (trial) gerando PIX real, ver modal, copiar código, verificar status. Só depois publicar.
 
-## Dependência: DNS
+## Escopo
 
-O envio efetivo só acontece após `avisos.zpclik.site` verificar (monitoro em Cloud → Emails). Todo o resto (endpoint, cron, templates) já fica pronto e roda idempotente — assim que o DNS verificar, os e-mails começam a sair no próximo ciclo das 09:00 BRT sem eu precisar mexer em nada.
+Somente arquivos:
+- `src/routes/clientes.dashboard.tsx` (mensagens de erro + logs temporários + garantia de Toaster).
+- `src/routes/__root.tsx` (adicionar `<Toaster />` se faltar).
+- `src/lib/asgard-billing.functions.ts` (mensagens de erro server-side).
+- `src/lib/asgard.server.ts` (log de erro do gateway).
+
+**Não vou tocar em**: RLS, tabelas, políticas, fluxo HS, encurtador, rotas de rota `/r/`, nem no gateway/segredos.
+
+## Riscos
+
+- Baixo. Todas as mudanças são de UX/observabilidade + hardening de erro; nenhuma altera lógica de billing, período de assinatura ou permissões.
+
+## Próximo passo depois deste plano
+
+Após ver os logs reais (turno seguinte), aplicar o fix definitivo (provavelmente exigir CPF antes do PIX, ou ajustar payload da Asgard).
