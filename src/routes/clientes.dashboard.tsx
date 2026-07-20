@@ -305,7 +305,9 @@ function ClientesDashboard() {
   const openInvoiceAuto = async () => {
     setBillingLoading(true);
     try {
+      console.log("[assinar] click — solicitando PIX…");
       const r: any = await requestPix();
+      console.log("[assinar] resposta PIX", r);
       if (r?.orderId) {
         setPixModal({
           orderId: String(r.orderId),
@@ -321,7 +323,11 @@ function ClientesDashboard() {
         toast.error("Não foi possível gerar o PIX agora — tente de novo em instantes.");
       }
     } catch (e: any) {
-      toast.error(e?.message ?? "Erro ao gerar cobrança");
+      console.error("[assinar] falhou", e);
+      const msg = typeof e === "string"
+        ? e
+        : (e?.message || e?.error || (e ? JSON.stringify(e).slice(0, 200) : "") || "Falha ao gerar cobrança PIX. Tente novamente em instantes.");
+      toast.error(msg);
     } finally {
       setBillingLoading(false);
     }
