@@ -1,13 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, CheckCircle2, XCircle, Gift } from "lucide-react";
+import { Loader2, CheckCircle2, XCircle, Gift, Banknote } from "lucide-react";
 import { PageShell } from "@/components/page-shell";
 import {
   listSubscribersAdmin,
   markSubscriberPaidAdmin,
   suspendSubscriberAdmin,
   giftSubscriberDaysAdmin,
+  markSubscriberPaidExternalAdmin,
 } from "@/lib/link-subscribers.functions";
 import { toast } from "sonner";
 
@@ -50,11 +51,13 @@ function Assinantes() {
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [giftTarget, setGiftTarget] = useState<Subscriber | null>(null);
+  const [externalTarget, setExternalTarget] = useState<Subscriber | null>(null);
 
   const listFn = useServerFn(listSubscribersAdmin);
   const markPaid = useServerFn(markSubscriberPaidAdmin);
   const suspend = useServerFn(suspendSubscriberAdmin);
   const giftFn = useServerFn(giftSubscriberDaysAdmin);
+  const externalFn = useServerFn(markSubscriberPaidExternalAdmin);
 
   const load = async () => {
     setLoading(true);
@@ -107,6 +110,22 @@ function Assinantes() {
     } finally { setBusy(null); }
   };
 
+  const submitExternal = async (months: number, amountCents: number, notes: string) => {
+    if (!externalTarget) return;
+    setBusy(externalTarget.id);
+    try {
+      const res: any = await externalFn({ data: { subscriberId: externalTarget.id, months, amount_cents: amountCents, notes: notes || null } });
+      const nd = res?.newEndDate ? new Date(res.newEndDate + "T12:00:00").toLocaleDateString("pt-BR") : "";
+      toast.success(res?.commissionId
+        ? `Pago externo — vencimento ${nd}. Comissão gerada para o parceiro.`
+        : `Pago externo — vencimento ${nd}. (Sem parceiro atribuído)`);
+      setExternalTarget(null);
+      await load();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Falhou ao marcar pago externo");
+    } finally { setBusy(null); }
+  };
+
   return (
     <PageShell title="Assinantes" subtitle="Gestão de clientes assinantes do encurtador">
       {err && (
@@ -152,6 +171,14 @@ function Assinantes() {
                       </button>
                       <button
                         disabled={busy === r.id}
+                        onClick={() => setExternalTarget(r)}
+                        className="inline-flex items-center gap-1 rounded-md bg-sky-600 hover:bg-sky-700 text-white text-xs px-2.5 py-1.5 disabled:opacity-60"
+                        title="Registrar pagamento feito fora do gateway (gera comissão para o parceiro se houver)"
+                      >
+                        <Banknote className="h-3.5 w-3.5" /> Pago externo
+                      </button>
+                      <button
+                        disabled={busy === r.id}
                         onClick={() => setGiftTarget(r)}
                         className="inline-flex items-center gap-1 rounded-md bg-amber-500 hover:bg-amber-600 text-white text-xs px-2.5 py-1.5 disabled:opacity-60"
                       >
@@ -178,6 +205,14 @@ function Assinantes() {
           busy={busy === giftTarget.id}
           onClose={() => setGiftTarget(null)}
           onConfirm={submitGift}
+        />
+      )}
+      {externalTarget && (
+        <ExternalPaymentModal
+          subscriber={externalTarget}
+          busy={busy === externalTarget.id}
+          onClose={() => setExternalTarget(null)}
+          onConfirm={submitExternal}
         />
       )}
     </PageShell>
