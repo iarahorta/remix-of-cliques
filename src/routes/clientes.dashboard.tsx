@@ -825,7 +825,7 @@ function ClientesDashboard() {
                 <h3 className="text-lg font-semibold text-foreground">Pague R$ {pixModal.amount.toFixed(2).replace(".", ",")} via PIX</h3>
                 <p className="text-xs text-muted-foreground mt-1">
                   {pixModal.manual
-                    ? "Use a chave PIX abaixo e envie o comprovante no WhatsApp para liberar sua assinatura."
+                    ? "Você precisa pagar por aqui (chave PIX abaixo) e depois clicar no botão para enviar o comprovante no WhatsApp."
                     : "Sua assinatura é ativada automaticamente após a confirmação."}
                 </p>
               </div>
