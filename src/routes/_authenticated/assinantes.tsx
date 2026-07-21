@@ -1,13 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, CheckCircle2, XCircle, Gift } from "lucide-react";
+import { Loader2, CheckCircle2, XCircle, Gift, Banknote } from "lucide-react";
 import { PageShell } from "@/components/page-shell";
 import {
   listSubscribersAdmin,
   markSubscriberPaidAdmin,
   suspendSubscriberAdmin,
   giftSubscriberDaysAdmin,
+  markSubscriberPaidExternalAdmin,
 } from "@/lib/link-subscribers.functions";
 import { toast } from "sonner";
 
@@ -50,11 +51,13 @@ function Assinantes() {
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [giftTarget, setGiftTarget] = useState<Subscriber | null>(null);
+  const [externalTarget, setExternalTarget] = useState<Subscriber | null>(null);
 
   const listFn = useServerFn(listSubscribersAdmin);
   const markPaid = useServerFn(markSubscriberPaidAdmin);
   const suspend = useServerFn(suspendSubscriberAdmin);
   const giftFn = useServerFn(giftSubscriberDaysAdmin);
+  const externalFn = useServerFn(markSubscriberPaidExternalAdmin);
 
   const load = async () => {
     setLoading(true);
@@ -107,6 +110,22 @@ function Assinantes() {
     } finally { setBusy(null); }
   };
 
+  const submitExternal = async (months: number, amountCents: number, notes: string) => {
+    if (!externalTarget) return;
+    setBusy(externalTarget.id);
+    try {
+      const res: any = await externalFn({ data: { subscriberId: externalTarget.id, months, amount_cents: amountCents, notes: notes || null } });
+      const nd = res?.newEndDate ? new Date(res.newEndDate + "T12:00:00").toLocaleDateString("pt-BR") : "";
+      toast.success(res?.commissionId
+        ? `Pago externo — vencimento ${nd}. Comissão gerada para o parceiro.`
+        : `Pago externo — vencimento ${nd}. (Sem parceiro atribuído)`);
+      setExternalTarget(null);
+      await load();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Falhou ao marcar pago externo");
+    } finally { setBusy(null); }
+  };
+
   return (
     <PageShell title="Assinantes" subtitle="Gestão de clientes assinantes do encurtador">
       {err && (
@@ -152,6 +171,14 @@ function Assinantes() {
                       </button>
                       <button
                         disabled={busy === r.id}
+                        onClick={() => setExternalTarget(r)}
+                        className="inline-flex items-center gap-1 rounded-md bg-sky-600 hover:bg-sky-700 text-white text-xs px-2.5 py-1.5 disabled:opacity-60"
+                        title="Registrar pagamento feito fora do gateway (gera comissão para o parceiro se houver)"
+                      >
+                        <Banknote className="h-3.5 w-3.5" /> Pago externo
+                      </button>
+                      <button
+                        disabled={busy === r.id}
                         onClick={() => setGiftTarget(r)}
                         className="inline-flex items-center gap-1 rounded-md bg-amber-500 hover:bg-amber-600 text-white text-xs px-2.5 py-1.5 disabled:opacity-60"
                       >
@@ -178,6 +205,14 @@ function Assinantes() {
           busy={busy === giftTarget.id}
           onClose={() => setGiftTarget(null)}
           onConfirm={submitGift}
+        />
+      )}
+      {externalTarget && (
+        <ExternalPaymentModal
+          subscriber={externalTarget}
+          busy={busy === externalTarget.id}
+          onClose={() => setExternalTarget(null)}
+          onConfirm={submitExternal}
         />
       )}
     </PageShell>
@@ -271,6 +306,101 @@ function GiftModal({
           >
             {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Gift className="h-3.5 w-3.5" />}
             Confirmar presente
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ExternalPaymentModal({
+  subscriber,
+  busy,
+  onClose,
+  onConfirm,
+}: {
+  subscriber: Subscriber;
+  busy: boolean;
+  onClose: () => void;
+  onConfirm: (months: number, amountCents: number, notes: string) => void;
+}) {
+  const [months, setMonths] = useState<number>(1);
+  const [amountReais, setAmountReais] = useState<string>("19,90");
+  const [notes, setNotes] = useState<string>("");
+
+  const amountCents = Math.max(0, Math.round(parseFloat(amountReais.replace(",", ".")) * 100 * months || 0));
+  const canSubmit = months > 0 && months <= 120 && amountCents > 0 && !busy;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+      <div className="w-full max-w-md rounded-xl bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="border-b border-slate-200 px-5 py-3 flex items-center gap-2">
+          <Banknote className="h-4 w-4 text-sky-600" />
+          <h3 className="font-semibold text-slate-800">Registrar pagamento externo</h3>
+        </div>
+        <div className="p-5 space-y-4">
+          <div className="text-sm text-slate-600">
+            <div><strong>{subscriber.name ?? subscriber.email ?? subscriber.id}</strong></div>
+            <div className="text-xs text-slate-500">
+              Vencimento atual: {subscriber.current_period_end
+                ? new Date(subscriber.current_period_end + "T12:00:00").toLocaleDateString("pt-BR")
+                : "—"}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-medium text-slate-700">Meses</label>
+              <input
+                type="number"
+                min={1}
+                max={120}
+                value={months}
+                onChange={(e) => setMonths(Math.max(1, parseInt(e.target.value || "1", 10)))}
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-slate-700">Valor por mês (R$)</label>
+              <input
+                type="text"
+                inputMode="decimal"
+                value={amountReais}
+                onChange={(e) => setAmountReais(e.target.value)}
+                className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="text-xs font-medium text-slate-700">Referência / notas (opcional)</label>
+            <input
+              type="text"
+              value={notes}
+              maxLength={500}
+              placeholder="Ex.: PIX recebido de Helaine em 21/07"
+              onChange={(e) => setNotes(e.target.value)}
+              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900"
+            />
+          </div>
+          <div className="rounded-md bg-sky-50 border border-sky-200 text-xs text-sky-800 px-3 py-2">
+            Vai estender <strong>{months * 30} dias</strong> (nunca reduz o vencimento atual), marcar como <strong>pago externo</strong> e
+            gerar comissão para o parceiro atribuído (se houver). Valor bruto total considerado: <strong>R$ {(amountCents/100).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</strong>.
+          </div>
+        </div>
+        <div className="border-t border-slate-200 px-5 py-3 flex items-center justify-end gap-2">
+          <button
+            onClick={onClose}
+            disabled={busy}
+            className="rounded-md px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100 disabled:opacity-60"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={() => onConfirm(months, amountCents, notes)}
+            disabled={!canSubmit}
+            className="inline-flex items-center gap-1 rounded-md bg-sky-600 hover:bg-sky-700 text-white text-sm px-3 py-1.5 disabled:opacity-60"
+          >
+            {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Banknote className="h-3.5 w-3.5" />}
+            Confirmar pagamento
           </button>
         </div>
       </div>
