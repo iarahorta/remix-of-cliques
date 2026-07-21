@@ -609,6 +609,74 @@ export const suspendSubscriberAdmin = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// Marca como pago externamente (fora do gateway): estende o vencimento pela
+// quantidade de meses informada (30 dias cada) e, se o assinante tiver
+// parceiro atribuído, gera comissão via record_partner_commission.
+export const markSubscriberPaidExternalAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { subscriberId: string; months: number; amount_cents?: number; notes?: string | null }) => {
+    const subscriberId = String(d.subscriberId || "").trim();
+    if (!subscriberId) throw new Error("subscriberId obrigatório");
+    const months = Math.floor(Number(d.months));
+    if (!Number.isFinite(months) || months <= 0 || months > 120) {
+      throw new Error("Quantidade de meses inválida");
+    }
+    const amount = d.amount_cents == null ? 1990 * months : Math.max(0, Math.round(Number(d.amount_cents)));
+    const notes = (d.notes ?? "").toString().trim().slice(0, 500) || null;
+    return { subscriberId, months, amount_cents: amount, notes };
+  })
+  .handler(async ({ data, context }) => {
+    await assertStaff({ supabase: context.supabase, userId: context.userId });
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: sub, error: readErr } = await supabaseAdmin
+      .from("link_subscribers")
+      .select("id,current_period_end,partner_id")
+      .eq("id", data.subscriberId)
+      .maybeSingle();
+    if (readErr) throw new Error(readErr.message);
+    if (!sub) throw new Error("Assinante não encontrado");
+
+    const todayBR = brDateKey(new Date());
+    const previousEnd = (sub as any).current_period_end as string | null;
+    const baseIso = previousEnd && previousEnd > todayBR ? previousEnd : todayBR;
+    const [y, m, d0] = baseIso.split("-").map((n) => parseInt(n, 10));
+    const baseDate = new Date(Date.UTC(y, m - 1, d0));
+    baseDate.setUTCDate(baseDate.getUTCDate() + data.months * 30);
+    const newEnd = baseDate.toISOString().slice(0, 10);
+
+    const now = new Date();
+    const { error: updErr } = await supabaseAdmin
+      .from("link_subscribers")
+      .update({
+        status: "active",
+        current_period_end: newEnd,
+        last_payment_at: now.toISOString(),
+        payment_method: "external",
+      })
+      .eq("id", data.subscriberId);
+    if (updErr) throw new Error(updErr.message);
+
+    // Gera comissão se houver parceiro atribuído.
+    let commissionId: string | null = null;
+    if ((sub as any).partner_id) {
+      const sourceId = `ext-${data.subscriberId}-${now.getTime()}`;
+      const { data: cid, error: comErr } = await (supabaseAdmin as any).rpc("record_partner_commission", {
+        _source_type: "external_payment",
+        _source_id: sourceId,
+        _subscriber_id: data.subscriberId,
+        _gross_cents: data.amount_cents,
+        _product_code: "zpclik",
+        _gateway: "external",
+        _method: "manual",
+      });
+      if (comErr) throw new Error(comErr.message);
+      commissionId = (cid as string) ?? null;
+    }
+
+    return { ok: true, newEndDate: newEnd, previousEndDate: previousEnd, commissionId };
+  });
+
 export const giftSubscriberDaysAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { subscriberId: string; days: number; reason?: string | null }) => {
