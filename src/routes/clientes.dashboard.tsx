@@ -866,12 +866,24 @@ function ClientesDashboard() {
                 >{pixCopied ? "Copiado ✓" : pixModal.manual ? "Copiar chave PIX" : "Copiar código PIX"}</button>
               </div>
             )}
+            {pixModal.manual && (
+              <div className="mt-4 space-y-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+                <div className="flex items-start gap-2">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-600 text-xs font-bold text-white">1</span>
+                  <p>Copie a chave PIX acima e pague <strong>R$ {pixModal.amount.toFixed(2).replace(".", ",")}</strong> pelo app do seu banco.</p>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-600 text-xs font-bold text-white">2</span>
+                  <p>Após pagar, <strong>clique no botão verde abaixo</strong> e envie o comprovante no WhatsApp. Sua assinatura é liberada assim que confirmarmos o pagamento.</p>
+                </div>
+              </div>
+            )}
             {pixModal.manual ? (
               <a
                 href={SUPPORT_WHATSAPP_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-3 block w-full rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-medium py-2 text-center"
+                className="mt-4 block w-full rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-medium py-2.5 text-center shadow-sm"
               >Enviar comprovante no WhatsApp</a>
             ) : <button
               onClick={async () => {
